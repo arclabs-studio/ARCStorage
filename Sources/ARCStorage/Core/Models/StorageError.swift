@@ -1,0 +1,60 @@
+import Foundation
+
+/// Errors that can occur during storage operations.
+///
+/// All storage providers throw `StorageError` for consistent error handling
+/// across different storage backends.
+///
+/// ## Topics
+/// ### Error Cases
+/// - ``notFound(id:)``
+/// - ``saveFailed(underlying:)``
+/// - ``fetchFailed(underlying:)``
+/// - ``deleteFailed(underlying:)``
+/// - ``invalidData``
+/// - ``transactionFailed(underlying:)``
+public enum StorageError: Error, Sendable {
+    /// Entity with the specified ID was not found.
+    case notFound(id: Any)
+
+    /// Save operation failed.
+    case saveFailed(underlying: Error)
+
+    /// Fetch operation failed.
+    case fetchFailed(underlying: Error)
+
+    /// Delete operation failed.
+    case deleteFailed(underlying: Error)
+
+    /// Data is invalid or corrupted.
+    case invalidData
+
+    /// Transaction failed and was rolled back.
+    case transactionFailed(underlying: Error)
+}
+
+extension StorageError: LocalizedError {
+    /// User-friendly error descriptions.
+    public var errorDescription: String? {
+        switch self {
+        case .notFound(let id):
+            return "Entity with ID '\(id)' was not found"
+        case .saveFailed(let error):
+            return "Failed to save entity: \(error.localizedDescription)"
+        case .fetchFailed(let error):
+            return "Failed to fetch entities: \(error.localizedDescription)"
+        case .deleteFailed(let error):
+            return "Failed to delete entity: \(error.localizedDescription)"
+        case .invalidData:
+            return "Data is invalid or corrupted"
+        case .transactionFailed(let error):
+            return "Transaction failed: \(error.localizedDescription)"
+        }
+    }
+}
+
+extension StorageError: CustomStringConvertible {
+    public var description: String {
+        errorDescription ?? "Unknown storage error"
+    }
+}
