@@ -21,7 +21,7 @@ import Foundation
 /// // Use in ViewModel
 /// let restaurants = try await repository.fetchAll()
 /// ```
-public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Identifiable & Codable & Sendable {
+public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Identifiable & Codable & Sendable, T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: SwiftDataStorage<T>

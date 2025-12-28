@@ -21,7 +21,7 @@ import Foundation
 /// let storage = KeychainStorage<AuthToken>(service: "com.myapp.auth")
 /// try await storage.save(authToken)
 /// ```
-public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible {
+public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let service: String
@@ -162,7 +162,7 @@ public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvi
         let status = SecItemDelete(query as CFDictionary)
 
         if status == errSecItemNotFound {
-            throw StorageError.notFound(id: id)
+            throw StorageError.entityNotFound(id: id)
         }
 
         guard status == errSecSuccess else {

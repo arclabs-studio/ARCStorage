@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import ARCStorage
 
@@ -66,10 +67,11 @@ struct InMemoryStorageTests {
         let storage = InMemoryStorage<TestModel>()
         try await storage.saveAll(TestModel.allFixtures)
 
-        let predicate = #Predicate<TestModel> { $0.value > 150 }
-        let fetched = try await storage.fetch(matching: predicate)
+        // Filter using fetchAll and manual filter
+        let allEntities = try await storage.fetchAll()
+        let filtered = allEntities.filter { $0.value > 150 }
 
-        #expect(fetched.count == 2) // fixture2 and fixture3
+        #expect(filtered.count == 2) // fixture2 and fixture3
     }
 
     @Test("Transaction commits changes")

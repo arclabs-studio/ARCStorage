@@ -32,7 +32,7 @@ import Foundation
 ///     }
 /// }
 /// ```
-public protocol StorageProvider<Entity>: Sendable {
+public protocol StorageProvider<Entity>: Sendable where Entity.ID: Sendable & Hashable {
     /// The type of entity this storage provider manages.
     associatedtype Entity: Codable & Sendable & Identifiable
 

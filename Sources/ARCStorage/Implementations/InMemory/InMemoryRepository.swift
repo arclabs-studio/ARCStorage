@@ -10,7 +10,7 @@ import Foundation
 /// try await repository.save(restaurant)
 /// let all = try await repository.fetchAll()
 /// ```
-public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repository {
+public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: InMemoryStorage<T>

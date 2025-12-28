@@ -17,7 +17,7 @@ import Foundation
 /// )
 /// try await repository.save(credentials)
 /// ```
-public actor KeychainRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: LosslessStringConvertible {
+public actor KeychainRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: KeychainStorage<T>

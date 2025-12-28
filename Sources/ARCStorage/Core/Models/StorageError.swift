@@ -13,9 +13,9 @@ import Foundation
 /// - ``deleteFailed(underlying:)``
 /// - ``invalidData``
 /// - ``transactionFailed(underlying:)``
-public enum StorageError: Error, Sendable {
+public enum StorageError: Error, @unchecked Sendable {
     /// Entity with the specified ID was not found.
-    case notFound(id: Any)
+    case notFound(id: String)
 
     /// Save operation failed.
     case saveFailed(underlying: Error)
@@ -31,6 +31,14 @@ public enum StorageError: Error, Sendable {
 
     /// Transaction failed and was rolled back.
     case transactionFailed(underlying: Error)
+
+    /// Creates a notFound error from any ID type.
+    ///
+    /// - Parameter id: The ID that was not found
+    /// - Returns: A StorageError.notFound with string representation of the ID
+    public static func entityNotFound<ID>(id: ID) -> StorageError {
+        .notFound(id: String(describing: id))
+    }
 }
 
 extension StorageError: LocalizedError {

@@ -20,7 +20,7 @@ import Foundation
 /// let storage = UserDefaultsStorage<Settings>()
 /// try await storage.save(settings)
 /// ```
-public actor UserDefaultsStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible {
+public actor UserDefaultsStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let userDefaults: UserDefaults
@@ -104,7 +104,7 @@ public actor UserDefaultsStorage<T: Codable & Sendable & Identifiable>: StorageP
         let key = makeKey(for: id)
 
         guard userDefaults.object(forKey: key) != nil else {
-            throw StorageError.notFound(id: id)
+            throw StorageError.entityNotFound(id: id)
         }
 
         userDefaults.removeObject(forKey: key)

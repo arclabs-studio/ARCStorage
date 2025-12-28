@@ -8,7 +8,7 @@ import Foundation
 ///
 /// ## Topics
 /// ### Creating Configuration
-/// - ``init(schema:isCloudKitEnabled:isAutosaveEnabled:allowsSave:)``
+/// - ``init(schema:isCloudKitEnabled:allowsSave:)``
 /// - ``makeContainer()``
 ///
 /// ## Example
@@ -26,9 +26,6 @@ public struct SwiftDataConfiguration: Sendable {
     /// Whether CloudKit sync is enabled.
     public let isCloudKitEnabled: Bool
 
-    /// Whether autosave is enabled.
-    public let isAutosaveEnabled: Bool
-
     /// Whether manual saves are allowed.
     public let allowsSave: Bool
 
@@ -40,20 +37,16 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Parameters:
     ///   - schema: The schema containing model definitions
     ///   - isCloudKitEnabled: Enable CloudKit synchronization
-    ///   - isAutosaveEnabled: Enable automatic saves
     ///   - allowsSave: Allow manual save operations
     public init(
         schema: Schema,
         isCloudKitEnabled: Bool = false,
-        isAutosaveEnabled: Bool = true,
         allowsSave: Bool = true
     ) {
         self.schema = schema
         self.isCloudKitEnabled = isCloudKitEnabled
-        self.isAutosaveEnabled = isAutosaveEnabled
         self.allowsSave = allowsSave
         self.modelConfiguration = ModelConfiguration(
-            isAutosaveEnabled: isAutosaveEnabled,
             allowsSave: allowsSave,
             cloudKitDatabase: isCloudKitEnabled ? .automatic : .none
         )

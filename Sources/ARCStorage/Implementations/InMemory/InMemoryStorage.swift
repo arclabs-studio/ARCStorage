@@ -15,7 +15,7 @@ import Foundation
 /// let restaurant = Restaurant(id: UUID(), name: "Test")
 /// try await storage.save(restaurant)
 /// ```
-public actor InMemoryStorage<T: Codable & Sendable & Identifiable>: StorageProvider {
+public actor InMemoryStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     private var entities: [T.ID: T] = [:]
@@ -50,7 +50,7 @@ public actor InMemoryStorage<T: Codable & Sendable & Identifiable>: StorageProvi
 
     public func delete(id: T.ID) async throws {
         guard entities[id] != nil else {
-            throw StorageError.notFound(id: id)
+            throw StorageError.entityNotFound(id: id)
         }
         entities.removeValue(forKey: id)
     }
