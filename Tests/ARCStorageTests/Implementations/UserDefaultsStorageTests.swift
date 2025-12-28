@@ -1,62 +1,83 @@
-import XCTest
+import Foundation
+import Testing
 @testable import ARCStorage
 
-final class UserDefaultsStorageTests: XCTestCase {
-    var storage: UserDefaultsStorage<SimpleTestModel>!
-    var userDefaults: UserDefaults!
+@Suite("UserDefaultsStorage Tests")
+struct UserDefaultsStorageTests {
 
-    override func setUp() async throws {
-        userDefaults = UserDefaults(suiteName: "test.\(UUID().uuidString)")
-        storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: userDefaults!,
+    private func makeStorage() -> (storage: UserDefaultsStorage<SimpleTestModel>, cleanup: () -> Void) {
+        let suiteName = "test.\(UUID().uuidString)"
+        let userDefaults = UserDefaults(suiteName: suiteName)!
+        let storage = UserDefaultsStorage<SimpleTestModel>(
+            userDefaults: userDefaults,
             keyPrefix: "test"
         )
+        let cleanup = {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+        return (storage, cleanup)
     }
 
-    override func tearDown() async throws {
-        userDefaults?.removePersistentDomain(forName: userDefaults.persistentDomainNames().first ?? "")
-    }
+    @Test("Save and fetch works correctly")
+    func saveAndFetch_worksCorrectly() async throws {
+        let (storage, cleanup) = makeStorage()
+        defer { cleanup() }
 
-    func testSaveAndFetch() async throws {
         let model = SimpleTestModel.fixture1
 
         try await storage.save(model)
         let fetched = try await storage.fetch(id: model.id)
 
-        XCTAssertEqual(fetched?.id, model.id)
-        XCTAssertEqual(fetched?.data, model.data)
+        #expect(fetched?.id == model.id)
+        #expect(fetched?.data == model.data)
     }
 
-    func testFetchAll() async throws {
+    @Test("Fetch all returns all saved entities")
+    func fetchAll_returnsAllSavedEntities() async throws {
+        let (storage, cleanup) = makeStorage()
+        defer { cleanup() }
+
         try await storage.save(SimpleTestModel.fixture1)
         try await storage.save(SimpleTestModel.fixture2)
 
         let fetched = try await storage.fetchAll()
 
-        XCTAssertEqual(fetched.count, 2)
+        #expect(fetched.count == 2)
     }
 
-    func testDelete() async throws {
+    @Test("Delete removes entity")
+    func delete_removesEntity() async throws {
+        let (storage, cleanup) = makeStorage()
+        defer { cleanup() }
+
         let model = SimpleTestModel.fixture1
 
         try await storage.save(model)
         try await storage.delete(id: model.id)
 
         let fetched = try await storage.fetch(id: model.id)
-        XCTAssertNil(fetched)
+        #expect(fetched == nil)
     }
 
-    func testDeleteAll() async throws {
+    @Test("Delete all clears storage")
+    func deleteAll_clearsStorage() async throws {
+        let (storage, cleanup) = makeStorage()
+        defer { cleanup() }
+
         try await storage.save(SimpleTestModel.fixture1)
         try await storage.save(SimpleTestModel.fixture2)
 
         try await storage.deleteAll()
 
         let fetched = try await storage.fetchAll()
-        XCTAssertTrue(fetched.isEmpty)
+        #expect(fetched.isEmpty)
     }
 
-    func testUpdate() async throws {
+    @Test("Update replaces existing entity")
+    func update_replacesExistingEntity() async throws {
+        let (storage, cleanup) = makeStorage()
+        defer { cleanup() }
+
         var model = SimpleTestModel.fixture1
 
         try await storage.save(model)
@@ -65,6 +86,6 @@ final class UserDefaultsStorageTests: XCTestCase {
         try await storage.save(model)
 
         let fetched = try await storage.fetch(id: model.id)
-        XCTAssertEqual(fetched?.data, "Updated Data")
+        #expect(fetched?.data == "Updated Data")
     }
 }

@@ -1,14 +1,12 @@
-import XCTest
+import Testing
 @testable import ARCStorage
 
-final class RepositoryIntegrationTests: XCTestCase {
-    var repository: InMemoryRepository<TestModel>!
+@Suite("Repository Integration Tests")
+struct RepositoryIntegrationTests {
 
-    override func setUp() async throws {
-        repository = InMemoryRepository<TestModel>(cachePolicy: .default)
-    }
-
-    func testFullCRUDFlow() async throws {
+    @Test("Full CRUD flow completes successfully")
+    func fullCRUDFlow_completesSuccessfully() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
         // Create
@@ -16,8 +14,8 @@ final class RepositoryIntegrationTests: XCTestCase {
 
         // Read
         let fetched = try await repository.fetch(id: model.id)
-        XCTAssertNotNil(fetched)
-        XCTAssertEqual(fetched?.id, model.id)
+        #expect(fetched != nil)
+        #expect(fetched?.id == model.id)
 
         // Update
         var updated = model
@@ -25,30 +23,34 @@ final class RepositoryIntegrationTests: XCTestCase {
         try await repository.save(updated)
 
         let fetchedAgain = try await repository.fetch(id: model.id)
-        XCTAssertEqual(fetchedAgain?.name, "Updated Name")
+        #expect(fetchedAgain?.name == "Updated Name")
 
         // Delete
         try await repository.delete(id: model.id)
 
         let fetchedAfterDelete = try await repository.fetch(id: model.id)
-        XCTAssertNil(fetchedAfterDelete)
+        #expect(fetchedAfterDelete == nil)
     }
 
-    func testCacheIntegration() async throws {
+    @Test("Cache integration populates on fetch")
+    func cacheIntegration_populatesOnFetch() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
         // Save and fetch (populates cache)
         try await repository.save(model)
         let fetched1 = try await repository.fetch(id: model.id)
-        XCTAssertNotNil(fetched1)
+        #expect(fetched1 != nil)
 
         // Fetch again (should hit cache)
         let fetched2 = try await repository.fetch(id: model.id)
-        XCTAssertNotNil(fetched2)
-        XCTAssertEqual(fetched1?.id, fetched2?.id)
+        #expect(fetched2 != nil)
+        #expect(fetched1?.id == fetched2?.id)
     }
 
-    func testCacheInvalidation() async throws {
+    @Test("Cache invalidation clears cache")
+    func cacheInvalidation_clearsCache() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
         try await repository.save(model)
@@ -58,10 +60,12 @@ final class RepositoryIntegrationTests: XCTestCase {
 
         // Should fetch from storage, not cache
         let fetched = try await repository.fetch(id: model.id)
-        XCTAssertNotNil(fetched)
+        #expect(fetched != nil)
     }
 
-    func testBatchOperations() async throws {
+    @Test("Batch operations work correctly")
+    func batchOperations_workCorrectly() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let models = TestModel.allFixtures
 
         // Save all
@@ -71,7 +75,7 @@ final class RepositoryIntegrationTests: XCTestCase {
 
         // Fetch all
         let fetched = try await repository.fetchAll()
-        XCTAssertEqual(fetched.count, models.count)
+        #expect(fetched.count == models.count)
 
         // Delete all
         for model in models {
@@ -79,38 +83,33 @@ final class RepositoryIntegrationTests: XCTestCase {
         }
 
         let fetchedAfterDelete = try await repository.fetchAll()
-        XCTAssertTrue(fetchedAfterDelete.isEmpty)
+        #expect(fetchedAfterDelete.isEmpty)
     }
 
-    func testConcurrentOperations() async throws {
+    @Test("Concurrent operations are thread-safe")
+    func concurrentOperations_areThreadSafe() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let iterations = 50
 
         await withTaskGroup(of: Void.self) { group in
             for i in 0..<iterations {
                 group.addTask {
                     let model = TestModel(id: UUID(), name: "Test \(i)", value: i)
-                    try? await self.repository.save(model)
+                    try? await repository.save(model)
                 }
             }
         }
 
         let fetched = try await repository.fetchAll()
-        XCTAssertEqual(fetched.count, iterations)
+        #expect(fetched.count == iterations)
     }
 
-    func testErrorHandling() async {
-        // Try to delete non-existent entity
-        do {
+    @Test("Delete non-existent entity throws notFound error")
+    func deleteNonExistent_throwsNotFoundError() async throws {
+        let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
+
+        await #expect(throws: StorageError.self) {
             try await repository.delete(id: UUID())
-            XCTFail("Should have thrown error")
-        } catch let error as StorageError {
-            if case .notFound = error {
-                // Success
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Wrong error type")
         }
     }
 }

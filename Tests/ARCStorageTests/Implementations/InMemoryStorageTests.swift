@@ -1,79 +1,80 @@
-import XCTest
+import Testing
 @testable import ARCStorage
 
-final class InMemoryStorageTests: XCTestCase {
-    var storage: InMemoryStorage<TestModel>!
+@Suite("InMemoryStorage Tests")
+struct InMemoryStorageTests {
 
-    override func setUp() async throws {
-        storage = InMemoryStorage<TestModel>()
-    }
-
-    func testSaveAndFetch() async throws {
+    @Test("Save and fetch works correctly")
+    func saveAndFetch_worksCorrectly() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let model = TestModel.fixture1
 
         try await storage.save(model)
         let fetched = try await storage.fetch(id: model.id)
 
-        XCTAssertEqual(fetched?.id, model.id)
-        XCTAssertEqual(fetched?.name, model.name)
-        XCTAssertEqual(fetched?.value, model.value)
+        #expect(fetched?.id == model.id)
+        #expect(fetched?.name == model.name)
+        #expect(fetched?.value == model.value)
     }
 
-    func testFetchAll() async throws {
+    @Test("Fetch all returns all saved entities")
+    func fetchAll_returnsAllSavedEntities() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let models = TestModel.allFixtures
 
         try await storage.saveAll(models)
         let fetched = try await storage.fetchAll()
 
-        XCTAssertEqual(fetched.count, 3)
+        #expect(fetched.count == 3)
     }
 
-    func testDelete() async throws {
+    @Test("Delete removes entity")
+    func delete_removesEntity() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let model = TestModel.fixture1
 
         try await storage.save(model)
         try await storage.delete(id: model.id)
 
         let fetched = try await storage.fetch(id: model.id)
-        XCTAssertNil(fetched)
+        #expect(fetched == nil)
     }
 
-    func testDeleteNonExistent() async {
+    @Test("Delete non-existent throws notFound error")
+    func deleteNonExistent_throwsNotFoundError() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let nonExistentID = UUID()
 
-        do {
+        await #expect(throws: StorageError.self) {
             try await storage.delete(id: nonExistentID)
-            XCTFail("Should have thrown notFound error")
-        } catch let error as StorageError {
-            if case .notFound = error {
-                // Success
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Wrong error type")
         }
     }
 
-    func testDeleteAll() async throws {
+    @Test("Delete all clears storage")
+    func deleteAll_clearsStorage() async throws {
+        let storage = InMemoryStorage<TestModel>()
         try await storage.saveAll(TestModel.allFixtures)
 
         try await storage.deleteAll()
 
         let fetched = try await storage.fetchAll()
-        XCTAssertTrue(fetched.isEmpty)
+        #expect(fetched.isEmpty)
     }
 
-    func testFetchWithPredicate() async throws {
+    @Test("Fetch with predicate filters correctly")
+    func fetchWithPredicate_filtersCorrectly() async throws {
+        let storage = InMemoryStorage<TestModel>()
         try await storage.saveAll(TestModel.allFixtures)
 
         let predicate = #Predicate<TestModel> { $0.value > 150 }
         let fetched = try await storage.fetch(matching: predicate)
 
-        XCTAssertEqual(fetched.count, 2) // fixture2 and fixture3
+        #expect(fetched.count == 2) // fixture2 and fixture3
     }
 
-    func testTransaction() async throws {
+    @Test("Transaction commits changes")
+    func transaction_commitsChanges() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let model1 = TestModel.fixture1
         let model2 = TestModel.fixture2
 
@@ -83,10 +84,12 @@ final class InMemoryStorageTests: XCTestCase {
         }
 
         let fetched = try await storage.fetchAll()
-        XCTAssertEqual(fetched.count, 2)
+        #expect(fetched.count == 2)
     }
 
-    func testTransactionRollback() async {
+    @Test("Transaction rollback on error")
+    func transactionRollback_onError() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let model1 = TestModel.fixture1
 
         do {
@@ -94,29 +97,30 @@ final class InMemoryStorageTests: XCTestCase {
                 try await storage.save(model1)
                 throw NSError(domain: "test", code: 1)
             }
-            XCTFail("Should have thrown error")
         } catch {
             // Expected
         }
 
         // Changes should be rolled back
-        let fetched = try? await storage.fetchAll()
-        XCTAssertEqual(fetched?.count, 0)
+        let fetched = try await storage.fetchAll()
+        #expect(fetched.count == 0)
     }
 
-    func testConcurrentAccess() async throws {
+    @Test("Concurrent access is thread-safe")
+    func concurrentAccess_isThreadSafe() async throws {
+        let storage = InMemoryStorage<TestModel>()
         let iterations = 100
 
         await withTaskGroup(of: Void.self) { group in
             for i in 0..<iterations {
                 group.addTask {
                     let model = TestModel(id: UUID(), name: "Test \(i)", value: i)
-                    try? await self.storage.save(model)
+                    try? await storage.save(model)
                 }
             }
         }
 
         let fetched = try await storage.fetchAll()
-        XCTAssertEqual(fetched.count, iterations)
+        #expect(fetched.count == iterations)
     }
 }

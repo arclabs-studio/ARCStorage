@@ -1,8 +1,11 @@
-import XCTest
+import Testing
 @testable import ARCStorage
 
-final class LRUCacheTests: XCTestCase {
-    func testBasicSetAndGet() async {
+@Suite("LRUCache Tests")
+struct LRUCacheTests {
+
+    @Test("Basic set and get works correctly")
+    func basicSetAndGet_worksCorrectly() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")
@@ -13,12 +16,13 @@ final class LRUCacheTests: XCTestCase {
         let value2 = await cache.get("two")
         let value3 = await cache.get("three")
 
-        XCTAssertEqual(value1, 1)
-        XCTAssertEqual(value2, 2)
-        XCTAssertEqual(value3, 3)
+        #expect(value1 == 1)
+        #expect(value2 == 2)
+        #expect(value3 == 3)
     }
 
-    func testCapacityEviction() async {
+    @Test("Capacity eviction removes oldest entry")
+    func capacityEviction_removesOldestEntry() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
@@ -29,12 +33,13 @@ final class LRUCacheTests: XCTestCase {
         let value2 = await cache.get("two")
         let value3 = await cache.get("three")
 
-        XCTAssertNil(value1)
-        XCTAssertEqual(value2, 2)
-        XCTAssertEqual(value3, 3)
+        #expect(value1 == nil)
+        #expect(value2 == 2)
+        #expect(value3 == 3)
     }
 
-    func testLRUOrdering() async {
+    @Test("LRU ordering preserves recently accessed")
+    func lruOrdering_preservesRecentlyAccessed() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
@@ -50,22 +55,24 @@ final class LRUCacheTests: XCTestCase {
         let value2 = await cache.get("two")
         let value3 = await cache.get("three")
 
-        XCTAssertEqual(value1, 1)
-        XCTAssertNil(value2)
-        XCTAssertEqual(value3, 3)
+        #expect(value1 == 1)
+        #expect(value2 == nil)
+        #expect(value3 == 3)
     }
 
-    func testUpdate() async {
+    @Test("Update replaces existing value")
+    func update_replacesExistingValue() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
         await cache.set(2, for: "one") // Update
 
         let value = await cache.get("one")
-        XCTAssertEqual(value, 2)
+        #expect(value == 2)
     }
 
-    func testRemove() async {
+    @Test("Remove deletes specific entry")
+    func remove_deletesSpecificEntry() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")
@@ -76,11 +83,12 @@ final class LRUCacheTests: XCTestCase {
         let value1 = await cache.get("one")
         let value2 = await cache.get("two")
 
-        XCTAssertNil(value1)
-        XCTAssertEqual(value2, 2)
+        #expect(value1 == nil)
+        #expect(value2 == 2)
     }
 
-    func testClear() async {
+    @Test("Clear removes all entries")
+    func clear_removesAllEntries() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")
@@ -92,8 +100,8 @@ final class LRUCacheTests: XCTestCase {
         let value2 = await cache.get("two")
         let count = await cache.count
 
-        XCTAssertNil(value1)
-        XCTAssertNil(value2)
-        XCTAssertEqual(count, 0)
+        #expect(value1 == nil)
+        #expect(value2 == nil)
+        #expect(count == 0)
     }
 }
