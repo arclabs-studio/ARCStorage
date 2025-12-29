@@ -113,9 +113,9 @@ struct InMemoryStorageTests {
         let iterations = 100
 
         await withTaskGroup(of: Void.self) { group in
-            for i in 0 ..< iterations {
+            for index in 0 ..< iterations {
                 group.addTask {
-                    let model = TestModel(id: UUID(), name: "Test \(i)", value: i)
+                    let model = TestModel(id: UUID(), name: "Test \(index)", value: index)
                     try? await storage.save(model)
                 }
             }

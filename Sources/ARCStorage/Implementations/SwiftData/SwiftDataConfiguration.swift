@@ -1,5 +1,5 @@
 import Foundation
-import SwiftData
+@preconcurrency import SwiftData
 
 /// Configuration for SwiftData-based storage.
 ///

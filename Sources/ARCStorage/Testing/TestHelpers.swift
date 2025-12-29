@@ -28,29 +28,25 @@ public struct TestModel: Codable, Identifiable, Sendable {
 }
 
 extension TestModel {
+    // MARK: Fixture UUIDs
+
+    // swiftlint:disable force_unwrapping
+    private static let fixtureID1 = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+    private static let fixtureID2 = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+    private static let fixtureID3 = UUID(uuidString: "00000000-0000-0000-0000-000000000003")!
+    // swiftlint:enable force_unwrapping
+
     /// Predefined test fixtures.
     public static var fixture1: TestModel {
-        TestModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-            name: "Test 1",
-            value: 100
-        )
+        TestModel(id: fixtureID1, name: "Test 1", value: 100)
     }
 
     public static var fixture2: TestModel {
-        TestModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-            name: "Test 2",
-            value: 200
-        )
+        TestModel(id: fixtureID2, name: "Test 2", value: 200)
     }
 
     public static var fixture3: TestModel {
-        TestModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-            name: "Test 3",
-            value: 300
-        )
+        TestModel(id: fixtureID3, name: "Test 3", value: 300)
     }
 
     public static var allFixtures: [TestModel] {
