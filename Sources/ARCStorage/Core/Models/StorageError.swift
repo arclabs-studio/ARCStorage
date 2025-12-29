@@ -45,17 +45,17 @@ extension StorageError: LocalizedError {
     /// User-friendly error descriptions.
     public var errorDescription: String? {
         switch self {
-        case .notFound(let id):
+        case let .notFound(id):
             return "Entity with ID '\(id)' was not found"
-        case .saveFailed(let error):
+        case let .saveFailed(error):
             return "Failed to save entity: \(error.localizedDescription)"
-        case .fetchFailed(let error):
+        case let .fetchFailed(error):
             return "Failed to fetch entities: \(error.localizedDescription)"
-        case .deleteFailed(let error):
+        case let .deleteFailed(error):
             return "Failed to delete entity: \(error.localizedDescription)"
         case .invalidData:
             return "Data is invalid or corrupted"
-        case .transactionFailed(let error):
+        case let .transactionFailed(error):
             return "Transaction failed: \(error.localizedDescription)"
         }
     }

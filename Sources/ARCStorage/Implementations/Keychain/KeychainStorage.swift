@@ -1,5 +1,5 @@
-import Security
 import Foundation
+import Security
 
 /// Secure storage implementation using the iOS Keychain.
 ///
@@ -21,7 +21,8 @@ import Foundation
 /// let storage = KeychainStorage<AuthToken>(service: "com.myapp.auth")
 /// try await storage.save(authToken)
 /// ```
-public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible & Sendable & Hashable {
+public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvider
+where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let service: String
@@ -179,7 +180,7 @@ public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvi
         let status = SecItemDelete(query as CFDictionary)
 
         // It's okay if nothing was found
-        if status != errSecSuccess && status != errSecItemNotFound {
+        if status != errSecSuccess, status != errSecItemNotFound {
             throw StorageError.deleteFailed(underlying: makeKeychainError(status))
         }
     }

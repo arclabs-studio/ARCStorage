@@ -20,8 +20,8 @@ public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repositor
     ///
     /// - Parameter cachePolicy: The caching policy to use
     public init(cachePolicy: CachePolicy = .default) {
-        self.storage = InMemoryStorage<T>()
-        self.cache = CacheManager(policy: cachePolicy)
+        storage = InMemoryStorage<T>()
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

@@ -16,7 +16,8 @@ import Foundation
 /// let repository = UserDefaultsRepository<AppSettings>()
 /// try await repository.save(settings)
 /// ```
-public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: LosslessStringConvertible & Sendable & Hashable {
+public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repository
+where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: UserDefaultsStorage<T>
@@ -31,11 +32,11 @@ public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repos
         keyPrefix: String = "ARCStorage",
         cachePolicy: CachePolicy = .default
     ) {
-        self.storage = UserDefaultsStorage<T>(
+        storage = UserDefaultsStorage<T>(
             userDefaults: .standard,
             keyPrefix: keyPrefix
         )
-        self.cache = CacheManager(policy: cachePolicy)
+        cache = CacheManager(policy: cachePolicy)
     }
 
     /// Creates a new UserDefaults repository with a custom storage.
@@ -48,7 +49,7 @@ public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repos
         cachePolicy: CachePolicy = .default
     ) {
         self.storage = storage
-        self.cache = CacheManager(policy: cachePolicy)
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

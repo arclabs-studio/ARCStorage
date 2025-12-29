@@ -4,7 +4,6 @@ import Testing
 
 @Suite("MockRepository Tests")
 struct MockRepositoryTests {
-
     @Test("Save tracking records call")
     func saveTracking_recordsCall() async throws {
         let repository = MockRepository<TestModel>()

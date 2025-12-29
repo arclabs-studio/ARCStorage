@@ -6,7 +6,7 @@ extension Identifiable where Self: Sendable {
     /// - Parameter other: Another identifiable entity
     /// - Returns: `true` if IDs match, `false` otherwise
     public func isSameEntity(as other: Self) -> Bool where ID: Equatable {
-        self.id == other.id
+        id == other.id
     }
 }
 

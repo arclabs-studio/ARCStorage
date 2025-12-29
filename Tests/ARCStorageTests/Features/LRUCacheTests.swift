@@ -3,7 +3,6 @@ import Testing
 
 @Suite("LRUCache Tests")
 struct LRUCacheTests {
-
     @Test("Basic set and get works correctly")
     func basicSetAndGet_worksCorrectly() async {
         let cache = LRUCache<String, Int>(capacity: 3)
@@ -102,6 +101,6 @@ struct LRUCacheTests {
 
         #expect(value1 == nil)
         #expect(value2 == nil)
-        #expect(count == 0)
+        #expect(count == .zero)
     }
 }

@@ -15,7 +15,7 @@ let package = Package(
         .library(
             name: "ARCStorage",
             targets: ["ARCStorage"]
-        ),
+        )
     ],
     targets: [
         .target(

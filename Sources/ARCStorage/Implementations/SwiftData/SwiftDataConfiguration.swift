@@ -1,5 +1,5 @@
-import SwiftData
 import Foundation
+import SwiftData
 
 /// Configuration for SwiftData-based storage.
 ///
@@ -46,7 +46,7 @@ public struct SwiftDataConfiguration: Sendable {
         self.schema = schema
         self.isCloudKitEnabled = isCloudKitEnabled
         self.allowsSave = allowsSave
-        self.modelConfiguration = ModelConfiguration(
+        modelConfiguration = ModelConfiguration(
             allowsSave: allowsSave,
             cloudKitDatabase: isCloudKitEnabled ? .automatic : .none
         )

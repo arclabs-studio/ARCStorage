@@ -17,7 +17,8 @@ import Foundation
 /// )
 /// try await repository.save(credentials)
 /// ```
-public actor KeychainRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: LosslessStringConvertible & Sendable & Hashable {
+public actor KeychainRepository<T: Codable & Sendable & Identifiable>: Repository
+where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: KeychainStorage<T>
@@ -34,11 +35,11 @@ public actor KeychainRepository<T: Codable & Sendable & Identifiable>: Repositor
         accessGroup: String? = nil,
         cachePolicy: CachePolicy = .default
     ) {
-        self.storage = KeychainStorage<T>(
+        storage = KeychainStorage<T>(
             service: service,
             accessGroup: accessGroup
         )
-        self.cache = CacheManager(policy: cachePolicy)
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

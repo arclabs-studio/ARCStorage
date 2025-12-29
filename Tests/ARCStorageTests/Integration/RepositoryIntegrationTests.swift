@@ -4,7 +4,6 @@ import Testing
 
 @Suite("Repository Integration Tests")
 struct RepositoryIntegrationTests {
-
     @Test("Full CRUD flow completes successfully")
     func fullCRUDFlow_completesSuccessfully() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
@@ -93,7 +92,7 @@ struct RepositoryIntegrationTests {
         let iterations = 50
 
         await withTaskGroup(of: Void.self) { group in
-            for i in 0..<iterations {
+            for i in 0 ..< iterations {
                 group.addTask {
                     let model = TestModel(id: UUID(), name: "Test \(i)", value: i)
                     try? await repository.save(model)

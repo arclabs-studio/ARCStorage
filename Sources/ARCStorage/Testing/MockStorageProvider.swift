@@ -19,7 +19,8 @@ import Foundation
 ///     // Success
 /// }
 /// ```
-public actor MockStorageProvider<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: Sendable & Hashable {
+public actor MockStorageProvider<T: Codable & Sendable & Identifiable>: StorageProvider
+where T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     /// Entities to return from fetch operations.

@@ -1,5 +1,5 @@
-import SwiftData
 import Foundation
+import SwiftData
 
 /// SwiftData-backed storage implementation.
 ///
@@ -22,7 +22,8 @@ import Foundation
 /// let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
 /// ```
 @ModelActor
-public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Identifiable & Codable & Sendable, T.ID: Sendable & Hashable {
+public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Identifiable & Codable & Sendable,
+T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     public func save(_ entity: T) async throws {

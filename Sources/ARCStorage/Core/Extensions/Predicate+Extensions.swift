@@ -14,7 +14,7 @@ extension Array where Element: Sendable {
     /// - Parameter predicate: The predicate to apply
     /// - Returns: Filtered array
     public func filter(using predicate: Predicate<Element>) throws -> [Element] {
-        try self.filter { element in
+        try filter { element in
             try predicate.evaluate(element)
         }
     }

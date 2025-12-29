@@ -162,7 +162,7 @@ import SwiftData
 /// - <doc:SwiftDataIntegration>
 /// - <doc:RepositoryPattern>
 /// - <doc:Testing>
-public struct ARCStorage {
+public enum ARCStorage {
     /// Current version of ARCStorage.
     public static let version = "1.0.0"
 

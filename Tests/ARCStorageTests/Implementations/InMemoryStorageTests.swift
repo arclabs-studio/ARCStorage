@@ -4,7 +4,6 @@ import Testing
 
 @Suite("InMemoryStorage Tests")
 struct InMemoryStorageTests {
-
     @Test("Save and fetch works correctly")
     func saveAndFetch_worksCorrectly() async throws {
         let storage = InMemoryStorage<TestModel>()
@@ -105,7 +104,7 @@ struct InMemoryStorageTests {
 
         // Changes should be rolled back
         let fetched = try await storage.fetchAll()
-        #expect(fetched.count == 0)
+        #expect(fetched.isEmpty)
     }
 
     @Test("Concurrent access is thread-safe")
@@ -114,7 +113,7 @@ struct InMemoryStorageTests {
         let iterations = 100
 
         await withTaskGroup(of: Void.self) { group in
-            for i in 0..<iterations {
+            for i in 0 ..< iterations {
                 group.addTask {
                     let model = TestModel(id: UUID(), name: "Test \(i)", value: i)
                     try? await storage.save(model)

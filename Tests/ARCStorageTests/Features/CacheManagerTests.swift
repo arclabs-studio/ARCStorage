@@ -3,7 +3,6 @@ import Testing
 
 @Suite("CacheManager Tests")
 struct CacheManagerTests {
-
     @Test("Set and get works correctly")
     func setAndGet_worksCorrectly() async {
         let cache = CacheManager<String, Int>(policy: .default)

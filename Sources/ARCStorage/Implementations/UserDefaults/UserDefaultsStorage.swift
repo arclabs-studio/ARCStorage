@@ -20,7 +20,8 @@ import Foundation
 /// let storage = UserDefaultsStorage<Settings>()
 /// try await storage.save(settings)
 /// ```
-public actor UserDefaultsStorage<T: Codable & Sendable & Identifiable>: StorageProvider where T.ID: LosslessStringConvertible & Sendable & Hashable {
+public actor UserDefaultsStorage<T: Codable & Sendable & Identifiable>: StorageProvider
+where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let userDefaults: UserDefaults
