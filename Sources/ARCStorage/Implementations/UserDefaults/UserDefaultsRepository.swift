@@ -16,28 +16,40 @@ import Foundation
 /// let repository = UserDefaultsRepository<AppSettings>()
 /// try await repository.save(settings)
 /// ```
-public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: LosslessStringConvertible {
+public actor UserDefaultsRepository<T: Codable & Sendable & Identifiable>: Repository
+where T.ID: LosslessStringConvertible & Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: UserDefaultsStorage<T>
     private let cache: CacheManager<T.ID, T>
 
-    /// Creates a new UserDefaults repository.
+    /// Creates a new UserDefaults repository using standard UserDefaults.
     ///
     /// - Parameters:
-    ///   - userDefaults: The UserDefaults instance to use
     ///   - keyPrefix: Prefix for storage keys
     ///   - cachePolicy: The caching policy
     public init(
-        userDefaults: UserDefaults = .standard,
         keyPrefix: String = "ARCStorage",
         cachePolicy: CachePolicy = .default
     ) {
-        self.storage = UserDefaultsStorage<T>(
-            userDefaults: userDefaults,
+        storage = UserDefaultsStorage<T>(
+            userDefaults: .standard,
             keyPrefix: keyPrefix
         )
-        self.cache = CacheManager(policy: cachePolicy)
+        cache = CacheManager(policy: cachePolicy)
+    }
+
+    /// Creates a new UserDefaults repository with a custom storage.
+    ///
+    /// - Parameters:
+    ///   - storage: Pre-configured UserDefaults storage
+    ///   - cachePolicy: The caching policy
+    public init(
+        storage: UserDefaultsStorage<T>,
+        cachePolicy: CachePolicy = .default
+    ) {
+        self.storage = storage
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

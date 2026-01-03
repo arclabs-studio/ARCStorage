@@ -1,5 +1,5 @@
-import SwiftData
 import Foundation
+import SwiftData
 
 /// SwiftData-backed storage implementation.
 ///
@@ -22,17 +22,9 @@ import Foundation
 /// let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
 /// ```
 @ModelActor
-public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Identifiable & Codable & Sendable {
+public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Identifiable & Codable & Sendable,
+T.ID: Sendable & Hashable {
     public typealias Entity = T
-
-    /// Creates a new SwiftData storage.
-    ///
-    /// - Parameter modelContainer: The SwiftData model container
-    public init(modelContainer: ModelContainer) {
-        let context = ModelContext(modelContainer)
-        self.modelExecutor = DefaultSerialExecutor()
-        self.modelContainer = modelContainer
-    }
 
     public func save(_ entity: T) async throws {
         modelContext.insert(entity)
@@ -47,12 +39,10 @@ public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Ide
     }
 
     public func fetch(id: T.ID) async throws -> T? {
-        let descriptor = FetchDescriptor<T>(
-            predicate: #Predicate { entity in
-                entity.id == id
-            }
-        )
-        return try modelContext.fetch(descriptor).first
+        // Fetch all and filter by ID to avoid #Predicate issues with generics
+        let descriptor = FetchDescriptor<T>()
+        let entities = try modelContext.fetch(descriptor)
+        return entities.first { $0.id == id }
     }
 
     public func fetchAll() async throws -> [T] {
@@ -67,7 +57,7 @@ public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Ide
 
     public func delete(id: T.ID) async throws {
         guard let entity = try await fetch(id: id) else {
-            throw StorageError.notFound(id: id)
+            throw StorageError.entityNotFound(id: id)
         }
         modelContext.delete(entity)
         try saveContext()

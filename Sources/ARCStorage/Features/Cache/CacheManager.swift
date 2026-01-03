@@ -70,7 +70,7 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         guard policy.maxSize > 0 else { return }
 
         // Evict if needed
-        if cache.count >= policy.maxSize && cache[key] == nil {
+        if cache.count >= policy.maxSize, cache[key] == nil {
             evictEntries(count: 1)
         }
 

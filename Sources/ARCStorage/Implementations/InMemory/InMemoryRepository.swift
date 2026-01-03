@@ -10,7 +10,7 @@ import Foundation
 /// try await repository.save(restaurant)
 /// let all = try await repository.fetchAll()
 /// ```
-public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repository {
+public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: InMemoryStorage<T>
@@ -20,8 +20,8 @@ public actor InMemoryRepository<T: Codable & Sendable & Identifiable>: Repositor
     ///
     /// - Parameter cachePolicy: The caching policy to use
     public init(cachePolicy: CachePolicy = .default) {
-        self.storage = InMemoryStorage<T>()
-        self.cache = CacheManager(policy: cachePolicy)
+        storage = InMemoryStorage<T>()
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

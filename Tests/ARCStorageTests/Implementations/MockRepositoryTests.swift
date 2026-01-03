@@ -1,14 +1,12 @@
-import XCTest
+import Foundation
+import Testing
 @testable import ARCStorage
 
-final class MockRepositoryTests: XCTestCase {
-    var repository: MockRepository<TestModel>!
-
-    override func setUp() async throws {
-        repository = MockRepository<TestModel>()
-    }
-
-    func testSaveTracking() async throws {
+@Suite("MockRepository Tests")
+struct MockRepositoryTests {
+    @Test("Save tracking records call")
+    func saveTracking_recordsCall() async throws {
+        let repository = MockRepository<TestModel>()
         let model = TestModel.fixture1
 
         try await repository.save(model)
@@ -16,33 +14,39 @@ final class MockRepositoryTests: XCTestCase {
         let callCount = await repository.saveCallCount
         let lastSaved = await repository.lastSavedEntity
 
-        XCTAssertEqual(callCount, 1)
-        XCTAssertEqual(lastSaved?.id, model.id)
+        #expect(callCount == 1)
+        #expect(lastSaved?.id == model.id)
     }
 
-    func testFetchAllTracking() async throws {
+    @Test("Fetch all tracking records call")
+    func fetchAllTracking_recordsCall() async throws {
+        let repository = MockRepository<TestModel>()
         await repository.setMockEntities(TestModel.allFixtures)
 
         let fetched = try await repository.fetchAll()
         let callCount = await repository.fetchAllCallCount
 
-        XCTAssertEqual(callCount, 1)
-        XCTAssertEqual(fetched.count, 3)
+        #expect(callCount == 1)
+        #expect(fetched.count == 3)
     }
 
-    func testFetchTracking() async throws {
+    @Test("Fetch tracking records call and ID")
+    func fetchTracking_recordsCallAndID() async throws {
+        let repository = MockRepository<TestModel>()
         await repository.setMockEntities([TestModel.fixture1])
 
         let model = try await repository.fetch(id: TestModel.fixture1.id)
         let callCount = await repository.fetchCallCount
         let lastID = await repository.lastAccessedID
 
-        XCTAssertEqual(callCount, 1)
-        XCTAssertEqual(lastID, TestModel.fixture1.id)
-        XCTAssertNotNil(model)
+        #expect(callCount == 1)
+        #expect(lastID == TestModel.fixture1.id)
+        #expect(model != nil)
     }
 
-    func testDeleteTracking() async throws {
+    @Test("Delete tracking records call and ID")
+    func deleteTracking_recordsCallAndID() async throws {
+        let repository = MockRepository<TestModel>()
         await repository.setMockEntities([TestModel.fixture1])
 
         try await repository.delete(id: TestModel.fixture1.id)
@@ -50,28 +54,23 @@ final class MockRepositoryTests: XCTestCase {
         let callCount = await repository.deleteCallCount
         let lastID = await repository.lastAccessedID
 
-        XCTAssertEqual(callCount, 1)
-        XCTAssertEqual(lastID, TestModel.fixture1.id)
+        #expect(callCount == 1)
+        #expect(lastID == TestModel.fixture1.id)
     }
 
-    func testErrorSimulation() async {
+    @Test("Error simulation throws configured error")
+    func errorSimulation_throwsConfiguredError() async throws {
+        let repository = MockRepository<TestModel>()
         await repository.setShouldThrowError(.saveFailed(underlying: NSError(domain: "test", code: 1)))
 
-        do {
+        await #expect(throws: StorageError.self) {
             try await repository.save(TestModel.fixture1)
-            XCTFail("Should have thrown error")
-        } catch let error as StorageError {
-            if case .saveFailed = error {
-                // Success
-            } else {
-                XCTFail("Wrong error type")
-            }
-        } catch {
-            XCTFail("Wrong error type")
         }
     }
 
-    func testReset() async {
+    @Test("Reset clears all state")
+    func reset_clearsAllState() async throws {
+        let repository = MockRepository<TestModel>()
         await repository.setMockEntities(TestModel.allFixtures)
         try? await repository.save(TestModel.fixture1)
 
@@ -80,8 +79,8 @@ final class MockRepositoryTests: XCTestCase {
         let entities = await repository.mockEntities
         let callCount = await repository.saveCallCount
 
-        XCTAssertTrue(entities.isEmpty)
-        XCTAssertEqual(callCount, 0)
+        #expect(entities.isEmpty)
+        #expect(callCount == 0)
     }
 }
 

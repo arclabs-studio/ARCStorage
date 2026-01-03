@@ -110,12 +110,13 @@ import SwiftData
 /// let repository = SwiftDataRepository(storage: storage)
 /// ```
 ///
-/// ### 4. Use in ViewModel
+/// ### 4. Use in a View Model
 ///
 /// ```swift
 /// @MainActor
-/// final class RestaurantsViewModel: ObservableObject {
-///     @Published var restaurants: [Restaurant] = []
+/// @Observable
+/// final class RestaurantsStore {
+///     private(set) var restaurants: [Restaurant] = []
 ///     private let repository: any Repository<Restaurant>
 ///
 ///     init(repository: any Repository<Restaurant>) {
@@ -162,7 +163,7 @@ import SwiftData
 /// - <doc:SwiftDataIntegration>
 /// - <doc:RepositoryPattern>
 /// - <doc:Testing>
-public struct ARCStorage {
+public enum ARCStorage {
     /// Current version of ARCStorage.
     public static let version = "1.0.0"
 

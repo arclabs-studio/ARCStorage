@@ -1,26 +1,19 @@
 # 🗄️ ARCStorage
 
-Protocol-based storage abstraction for iOS apps supporting SwiftData, UserDefaults, Keychain, and testing.
-
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
-![Platform](https://img.shields.io/badge/platforms-iOS%2017%2B%20%7C%20macOS%2014%2B-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
-![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
+![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20watchOS%2010%20%7C%20tvOS%2017-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
+
+**Protocol-based storage abstraction for iOS apps supporting SwiftData, UserDefaults, Keychain, and testing.**
+
+Clean Architecture • Repository Pattern • Thread-Safe • Fully Testable
 
 ---
 
-## ✨ Features
+## 🎯 Overview
 
-- 🏗️ **Clean Architecture**: Repository Pattern with protocol-first design
-- 🔄 **SwiftData Integration**: First-class support for SwiftData (iOS 17+)
-- 🧪 **Fully Testable**: Mocks and in-memory storage for unit tests
-- 🔒 **Secure Storage**: Keychain integration for sensitive data
-- ⚡ **Built-in Caching**: LRU cache with configurable TTL
-- 🔐 **Thread-Safe**: Swift 6 concurrency (actors, Sendable)
-- 📱 **Zero SwiftUI Coupling**: Domain layer independent of views
-- ☁️ **CloudKit Ready**: Optional iCloud synchronization
-
-## 🎯 Why ARCStorage?
+ARCStorage provides a clean, testable architecture for data persistence that completely decouples your domain layer from persistence details. Built with Swift 6 strict concurrency, it offers multiple storage backends with a unified interface.
 
 ### The Problem
 
@@ -30,20 +23,13 @@ Using SwiftData's `@Query` directly in SwiftUI views creates tight coupling:
 // ❌ Tightly coupled to SwiftData
 struct RestaurantsView: View {
     @Query private var restaurants: [Restaurant]  // Can't test this!
-
-    var body: some View {
-        List(restaurants) { restaurant in
-            Text(restaurant.name)
-        }
-    }
 }
 ```
 
 **Issues:**
-- ❌ Impossible to unit test
-- ❌ Locked into SwiftData
-- ❌ Business logic mixed with views
-- ❌ Hard to mock for previews
+- Impossible to unit test
+- Locked into SwiftData
+- Business logic mixed with views
 
 ### The Solution
 
@@ -66,29 +52,52 @@ class RestaurantsViewModel: ObservableObject {
 }
 ```
 
-**Benefits:**
-- ✅ Fully testable with mocks
-- ✅ Swap storage backends easily
-- ✅ Clean separation of concerns
-- ✅ Easy to preview and test
+### Key Features
 
-## 📦 Installation
+- ✅ **Clean Architecture** - Repository Pattern with protocol-first design
+- ✅ **SwiftData Integration** - First-class support for SwiftData (iOS 17+)
+- ✅ **Fully Testable** - Mocks and in-memory storage for unit tests
+- ✅ **Secure Storage** - Keychain integration for sensitive data
+- ✅ **Built-in Caching** - LRU cache with configurable TTL
+- ✅ **Thread-Safe** - Swift 6 concurrency (actors, Sendable)
+- ✅ **CloudKit Ready** - Optional iCloud synchronization
+
+---
+
+## 📋 Requirements
+
+- **Swift:** 6.0+
+- **Platforms:** iOS 17.0+ / macOS 14.0+ / watchOS 10.0+ / tvOS 17.0+
+- **Xcode:** 16.0+
+
+---
+
+## 🚀 Installation
 
 ### Swift Package Manager
 
-Add to your `Package.swift`:
+#### For Swift Packages
 
 ```swift
+// Package.swift
 dependencies: [
     .package(url: "https://github.com/arclabs-studio/ARCStorage.git", from: "1.0.0")
 ]
 ```
 
-Or add via Xcode: `File → Add Package Dependencies`
+#### For Xcode Projects
 
-## 🚀 Quick Start
+1. **File → Add Package Dependencies**
+2. Enter: `https://github.com/arclabs-studio/ARCStorage.git`
+3. Select version: `1.0.0` or later
 
-### 1. Define Your Model
+---
+
+## 📖 Usage
+
+### Quick Start
+
+#### 1. Define Your Model
 
 ```swift
 import SwiftData
@@ -109,7 +118,7 @@ final class Restaurant: Identifiable, Codable {
 }
 ```
 
-### 2. Configure in Your App
+#### 2. Configure in Your App
 
 ```swift
 import SwiftUI
@@ -137,7 +146,7 @@ struct MyApp: App {
 }
 ```
 
-### 3. Create Repository
+#### 3. Create Repository
 
 ```swift
 actor RestaurantRepository {
@@ -158,7 +167,7 @@ actor RestaurantRepository {
 }
 ```
 
-### 4. Use in ViewModel
+#### 4. Use in ViewModel
 
 ```swift
 @MainActor
@@ -180,102 +189,61 @@ final class RestaurantsViewModel: ObservableObject {
 }
 ```
 
-## 📚 Storage Backends
+### Storage Backends
 
-### SwiftData (Recommended)
-
-For persistent storage with CloudKit sync:
+#### SwiftData (Recommended)
 
 ```swift
 let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
 let repository = SwiftDataRepository(storage: storage, cachePolicy: .default)
 ```
 
-### InMemory (Testing)
-
-Fast, isolated storage for tests:
+#### InMemory (Testing)
 
 ```swift
 let storage = InMemoryStorage<Restaurant>()
 let repository = InMemoryRepository<Restaurant>()
 ```
 
-### UserDefaults (Simple Data)
-
-For preferences and settings:
+#### UserDefaults (Simple Data)
 
 ```swift
 let storage = UserDefaultsStorage<Settings>()
 let repository = UserDefaultsRepository<Settings>()
 ```
 
-### Keychain (Secure Data)
-
-For tokens and credentials:
+#### Keychain (Secure Data)
 
 ```swift
 let storage = KeychainStorage<AuthToken>(service: "com.myapp.auth")
 let repository = KeychainRepository<AuthToken>(service: "com.myapp.auth")
 ```
 
-## 🧪 Testing
+### Advanced Features
 
-ARCStorage makes testing easy with mocks:
-
-```swift
-func testLoadRestaurants() async throws {
-    // Given
-    let mockRepo = MockRepository<Restaurant>()
-    mockRepo.mockEntities = [.fixture1, .fixture2]
-
-    let viewModel = RestaurantsViewModel(repository: mockRepo)
-
-    // When
-    await viewModel.loadRestaurants()
-
-    // Then
-    XCTAssertEqual(viewModel.restaurants.count, 2)
-}
-```
-
-## 🔍 Advanced Features
-
-### Caching
-
-Control cache behavior with policies:
+#### Caching
 
 ```swift
 // Aggressive caching (1 hour TTL, 500 items)
-let repository = SwiftDataRepository(
-    storage: storage,
-    cachePolicy: .aggressive
-)
+let repository = SwiftDataRepository(storage: storage, cachePolicy: .aggressive)
 
 // No caching (always fresh)
-let repository = SwiftDataRepository(
-    storage: storage,
-    cachePolicy: .noCache
-)
+let repository = SwiftDataRepository(storage: storage, cachePolicy: .noCache)
 
 // Custom policy
-let customPolicy = CachePolicy(
-    ttl: 600,      // 10 minutes
-    maxSize: 200,
-    strategy: .lru
-)
+let customPolicy = CachePolicy(ttl: 600, maxSize: 200, strategy: .lru)
 ```
 
-### Queries with Predicates
+#### Queries with Predicates
 
 ```swift
-// Find high-rated Italian restaurants
 let predicate = #Predicate<Restaurant> { restaurant in
     restaurant.rating >= 4.0 && restaurant.cuisine == "Italian"
 }
 let results = try await repository.fetch(matching: predicate)
 ```
 
-### CloudKit Sync
+#### CloudKit Sync
 
 ```swift
 let config = SwiftDataConfiguration(
@@ -283,42 +251,73 @@ let config = SwiftDataConfiguration(
     isCloudKitEnabled: true
 )
 
-let cloudConfig = CloudKitConfiguration(
-    containerIdentifier: "iCloud.com.myapp.container",
-    conflictResolution: .mostRecentWins
-)
-
-// Monitor sync status
 let monitor = CloudKitSyncMonitor()
 monitor.startMonitoring()
 ```
 
-### Data Migration
+---
 
-```swift
-let migration = MigrationPlan(
-    sourceVersion: "1.0",
-    destinationVersion: "2.0"
-) { context in
-    // Transform data during migration
-}
+## 🏗️ Project Structure
 
-let manager = MigrationManager()
-await manager.addPlan(migration)
-try await manager.migrate(from: "1.0", to: "2.0")
+```
+Sources/ARCStorage/
+├── Core/
+│   ├── Protocols/      # Repository, StorageProvider, CachePolicy
+│   ├── Models/         # StorageError, QueryDescriptor, SortDescriptor
+│   └── Extensions/     # Identifiable, Predicate helpers
+├── Implementations/
+│   ├── SwiftData/      # SwiftDataStorage, SwiftDataRepository
+│   ├── InMemory/       # InMemoryStorage, InMemoryRepository
+│   ├── UserDefaults/   # UserDefaultsStorage, UserDefaultsRepository
+│   └── Keychain/       # KeychainStorage, KeychainRepository
+├── Features/
+│   ├── Cache/          # LRUCache, CacheManager
+│   ├── CloudKit/       # CloudKitConfiguration, CloudKitSyncMonitor
+│   └── Migration/      # MigrationPlan, MigrationHelper
+└── Testing/            # MockRepository, MockStorageProvider, TestHelpers
 ```
 
-## 📖 Documentation
+---
 
-Full documentation available at [Documentation](https://arclabs-studio.github.io/ARCStorage/documentation/arcstorage/)
+## 🧪 Testing
 
-Topics:
-- [Getting Started](https://arclabs-studio.github.io/ARCStorage/documentation/arcstorage/gettingstarted)
-- [SwiftData Integration](https://arclabs-studio.github.io/ARCStorage/documentation/arcstorage/swiftdataintegration)
-- [Repository Pattern](https://arclabs-studio.github.io/ARCStorage/documentation/arcstorage/repositorypattern)
-- [Testing Guide](https://arclabs-studio.github.io/ARCStorage/documentation/arcstorage/testing)
+ARCStorage makes testing easy with mocks:
 
-## 🏗️ Architecture
+```swift
+import Testing
+@testable import ARCStorage
+
+@Test
+func loadRestaurants_withMockData_returnsRestaurants() async throws {
+    // Arrange
+    let mockRepo = MockRepository<Restaurant>()
+    mockRepo.mockEntities = [.fixture1, .fixture2]
+
+    let viewModel = RestaurantsViewModel(repository: mockRepo)
+
+    // Act
+    await viewModel.loadRestaurants()
+
+    // Assert
+    #expect(viewModel.restaurants.count == 2)
+}
+```
+
+### Running Tests
+
+```bash
+swift test
+```
+
+### Coverage
+
+- **Packages:** Target 100%, minimum 80%
+
+---
+
+## 📐 Architecture
+
+ARCStorage follows Clean Architecture principles:
 
 ```
 ┌──────────────────────────────────────┐
@@ -342,32 +341,97 @@ Topics:
 └──────────────────────────────────────┘
 ```
 
-## 🔧 Requirements
-
-- iOS 17.0+ / macOS 14.0+ / tvOS 17.0+ / watchOS 10.0+
-- Swift 6.0+
-- Xcode 16.0+
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) first.
-
-## 📄 License
-
-ARCStorage is available under the MIT license. See [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-- Built with Swift 6 strict concurrency
-- Designed for Clean Architecture
-- Inspired by Domain-Driven Design principles
-
-## 📞 Support
-
-- [Documentation](https://arclabs-studio.github.io/ARCStorage)
-- [GitHub Issues](https://github.com/arclabs-studio/ARCStorage/issues)
-- [Discussions](https://github.com/arclabs-studio/ARCStorage/discussions)
+For complete architecture guidelines, see [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge).
 
 ---
 
-Made with ❤️ by ARC Labs Studio
+## 🛠️ Development
+
+### Prerequisites
+
+```bash
+# Install required tools
+brew install swiftlint swiftformat
+```
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/arclabs-studio/ARCStorage.git
+cd ARCStorage
+
+# Initialize submodules
+git submodule update --init --recursive
+
+# Build the project
+swift build
+```
+
+### Available Commands
+
+```bash
+swift build          # Build the package
+swift test           # Run tests
+swiftlint lint       # Run SwiftLint
+swiftformat --lint . # Check formatting
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `feature/your-feature`
+3. Follow [ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge) standards
+4. Ensure tests pass: `swift test`
+5. Run quality checks: `swiftlint lint`
+6. Create a pull request
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add new storage backend
+fix: resolve cache invalidation issue
+docs: update installation instructions
+```
+
+---
+
+## 📦 Versioning
+
+This project follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** - Breaking changes
+- **MINOR** - New features (backwards compatible)
+- **PATCH** - Bug fixes (backwards compatible)
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+## 🔗 Related Resources
+
+- **[ARCKnowledge](https://github.com/arclabs-studio/ARCKnowledge)** - Development standards and guidelines
+- **[ARCDevTools](https://github.com/arclabs-studio/ARCDevTools)** - Quality tooling and automation
+- **[Documentation](https://arclabs-studio.github.io/ARCStorage)** - Full API documentation
+
+---
+
+<div align="center">
+
+Made with 💛 by **ARC Labs Studio**
+
+[**GitHub**](https://github.com/arclabs-studio) • [**Issues**](https://github.com/arclabs-studio/ARCStorage/issues)
+
+</div>

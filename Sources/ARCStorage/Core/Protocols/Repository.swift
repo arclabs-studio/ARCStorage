@@ -30,7 +30,7 @@ import Foundation
 ///     }
 /// }
 /// ```
-public protocol Repository<Entity>: Sendable {
+public protocol Repository<Entity>: Sendable where Entity.ID: Sendable & Hashable {
     /// The type of entity this repository manages.
     associatedtype Entity: Codable & Sendable & Identifiable
 

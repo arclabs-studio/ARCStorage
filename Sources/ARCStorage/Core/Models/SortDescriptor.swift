@@ -10,7 +10,7 @@ import Foundation
 /// let nameSort = SortDescriptor(\.name, order: .ascending)
 /// let dateSort = SortDescriptor(\.createdAt, order: .descending)
 /// ```
-public struct SortDescriptor<T: Sendable>: Sendable {
+public struct SortDescriptor<T: Sendable>: @unchecked Sendable {
     /// The key path to sort by.
     public let keyPath: PartialKeyPath<T>
 

@@ -15,7 +15,7 @@ import Foundation
 ///
 /// XCTAssertEqual(await mockRepo.fetchAllCallCount, 1)
 /// ```
-public actor MockRepository<T: Codable & Sendable & Identifiable>: Repository {
+public actor MockRepository<T: Codable & Sendable & Identifiable>: Repository where T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     /// Entities to return from fetch operations.

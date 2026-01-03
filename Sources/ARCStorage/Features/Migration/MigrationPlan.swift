@@ -112,9 +112,9 @@ public enum MigrationError: Error, Sendable {
 extension MigrationError: LocalizedError {
     public var errorDescription: String? {
         switch self {
-        case .noMigrationPath(let from, let to):
+        case let .noMigrationPath(from, to):
             return "No migration path from version \(from) to \(to)"
-        case .migrationFailed(let error):
+        case let .migrationFailed(error):
             return "Migration failed: \(error.localizedDescription)"
         }
     }

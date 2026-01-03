@@ -1,36 +1,41 @@
-import XCTest
+import Testing
 @testable import ARCStorage
 
-final class CachePolicyTests: XCTestCase {
-    func testDefaultPolicy() {
+@Suite("CachePolicy Tests")
+struct CachePolicyTests {
+    @Test("Default policy has correct values")
+    func defaultPolicy_hasCorrectValues() {
         let policy = CachePolicy.default
 
-        XCTAssertEqual(policy.ttl, 300)
-        XCTAssertEqual(policy.maxSize, 100)
-        XCTAssertEqual(policy.strategy, .lru)
+        #expect(policy.ttl == 300)
+        #expect(policy.maxSize == 100)
+        #expect(policy.strategy == .lru)
     }
 
-    func testAggressivePolicy() {
+    @Test("Aggressive policy has correct values")
+    func aggressivePolicy_hasCorrectValues() {
         let policy = CachePolicy.aggressive
 
-        XCTAssertEqual(policy.ttl, 3600)
-        XCTAssertEqual(policy.maxSize, 500)
-        XCTAssertEqual(policy.strategy, .lru)
+        #expect(policy.ttl == 3600)
+        #expect(policy.maxSize == 500)
+        #expect(policy.strategy == .lru)
     }
 
-    func testNoCachePolicy() {
+    @Test("NoCache policy has correct values")
+    func noCachePolicy_hasCorrectValues() {
         let policy = CachePolicy.noCache
 
-        XCTAssertEqual(policy.ttl, 0)
-        XCTAssertEqual(policy.maxSize, 0)
-        XCTAssertEqual(policy.strategy, .lru)
+        #expect(policy.ttl == 0)
+        #expect(policy.maxSize == 0)
+        #expect(policy.strategy == .lru)
     }
 
-    func testCustomPolicy() {
+    @Test("Custom policy preserves values")
+    func customPolicy_preservesValues() {
         let policy = CachePolicy(ttl: 600, maxSize: 200, strategy: .fifo)
 
-        XCTAssertEqual(policy.ttl, 600)
-        XCTAssertEqual(policy.maxSize, 200)
-        XCTAssertEqual(policy.strategy, .fifo)
+        #expect(policy.ttl == 600)
+        #expect(policy.maxSize == 200)
+        #expect(policy.strategy == .fifo)
     }
 }

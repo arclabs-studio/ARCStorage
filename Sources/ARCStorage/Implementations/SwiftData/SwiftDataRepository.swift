@@ -1,5 +1,5 @@
-import SwiftData
 import Foundation
+import SwiftData
 
 /// Repository implementation with caching on top of SwiftDataStorage.
 ///
@@ -21,7 +21,8 @@ import Foundation
 /// // Use in ViewModel
 /// let restaurants = try await repository.fetchAll()
 /// ```
-public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Identifiable & Codable & Sendable {
+public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Identifiable & Codable & Sendable,
+T.ID: Sendable & Hashable {
     public typealias Entity = T
 
     private let storage: SwiftDataStorage<T>
@@ -37,7 +38,7 @@ public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Ident
         cachePolicy: CachePolicy = .default
     ) {
         self.storage = storage
-        self.cache = CacheManager(policy: cachePolicy)
+        cache = CacheManager(policy: cachePolicy)
     }
 
     public func save(_ entity: T) async throws {

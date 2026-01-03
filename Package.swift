@@ -15,7 +15,7 @@ let package = Package(
         .library(
             name: "ARCStorage",
             targets: ["ARCStorage"]
-        ),
+        )
     ],
     targets: [
         .target(
@@ -34,5 +34,5 @@ let package = Package(
             ]
         )
     ],
-    swiftLanguageVersions: [.v6]
+    swiftLanguageModes: [.v6]
 )
