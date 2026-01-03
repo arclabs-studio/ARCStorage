@@ -25,15 +25,13 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            NoteListView(viewModel: notesViewModel)
-                .tabItem {
-                    Label("Notes", systemImage: "note.text")
-                }
+            Tab("Notes", systemImage: "note.text") {
+                NoteListView(viewModel: notesViewModel)
+            }
 
-            SettingsView(viewModel: settingsViewModel)
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+            Tab("Settings", systemImage: "gear") {
+                SettingsView(viewModel: settingsViewModel)
+            }
         }
     }
 }
