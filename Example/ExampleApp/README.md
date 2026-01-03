@@ -5,7 +5,7 @@ Demo application for **ARCStorage** package.
 ## Requirements
 
 - Xcode 16.0+
-- iOS 17.0+
+- iOS 18.0+
 - Swift 6.0
 
 ## Running the Example
@@ -40,6 +40,12 @@ The Settings tab demonstrates `UserDefaultsRepository<AppSettings>` with:
 - **MVVM**: ViewModels manage state and business logic
 - **Dependency Injection**: Repositories injected into ViewModels
 - **Swift 6 Concurrency**: Full async/await with strict concurrency
+
+### Modern SwiftUI APIs (iOS 18+)
+
+- **Tab**: New declarative tab API for `TabView`
+- **@Observable**: Observation framework macro for ViewModels
+- **@Bindable**: Property wrapper for observable object bindings
 
 ## Project Structure
 
