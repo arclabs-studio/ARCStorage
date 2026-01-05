@@ -48,6 +48,7 @@ import SwiftData
 /// - ``CacheManager``
 /// - ``LRUCache``
 /// - ``CacheStrategy``
+/// - ``MemoryPressureLevel``
 ///
 /// ### Testing
 /// - ``MockRepository``
@@ -57,6 +58,12 @@ import SwiftData
 /// ### CloudKit
 /// - ``CloudKitConfiguration``
 /// - ``CloudKitSyncMonitor``
+/// - ``CloudKitSyncEngineManager``
+/// - ``CloudKitSyncEngineDelegate``
+/// - ``CloudKitSyncError``
+///
+/// ### Security
+/// - ``KeychainAccessibility``
 ///
 /// ### Migration
 /// - ``MigrationPlan``

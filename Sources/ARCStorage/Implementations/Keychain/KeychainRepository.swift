@@ -12,8 +12,15 @@ import Foundation
 ///     var password: String
 /// }
 ///
+/// // Default accessibility
 /// let repository = KeychainRepository<Credentials>(
 ///     service: "com.myapp.credentials"
+/// )
+///
+/// // High security for sensitive data
+/// let secureRepository = KeychainRepository<Credentials>(
+///     service: "com.myapp.credentials",
+///     accessibility: .whenPasscodeSetThisDeviceOnly
 /// )
 /// try await repository.save(credentials)
 /// ```
@@ -29,15 +36,18 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - service: The service identifier
     ///   - accessGroup: Optional access group
+    ///   - accessibility: When keychain items can be accessed. Defaults to `.whenUnlocked`
     ///   - cachePolicy: The caching policy
     public init(
         service: String,
         accessGroup: String? = nil,
+        accessibility: KeychainAccessibility = .whenUnlocked,
         cachePolicy: CachePolicy = .default
     ) {
         storage = KeychainStorage<T>(
             service: service,
-            accessGroup: accessGroup
+            accessGroup: accessGroup,
+            accessibility: accessibility
         )
         cache = CacheManager(policy: cachePolicy)
     }

@@ -26,6 +26,15 @@ The Notes tab demonstrates `InMemoryRepository<Note>` with:
 - **Delete**: Swipe to delete notes
 - **Cache Invalidation**: Pull to refresh clears cache and reloads
 
+### KeychainRepository (NEW)
+
+The Secure tab demonstrates `KeychainRepository<AuthToken>` with:
+
+- **Secure Storage**: Tokens encrypted in iOS Keychain
+- **Security Levels**: Using `KeychainAccessibility.whenUnlockedThisDeviceOnly`
+- **Token Management**: Generate, refresh, and delete tokens
+- **Expiration Tracking**: Shows token validity and time remaining
+
 ### UserDefaultsRepository
 
 The Settings tab demonstrates `UserDefaultsRepository<AppSettings>` with:
@@ -55,15 +64,18 @@ ExampleApp/
 ├── ContentView.swift        # Main tab view
 ├── Model/
 │   ├── Note.swift           # Note entity
-│   └── AppSettings.swift    # Settings entity
+│   ├── AppSettings.swift    # Settings entity
+│   └── AuthToken.swift      # Auth token entity (Keychain)
 ├── ViewModel/
 │   ├── NotesViewModel.swift     # Notes business logic
-│   └── SettingsViewModel.swift  # Settings business logic
+│   ├── SettingsViewModel.swift  # Settings business logic
+│   └── AuthViewModel.swift      # Auth/Keychain business logic
 ├── Views/
 │   ├── NoteListView.swift   # Notes list
 │   ├── NoteDetailView.swift # Note editor
 │   ├── AddNoteView.swift    # New note form
-│   └── SettingsView.swift   # Settings form
+│   ├── SettingsView.swift   # Settings form
+│   └── AuthView.swift       # Secure storage demo
 └── Assets.xcassets          # App assets
 ```
 
@@ -92,6 +104,12 @@ let notesRepository = InMemoryRepository<Note>()
 // UserDefaults for settings (persistent storage)
 let settingsRepository = UserDefaultsRepository<AppSettings>(
     keyPrefix: "ExampleApp.Settings"
+)
+
+// Keychain for auth tokens (secure storage with security level)
+let authViewModel = AuthViewModel(
+    securityLevel: .whenUnlockedThisDeviceOnly,
+    service: "com.arclabs.exampleapp.auth"
 )
 ```
 
