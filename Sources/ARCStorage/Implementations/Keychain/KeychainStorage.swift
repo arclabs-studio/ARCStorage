@@ -1,6 +1,63 @@
 import Foundation
 import Security
 
+/// Defines when keychain items can be accessed.
+///
+/// These values map directly to Apple's `kSecAttrAccessible` constants
+/// and control when your app can read keychain items.
+///
+/// ## Security Considerations
+/// Choose the most restrictive option that works for your use case:
+/// - Use ``whenPasscodeSetThisDeviceOnly`` for highly sensitive data
+/// - Use ``whenUnlockedThisDeviceOnly`` for sensitive data that shouldn't sync
+/// - Use ``whenUnlocked`` (default) for general secure storage
+///
+/// ## Example
+/// ```swift
+/// let storage = KeychainStorage<AuthToken>(
+///     service: "com.myapp.auth",
+///     accessibility: .whenUnlockedThisDeviceOnly
+/// )
+/// ```
+public enum KeychainAccessibility: Sendable {
+    /// Item is only accessible when the device is unlocked.
+    /// This is the default and recommended for most use cases.
+    case whenUnlocked
+
+    /// Item is only accessible when the device is unlocked.
+    /// Item will not be migrated to a new device.
+    case whenUnlockedThisDeviceOnly
+
+    /// Item is accessible after first unlock until device restart.
+    /// Use for background app refresh scenarios.
+    case afterFirstUnlock
+
+    /// Item is accessible after first unlock until device restart.
+    /// Item will not be migrated to a new device.
+    case afterFirstUnlockThisDeviceOnly
+
+    /// Item is only accessible when a passcode is set on the device.
+    /// Item will not be migrated to a new device.
+    /// Most secure option - recommended for highly sensitive data.
+    case whenPasscodeSetThisDeviceOnly
+
+    /// The corresponding Security framework constant.
+    var securityAttribute: CFString {
+        switch self {
+        case .whenUnlocked:
+            return kSecAttrAccessibleWhenUnlocked
+        case .whenUnlockedThisDeviceOnly:
+            return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        case .afterFirstUnlock:
+            return kSecAttrAccessibleAfterFirstUnlock
+        case .afterFirstUnlockThisDeviceOnly:
+            return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        case .whenPasscodeSetThisDeviceOnly:
+            return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+        }
+    }
+}
+
 /// Secure storage implementation using the iOS Keychain.
 ///
 /// Use this for sensitive data like tokens, passwords, and credentials.
@@ -8,7 +65,10 @@ import Security
 ///
 /// ## Topics
 /// ### Initialization
-/// - ``init(service:accessGroup:)``
+/// - ``init(service:accessGroup:accessibility:)``
+///
+/// ### Accessibility
+/// - ``KeychainAccessibility``
 ///
 /// ## Example
 /// ```swift
@@ -18,7 +78,14 @@ import Security
 ///     var expiresAt: Date
 /// }
 ///
+/// // Default accessibility (whenUnlocked)
 /// let storage = KeychainStorage<AuthToken>(service: "com.myapp.auth")
+///
+/// // High security - requires passcode
+/// let secureStorage = KeychainStorage<AuthToken>(
+///     service: "com.myapp.auth",
+///     accessibility: .whenPasscodeSetThisDeviceOnly
+/// )
 /// try await storage.save(authToken)
 /// ```
 public actor KeychainStorage<T: Codable & Sendable & Identifiable>: StorageProvider
@@ -27,6 +94,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
 
     private let service: String
     private let accessGroup: String?
+    private let accessibility: KeychainAccessibility
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
@@ -35,12 +103,15 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - service: The service identifier for keychain items
     ///   - accessGroup: Optional access group for shared keychain access
+    ///   - accessibility: When keychain items can be accessed. Defaults to `.whenUnlocked`
     public init(
         service: String,
-        accessGroup: String? = nil
+        accessGroup: String? = nil,
+        accessibility: KeychainAccessibility = .whenUnlocked
     ) {
         self.service = service
         self.accessGroup = accessGroup
+        self.accessibility = accessibility
     }
 
     public func save(_ entity: T) async throws {
@@ -202,7 +273,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrAccount as String: account,
+            kSecAttrAccessible as String: accessibility.securityAttribute
         ]
 
         if let accessGroup = accessGroup {

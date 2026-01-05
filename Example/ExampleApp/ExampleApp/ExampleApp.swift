@@ -14,17 +14,26 @@ struct ExampleApp: App {
 
     private let notesViewModel: NotesViewModel
     private let settingsViewModel: SettingsViewModel
+    private let authViewModel: AuthViewModel
 
     // MARK: Initialization
 
     init() {
+        // Notes: In-memory storage (volatile)
         let notesRepository = InMemoryRepository<Note>()
         notesViewModel = NotesViewModel(repository: notesRepository)
 
+        // Settings: UserDefaults storage (persistent)
         let settingsRepository = UserDefaultsRepository<AppSettings>(
             keyPrefix: "ExampleApp.Settings"
         )
         settingsViewModel = SettingsViewModel(repository: settingsRepository)
+
+        // Auth: Keychain storage (secure, with high security level)
+        authViewModel = AuthViewModel(
+            securityLevel: .whenUnlockedThisDeviceOnly,
+            service: "com.arclabs.exampleapp.auth"
+        )
     }
 
     // MARK: Body
@@ -33,7 +42,8 @@ struct ExampleApp: App {
         WindowGroup {
             ContentView(
                 notesViewModel: notesViewModel,
-                settingsViewModel: settingsViewModel
+                settingsViewModel: settingsViewModel,
+                authViewModel: authViewModel
             )
         }
     }

@@ -11,8 +11,10 @@ ARCStorage provides a clean, testable architecture for data persistence that com
 - **Protocol-First Design**: Abstract storage behind protocols for testability
 - **Multiple Backends**: SwiftData, UserDefaults, Keychain, in-memory
 - **Thread-Safe**: Built with Swift 6 actors and Sendable types
-- **Built-in Caching**: LRU cache with configurable TTL and eviction strategies
-- **CloudKit Ready**: Optional iCloud synchronization support
+- **Built-in Caching**: LRU cache with configurable TTL, eviction strategies, and memory pressure handling
+- **Secure Storage**: Keychain integration with configurable security levels
+- **CloudKit Ready**: Full CKSyncEngine integration for iCloud synchronization
+- **@Observable Support**: Modern SwiftUI integration using Observation framework
 
 ### The Problem
 

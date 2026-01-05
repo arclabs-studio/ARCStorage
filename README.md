@@ -215,9 +215,27 @@ let repository = UserDefaultsRepository<Settings>()
 #### Keychain (Secure Data)
 
 ```swift
+// Default security (accessible when unlocked)
 let storage = KeychainStorage<AuthToken>(service: "com.myapp.auth")
-let repository = KeychainRepository<AuthToken>(service: "com.myapp.auth")
+
+// High security - requires device passcode
+let secureStorage = KeychainStorage<AuthToken>(
+    service: "com.myapp.auth",
+    accessibility: .whenPasscodeSetThisDeviceOnly
+)
+
+// Repository with security level
+let repository = KeychainRepository<AuthToken>(
+    service: "com.myapp.auth",
+    accessibility: .whenUnlockedThisDeviceOnly
+)
 ```
+
+**Security Levels (`KeychainAccessibility`):**
+- `.whenUnlocked` - Default, accessible when device is unlocked
+- `.whenUnlockedThisDeviceOnly` - Same, but won't sync to new devices
+- `.afterFirstUnlock` - For background operations
+- `.whenPasscodeSetThisDeviceOnly` - Most secure, requires passcode
 
 ### Advanced Features
 
@@ -251,8 +269,54 @@ let config = SwiftDataConfiguration(
     isCloudKitEnabled: true
 )
 
-let monitor = CloudKitSyncMonitor()
-monitor.startMonitoring()
+// Monitor sync status (uses @Observable for SwiftUI)
+let monitor = CloudKitSyncMonitor(configuration: cloudKitConfig)
+await monitor.startMonitoring()
+
+// In SwiftUI
+struct SyncStatusView: View {
+    @State private var monitor = CloudKitSyncMonitor()
+
+    var body: some View {
+        Text(monitor.status.description)
+    }
+}
+```
+
+#### Advanced CloudKit with CKSyncEngine
+
+For full control over CloudKit sync, use `CloudKitSyncEngineManager`:
+
+```swift
+let cloudConfig = CloudKitConfiguration(
+    containerIdentifier: "iCloud.com.myapp.container",
+    conflictResolution: .serverWins
+)
+
+let syncEngine = CloudKitSyncEngineManager(
+    configuration: cloudConfig,
+    delegate: mySyncDelegate
+)
+try await syncEngine.start()
+
+// Manual sync
+try await syncEngine.fetchChanges()
+try await syncEngine.sendChanges()
+```
+
+#### Memory-Aware Caching
+
+Cache automatically responds to system memory pressure:
+
+```swift
+// Cache clears 50% on memory warning, 100% on critical
+let cache = CacheManager<UUID, Restaurant>(policy: .default)
+
+// Disable automatic memory handling if needed
+let cache = CacheManager<UUID, Restaurant>(
+    policy: .default,
+    registerForMemoryWarnings: false
+)
 ```
 
 ---
@@ -269,10 +333,10 @@ Sources/ARCStorage/
 │   ├── SwiftData/      # SwiftDataStorage, SwiftDataRepository
 │   ├── InMemory/       # InMemoryStorage, InMemoryRepository
 │   ├── UserDefaults/   # UserDefaultsStorage, UserDefaultsRepository
-│   └── Keychain/       # KeychainStorage, KeychainRepository
+│   └── Keychain/       # KeychainStorage, KeychainRepository, KeychainAccessibility
 ├── Features/
-│   ├── Cache/          # LRUCache, CacheManager
-│   ├── CloudKit/       # CloudKitConfiguration, CloudKitSyncMonitor
+│   ├── Cache/          # LRUCache, CacheManager, MemoryPressureHandler
+│   ├── CloudKit/       # CloudKitSyncEngine, CloudKitSyncMonitor, CloudKitConfiguration
 │   └── Migration/      # MigrationPlan, MigrationHelper
 └── Testing/            # MockRepository, MockStorageProvider, TestHelpers
 ```

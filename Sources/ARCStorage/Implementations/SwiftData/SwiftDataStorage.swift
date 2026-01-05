@@ -10,6 +10,17 @@ import SwiftData
 /// ### Initialization
 /// - ``init(modelContainer:)``
 ///
+/// ### Performance
+/// For optimal fetch performance, add an index to your model's id property:
+/// ```swift
+/// @Model
+/// final class Restaurant: Identifiable, Codable {
+///     @Attribute(.unique)
+///     var id: UUID
+///     var name: String
+/// }
+/// ```
+///
 /// ## Example
 /// ```swift
 /// @Model
@@ -26,23 +37,59 @@ public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Ide
 T.ID: Sendable & Hashable {
     public typealias Entity = T
 
+    /// Tracks registered objects for faster lookups.
+    private var registeredObjects: [T.ID: T] = [:]
+
     public func save(_ entity: T) async throws {
         modelContext.insert(entity)
+        registeredObjects[entity.id] = entity
         try saveContext()
     }
 
     public func saveAll(_ entities: [T]) async throws {
         for entity in entities {
             modelContext.insert(entity)
+            registeredObjects[entity.id] = entity
         }
         try saveContext()
     }
 
     public func fetch(id: T.ID) async throws -> T? {
-        // Fetch all and filter by ID to avoid #Predicate issues with generics
-        let descriptor = FetchDescriptor<T>()
-        let entities = try modelContext.fetch(descriptor)
-        return entities.first { $0.id == id }
+        // 1. Check registered objects first (O(1) lookup)
+        if let cached = registeredObjects[id] {
+            // Verify it's still valid in the context
+            if !cached.isDeleted {
+                return cached
+            }
+            registeredObjects.removeValue(forKey: id)
+        }
+
+        // 2. Use enumeration to find the entity with early exit
+        //    This is more efficient than fetching all when the entity is near the start
+        var descriptor = FetchDescriptor<T>()
+        descriptor.fetchLimit = 100 // Batch size for enumeration
+
+        var offset = 0
+        while true {
+            descriptor.fetchOffset = offset
+            let batch = try modelContext.fetch(descriptor)
+
+            if batch.isEmpty {
+                return nil
+            }
+
+            for entity in batch where entity.id == id {
+                registeredObjects[id] = entity
+                return entity
+            }
+
+            offset += batch.count
+
+            // If we got fewer than the limit, we've reached the end
+            if batch.count < 100 {
+                return nil
+            }
+        }
     }
 
     public func fetchAll() async throws -> [T] {
@@ -60,6 +107,7 @@ T.ID: Sendable & Hashable {
             throw StorageError.entityNotFound(id: id)
         }
         modelContext.delete(entity)
+        registeredObjects.removeValue(forKey: id)
         try saveContext()
     }
 
@@ -68,6 +116,7 @@ T.ID: Sendable & Hashable {
         for entity in entities {
             modelContext.delete(entity)
         }
+        registeredObjects.removeAll()
         try saveContext()
     }
 
