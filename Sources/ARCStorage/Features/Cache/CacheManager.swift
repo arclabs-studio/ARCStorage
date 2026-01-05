@@ -1,9 +1,13 @@
 import Foundation
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// Thread-safe cache manager for repository layer.
 ///
 /// `CacheManager` provides an LRU (Least Recently Used) cache implementation
-/// with configurable TTL and capacity limits.
+/// with configurable TTL and capacity limits. It automatically responds to
+/// system memory pressure by evicting entries.
 ///
 /// ## Topics
 /// ### Cache Operations
@@ -11,6 +15,10 @@ import Foundation
 /// - ``set(_:for:)``
 /// - ``invalidate()``
 /// - ``invalidate(_:)``
+///
+/// ### Memory Management
+/// - ``handleMemoryPressure(level:)``
+/// - ``MemoryPressureLevel``
 ///
 /// ## Example
 /// ```swift
@@ -23,11 +31,23 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     private var accessOrder: [Key] = []
     private let policy: CachePolicy
 
+    /// The memory pressure handler for this cache.
+    private var memoryPressureHandler: MemoryPressureHandler?
+
     /// Creates a new cache manager.
     ///
-    /// - Parameter policy: The caching policy to use
-    public init(policy: CachePolicy) {
+    /// - Parameters:
+    ///   - policy: The caching policy to use
+    ///   - registerForMemoryWarnings: Whether to automatically clear cache on memory warnings.
+    ///     Defaults to `true`.
+    public init(policy: CachePolicy, registerForMemoryWarnings: Bool = true) {
         self.policy = policy
+
+        if registerForMemoryWarnings {
+            Task { [weak self] in
+                await self?.setupMemoryPressureHandling()
+            }
+        }
     }
 
     /// Retrieves a value from the cache.
@@ -98,7 +118,34 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         cache.count
     }
 
+    // MARK: - Memory Pressure Handling
+
+    /// Handles memory pressure by evicting cache entries.
+    ///
+    /// - Parameter level: The severity of memory pressure
+    public func handleMemoryPressure(level: MemoryPressureLevel) {
+        switch level {
+        case .warning:
+            // Evict 50% of entries on warning
+            let toEvict = max(1, cache.count / 2)
+            evictEntries(count: toEvict)
+
+        case .critical:
+            // Clear everything on critical pressure
+            invalidate()
+        }
+    }
+
     // MARK: - Private Methods
+
+    private func setupMemoryPressureHandling() {
+        memoryPressureHandler = MemoryPressureHandler { [weak self] level in
+            guard let self else { return }
+            Task {
+                await self.handleMemoryPressure(level: level)
+            }
+        }
+    }
 
     private func updateAccessOrder(for key: Key) {
         accessOrder.removeAll { $0 == key }
@@ -121,6 +168,94 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         }
     }
 }
+
+// MARK: - Memory Pressure Level
+
+/// Represents the severity of memory pressure from the system.
+public enum MemoryPressureLevel: Sendable {
+    /// Moderate memory pressure - should reduce memory usage.
+    case warning
+
+    /// Critical memory pressure - should release as much memory as possible.
+    case critical
+}
+
+// MARK: - Memory Pressure Handler
+
+/// Handles system memory pressure notifications.
+final class MemoryPressureHandler: @unchecked Sendable {
+    private let callback: @Sendable (MemoryPressureLevel) -> Void
+
+    #if os(macOS)
+    private var dispatchSource: DispatchSourceMemoryPressure?
+    #endif
+
+    init(callback: @escaping @Sendable (MemoryPressureLevel) -> Void) {
+        self.callback = callback
+        setupNotifications()
+    }
+
+    deinit {
+        teardownNotifications()
+    }
+
+    private func setupNotifications() {
+        #if canImport(UIKit) && !os(watchOS)
+        // iOS, tvOS, visionOS
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
+        #elseif os(macOS)
+        // macOS uses dispatch source for memory pressure
+        dispatchSource = DispatchSource.makeMemoryPressureSource(
+            eventMask: [.warning, .critical],
+            queue: .main
+        )
+        dispatchSource?.setEventHandler { [weak self] in
+            guard let source = self?.dispatchSource else { return }
+            let event = source.data
+            if event.contains(.critical) {
+                self?.callback(.critical)
+            } else if event.contains(.warning) {
+                self?.callback(.warning)
+            }
+        }
+        dispatchSource?.resume()
+        #elseif os(watchOS)
+        // watchOS - use ProcessInfo for memory warnings
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: .init("NSProcessInfoPowerStateDidChangeNotification"),
+            object: nil
+        )
+        #endif
+    }
+
+    private func teardownNotifications() {
+        #if canImport(UIKit) && !os(watchOS)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
+        #elseif os(macOS)
+        dispatchSource?.cancel()
+        dispatchSource = nil
+        #elseif os(watchOS)
+        NotificationCenter.default.removeObserver(self)
+        #endif
+    }
+
+    @objc private func handleMemoryWarning() {
+        callback(.warning)
+    }
+}
+
+// MARK: - Cache Entry
 
 /// Internal cache entry storing value and metadata.
 struct CacheEntry<Value: Sendable>: Sendable {
