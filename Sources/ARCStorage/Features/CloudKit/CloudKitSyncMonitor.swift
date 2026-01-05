@@ -39,7 +39,7 @@ public final class CloudKitSyncMonitor {
     public private(set) var lastError: Error?
 
     /// Whether the sync engine is currently active.
-    public private(set) var isActive: Bool = false
+    public private(set) var isActive = false
 
     /// The sync engine manager.
     private var syncEngineManager: CloudKitSyncEngineManager?
@@ -223,7 +223,7 @@ public enum SyncStatus: Sendable {
             return "Syncing..."
         case .synced:
             return "Synced"
-        case .error(let error):
+        case let .error(error):
             return "Error: \(error.localizedDescription)"
         }
     }

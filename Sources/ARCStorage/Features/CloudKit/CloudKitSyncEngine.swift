@@ -149,22 +149,22 @@ public actor CloudKitSyncEngineManager {
 
     fileprivate func handleEvent(_ event: CKSyncEngine.Event) async {
         switch event {
-        case .stateUpdate(let stateUpdate):
+        case let .stateUpdate(stateUpdate):
             persistState(stateUpdate.stateSerialization)
 
-        case .accountChange(let accountChange):
+        case let .accountChange(accountChange):
             await delegate?.syncEngine(didReceiveAccountChange: accountChange)
 
-        case .fetchedDatabaseChanges(let databaseChanges):
+        case let .fetchedDatabaseChanges(databaseChanges):
             await delegate?.syncEngine(didFetchDatabaseChanges: databaseChanges)
 
-        case .fetchedRecordZoneChanges(let zoneChanges):
+        case let .fetchedRecordZoneChanges(zoneChanges):
             await delegate?.syncEngine(didFetchRecordZoneChanges: zoneChanges)
 
-        case .sentDatabaseChanges(let sentChanges):
+        case let .sentDatabaseChanges(sentChanges):
             await delegate?.syncEngine(didSendDatabaseChanges: sentChanges)
 
-        case .sentRecordZoneChanges(let sentChanges):
+        case let .sentRecordZoneChanges(sentChanges):
             await delegate?.syncEngine(didSendRecordZoneChanges: sentChanges)
 
         case .willFetchChanges, .willFetchRecordZoneChanges, .didFetchRecordZoneChanges,
@@ -194,7 +194,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
         self.manager = manager
     }
 
-    func handleEvent(_ event: CKSyncEngine.Event, syncEngine: CKSyncEngine) {
+    func handleEvent(_ event: CKSyncEngine.Event, syncEngine _: CKSyncEngine) {
         Task {
             await manager.handleEvent(event)
         }
@@ -202,7 +202,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
 
     func nextRecordZoneChangeBatch(
         _ context: CKSyncEngine.SendChangesContext,
-        syncEngine: CKSyncEngine
+        syncEngine _: CKSyncEngine
     ) async -> CKSyncEngine.RecordZoneChangeBatch? {
         await manager.nextRecordZoneChangeBatch(context)
     }
@@ -215,6 +215,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
 /// Implement this protocol to respond to sync events and provide
 /// records to be synced.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+// swiftlint:disable:next class_delegate_protocol
 public protocol CloudKitSyncEngineDelegate: Actor {
     /// Called when account status changes.
     func syncEngine(didReceiveAccountChange change: CKSyncEngine.Event.AccountChange) async
@@ -240,10 +241,10 @@ public protocol CloudKitSyncEngineDelegate: Actor {
 // MARK: - Default Implementations
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-public extension CloudKitSyncEngineDelegate {
-    func syncEngine(didReceiveAccountChange change: CKSyncEngine.Event.AccountChange) async {}
-    func syncEngine(didFetchDatabaseChanges changes: CKSyncEngine.Event.FetchedDatabaseChanges) async {}
-    func syncEngine(didSendDatabaseChanges changes: CKSyncEngine.Event.SentDatabaseChanges) async {}
+extension CloudKitSyncEngineDelegate {
+    public func syncEngine(didReceiveAccountChange _: CKSyncEngine.Event.AccountChange) async {}
+    public func syncEngine(didFetchDatabaseChanges _: CKSyncEngine.Event.FetchedDatabaseChanges) async {}
+    public func syncEngine(didSendDatabaseChanges _: CKSyncEngine.Event.SentDatabaseChanges) async {}
 }
 
 // MARK: - Errors
@@ -266,9 +267,9 @@ public enum CloudKitSyncError: Error, LocalizedError, Sendable {
         switch self {
         case .engineNotStarted:
             return "CloudKit sync engine has not been started"
-        case .fetchFailed(let error):
+        case let .fetchFailed(error):
             return "Failed to fetch changes: \(error.localizedDescription)"
-        case .sendFailed(let error):
+        case let .sendFailed(error):
             return "Failed to send changes: \(error.localizedDescription)"
         case .accountNotAvailable:
             return "iCloud account is not available"
@@ -279,13 +280,13 @@ public enum CloudKitSyncError: Error, LocalizedError, Sendable {
 // MARK: - CKSyncEngine.State.Serialization Extension
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-private extension CKSyncEngine.State.Serialization {
-    init(from data: Data) throws {
+extension CKSyncEngine.State.Serialization {
+    fileprivate init(from data: Data) throws {
         let decoder = JSONDecoder()
         self = try decoder.decode(CKSyncEngine.State.Serialization.self, from: data)
     }
 
-    func data() throws -> Data {
+    fileprivate func data() throws -> Data {
         let encoder = JSONEncoder()
         return try encoder.encode(self)
     }

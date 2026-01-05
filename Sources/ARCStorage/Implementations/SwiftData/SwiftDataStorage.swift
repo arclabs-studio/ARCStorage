@@ -78,11 +78,9 @@ T.ID: Sendable & Hashable {
                 return nil
             }
 
-            for entity in batch {
-                if entity.id == id {
-                    registeredObjects[id] = entity
-                    return entity
-                }
+            for entity in batch where entity.id == id {
+                registeredObjects[id] = entity
+                return entity
             }
 
             offset += batch.count

@@ -246,11 +246,13 @@ final class MemoryPressureHandler: @unchecked Sendable {
         dispatchSource?.cancel()
         dispatchSource = nil
         #elseif os(watchOS)
+        // swiftlint:disable:next notification_center_detachment
         NotificationCenter.default.removeObserver(self)
         #endif
     }
 
-    @objc private func handleMemoryWarning() {
+    @objc
+    private func handleMemoryWarning() {
         callback(.warning)
     }
 }
