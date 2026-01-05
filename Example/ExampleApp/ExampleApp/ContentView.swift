@@ -13,12 +13,18 @@ struct ContentView: View {
 
     private let notesViewModel: NotesViewModel
     private let settingsViewModel: SettingsViewModel
+    private let authViewModel: AuthViewModel
 
     // MARK: Initialization
 
-    init(notesViewModel: NotesViewModel, settingsViewModel: SettingsViewModel) {
+    init(
+        notesViewModel: NotesViewModel,
+        settingsViewModel: SettingsViewModel,
+        authViewModel: AuthViewModel
+    ) {
         self.notesViewModel = notesViewModel
         self.settingsViewModel = settingsViewModel
+        self.authViewModel = authViewModel
     }
 
     // MARK: Body
@@ -27,6 +33,10 @@ struct ContentView: View {
         TabView {
             Tab("Notes", systemImage: "note.text") {
                 NoteListView(viewModel: notesViewModel)
+            }
+
+            Tab("Secure", systemImage: "lock.shield") {
+                AuthView(viewModel: authViewModel)
             }
 
             Tab("Settings", systemImage: "gear") {
@@ -47,6 +57,9 @@ struct ContentView: View {
             repository: UserDefaultsRepository<AppSettings>(
                 keyPrefix: "Preview.Settings"
             )
+        ),
+        authViewModel: AuthViewModel(
+            securityLevel: .whenUnlockedThisDeviceOnly
         )
     )
     .preferredColorScheme(.light)
@@ -61,6 +74,9 @@ struct ContentView: View {
             repository: UserDefaultsRepository<AppSettings>(
                 keyPrefix: "Preview.Settings"
             )
+        ),
+        authViewModel: AuthViewModel(
+            securityLevel: .whenPasscodeSetThisDeviceOnly
         )
     )
     .preferredColorScheme(.dark)
