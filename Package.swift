@@ -17,9 +17,15 @@ let package = Package(
             targets: ["ARCStorage"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/arclabs-studio/ARCLogger", from: "1.0.0")
+    ],
     targets: [
         .target(
             name: "ARCStorage",
+            dependencies: [
+                .product(name: "ARCLogger", package: "ARCLogger")
+            ],
             path: "Sources/ARCStorage",
             swiftSettings: [
                 .enableUpcomingFeature("StrictConcurrency")

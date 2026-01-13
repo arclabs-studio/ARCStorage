@@ -120,11 +120,14 @@ import SwiftData
 /// ### 4. Use in a View Model
 ///
 /// ```swift
+/// import ARCLogger
+///
 /// @MainActor
 /// @Observable
 /// final class RestaurantsStore {
 ///     private(set) var restaurants: [Restaurant] = []
 ///     private let repository: any Repository<Restaurant>
+///     private let logger = ARCLogger(category: "RestaurantsStore")
 ///
 ///     init(repository: any Repository<Restaurant>) {
 ///         self.repository = repository
@@ -133,8 +136,13 @@ import SwiftData
 ///     func loadRestaurants() async {
 ///         do {
 ///             restaurants = try await repository.fetchAll()
+///             logger.info("Loaded restaurants", metadata: [
+///                 "count": .public(String(restaurants.count))
+///             ])
 ///         } catch {
-///             print("Error: \(error)")
+///             logger.error("Failed to load", metadata: [
+///                 "error": .public(error.localizedDescription)
+///             ])
 ///         }
 ///     }
 /// }
