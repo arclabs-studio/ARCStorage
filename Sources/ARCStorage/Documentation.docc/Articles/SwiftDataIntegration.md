@@ -107,17 +107,25 @@ let results = try await repository.fetch(matching: predicate)
 ## CloudKit Sync Monitoring
 
 ```swift
+import ARCLogger
+
 let monitor = CloudKitSyncMonitor()
-monitor.startMonitoring()
+let logger = ARCLogger(category: "CloudKitSync")
+
+await monitor.startMonitoring()
 
 // Check sync status
-switch monitor.syncStatus {
+switch monitor.status {
 case .idle:
-    print("Sync complete")
+    logger.info("Sync idle")
 case .syncing:
-    print("Syncing...")
+    logger.info("Sync in progress")
+case .synced:
+    logger.info("Sync complete")
 case .error(let error):
-    print("Sync error: \(error)")
+    logger.error("Sync failed", metadata: [
+        "error": .public(error.localizedDescription)
+    ])
 }
 ```
 
