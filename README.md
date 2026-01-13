@@ -170,10 +170,13 @@ actor RestaurantRepository {
 #### 4. Use in ViewModel
 
 ```swift
+import ARCLogger
+
 @MainActor
 final class RestaurantsViewModel: ObservableObject {
     @Published var restaurants: [Restaurant] = []
     private let repository: RestaurantRepository
+    private let logger = ARCLogger(category: "RestaurantsViewModel")
 
     init(repository: RestaurantRepository) {
         self.repository = repository
@@ -182,8 +185,13 @@ final class RestaurantsViewModel: ObservableObject {
     func loadRestaurants() async {
         do {
             restaurants = try await repository.fetchAll()
+            logger.info("Loaded restaurants", metadata: [
+                "count": .public(String(restaurants.count))
+            ])
         } catch {
-            print("Error: \(error)")
+            logger.error("Failed to load restaurants", metadata: [
+                "error": .public(error.localizedDescription)
+            ])
         }
     }
 }
