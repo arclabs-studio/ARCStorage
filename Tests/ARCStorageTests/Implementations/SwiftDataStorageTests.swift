@@ -93,7 +93,7 @@ struct SwiftDataStorageTests {
         let models = [
             TestSwiftDataModel(name: "Batch1", value: 10),
             TestSwiftDataModel(name: "Batch2", value: 20),
-            TestSwiftDataModel(name: "Batch3", value: 30),
+            TestSwiftDataModel(name: "Batch3", value: 30)
         ]
 
         try storage.saveAll(models)
@@ -109,7 +109,7 @@ struct SwiftDataStorageTests {
 
         let models = [
             TestSwiftDataModel(name: "A", value: 1),
-            TestSwiftDataModel(name: "B", value: 2),
+            TestSwiftDataModel(name: "B", value: 2)
         ]
 
         try storage.saveAll(models)
@@ -127,7 +127,7 @@ struct SwiftDataStorageTests {
         let models = [
             TestSwiftDataModel(name: "Low", value: 10),
             TestSwiftDataModel(name: "High", value: 100),
-            TestSwiftDataModel(name: "Medium", value: 50),
+            TestSwiftDataModel(name: "Medium", value: 50)
         ]
 
         try storage.saveAll(models)
@@ -202,7 +202,7 @@ struct SwiftDataRepositoryTests {
 
         let models = [
             TestSwiftDataModel(name: "X", value: 1),
-            TestSwiftDataModel(name: "Y", value: 2),
+            TestSwiftDataModel(name: "Y", value: 2)
         ]
 
         try repository.saveAll(models)
