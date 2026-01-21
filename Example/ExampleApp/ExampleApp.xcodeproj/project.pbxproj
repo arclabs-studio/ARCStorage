@@ -22,6 +22,9 @@
 		E80000250000000000000025 /* AuthToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000260000000000000026 /* AuthToken.swift */; };
 		E80000270000000000000027 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000280000000000000028 /* AuthViewModel.swift */; };
 		E80000290000000000000029 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000300000000000000030 /* AuthView.swift */; };
+		E80000340000000000000034 /* PersistentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000310000000000000031 /* PersistentNote.swift */; };
+		E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000320000000000000032 /* PersistentNotesViewModel.swift */; };
+		E80000360000000000000036 /* PersistentNoteListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000330000000000000033 /* PersistentNoteListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +42,9 @@
 		E80000260000000000000026 /* AuthToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthToken.swift; sourceTree = "<group>"; };
 		E80000280000000000000028 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		E80000300000000000000030 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		E80000310000000000000031 /* PersistentNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNote.swift; sourceTree = "<group>"; };
+		E80000320000000000000032 /* PersistentNotesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNotesViewModel.swift; sourceTree = "<group>"; };
+		E80000330000000000000033 /* PersistentNoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNoteListView.swift; sourceTree = "<group>"; };
 		E8PROD0000000000000000PR /* ExampleApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExampleApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -60,6 +66,7 @@
 				E80000080000000000000007 /* Note.swift */,
 				E80000220000000000000022 /* AppSettings.swift */,
 				E80000260000000000000026 /* AuthToken.swift */,
+				E80000310000000000000031 /* PersistentNote.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -101,6 +108,7 @@
 				E80000180000000000000018 /* AddNoteView.swift */,
 				E80000200000000000000020 /* SettingsView.swift */,
 				E80000300000000000000030 /* AuthView.swift */,
+				E80000330000000000000033 /* PersistentNoteListView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -111,6 +119,7 @@
 				E80000100000000000000010 /* NotesViewModel.swift */,
 				E80000240000000000000024 /* SettingsViewModel.swift */,
 				E80000280000000000000028 /* AuthViewModel.swift */,
+				E80000320000000000000032 /* PersistentNotesViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -203,6 +212,9 @@
 				E80000250000000000000025 /* AuthToken.swift in Sources */,
 				E80000270000000000000027 /* AuthViewModel.swift in Sources */,
 				E80000290000000000000029 /* AuthView.swift in Sources */,
+				E80000340000000000000034 /* PersistentNote.swift in Sources */,
+				E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */,
+				E80000360000000000000036 /* PersistentNoteListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
