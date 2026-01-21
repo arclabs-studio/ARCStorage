@@ -22,6 +22,7 @@ disabled_rules:
   - todo                 # We allow TODOs
   - sorted_imports       # Conflicts with @testable imports preference (should be last)
   - attributes           # SwiftFormat handles this (always same line in ARC Labs)
+  - superfluous_disable_command  # Different SwiftLint versions trigger different rules
 
 # Opt-in rules (explicitly enabled per ARCKnowledge)
 opt_in_rules:
