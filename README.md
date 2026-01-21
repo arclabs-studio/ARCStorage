@@ -3,7 +3,7 @@
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20watchOS%2010%20%7C%20tvOS%2017-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.2.0-blue.svg)
 
 **Protocol-based storage abstraction for iOS apps supporting SwiftData, UserDefaults, Keychain, and testing.**
 
@@ -56,11 +56,85 @@ class RestaurantsViewModel: ObservableObject {
 
 - ✅ **Clean Architecture** - Repository Pattern with protocol-first design
 - ✅ **SwiftData Integration** - First-class support for SwiftData (iOS 17+)
+- ✅ **Swift 6 Compatible** - Full strict concurrency support for `@Model` classes
 - ✅ **Fully Testable** - Mocks and in-memory storage for unit tests
 - ✅ **Secure Storage** - Keychain integration for sensitive data
 - ✅ **Built-in Caching** - LRU cache with configurable TTL
-- ✅ **Thread-Safe** - Swift 6 concurrency (actors, Sendable)
+- ✅ **Thread-Safe** - Swift 6 concurrency (actors, Sendable, MainActor)
 - ✅ **CloudKit Ready** - Optional iCloud synchronization
+
+---
+
+## ⚡ Swift 6 Compatibility
+
+ARCStorage v1.2+ provides full Swift 6 strict concurrency support for SwiftData `@Model` classes.
+
+### The Problem
+
+In Swift 6, the `@Model` macro generates conformances isolated to the main actor. This makes it impossible for `@Model` classes to safely conform to `Sendable`:
+
+```swift
+// ❌ This won't compile in Swift 6 strict concurrency
+@Model
+final class Restaurant: Identifiable, Codable, Sendable {
+    var id: UUID
+    var name: String
+}
+
+// Error: Main actor-isolated conformance of 'Restaurant' to 'Decodable'
+// cannot satisfy conformance requirement for a 'Sendable' type parameter
+```
+
+### The Solution
+
+ARCStorage provides `SwiftDataEntity`, a protocol that only requires `PersistentModel & Identifiable`:
+
+```swift
+// ✅ Swift 6 compatible
+@Model
+final class Restaurant: SwiftDataEntity {
+    var id: UUID
+    var name: String
+
+    init(id: UUID = UUID(), name: String) {
+        self.id = id
+        self.name = name
+    }
+}
+```
+
+### Architecture Differences
+
+| Feature | SwiftData | Other Backends |
+|---------|-----------|----------------|
+| Entity Protocol | `SwiftDataEntity` | `Codable & Sendable & Identifiable` |
+| Isolation | `@MainActor` | `actor` |
+| API | Synchronous | `async/await` |
+| Caching | SwiftData internal | `CacheManager` |
+| Protocol Conformance | Standalone | `Repository` / `StorageProvider` |
+
+### Usage Pattern
+
+```swift
+// SwiftData (synchronous, MainActor)
+@MainActor
+class MyViewModel {
+    let repository: SwiftDataRepository<Restaurant>
+
+    func load() {
+        let items = try repository.fetchAll()  // No await needed
+    }
+}
+
+// Other backends (async)
+class MyViewModel {
+    let repository: InMemoryRepository<Note>
+
+    func load() async {
+        let items = try await repository.fetchAll()  // Async
+    }
+}
+```
 
 ---
 
@@ -101,10 +175,11 @@ dependencies: [
 
 ```swift
 import SwiftData
+import ARCStorage
 
 @Model
-final class Restaurant: Identifiable, Codable {
-    @Attribute(.unique) var id: UUID
+final class Restaurant: SwiftDataEntity {
+    var id: UUID
     var name: String
     var cuisine: String
     var rating: Double
@@ -117,6 +192,8 @@ final class Restaurant: Identifiable, Codable {
     }
 }
 ```
+
+> **Note:** SwiftData models conform to `SwiftDataEntity` instead of `Codable` or `Sendable`. This is required for Swift 6 strict concurrency compatibility. See [Swift 6 Compatibility](#-swift-6-compatibility) for details.
 
 #### 2. Configure in Your App
 
@@ -149,7 +226,8 @@ struct MyApp: App {
 #### 3. Create Repository
 
 ```swift
-actor RestaurantRepository {
+@MainActor
+final class RestaurantRepository {
     private let repository: SwiftDataRepository<Restaurant>
 
     init(modelContainer: ModelContainer) {
@@ -157,15 +235,17 @@ actor RestaurantRepository {
         self.repository = SwiftDataRepository(storage: storage)
     }
 
-    func fetchAll() async throws -> [Restaurant] {
-        try await repository.fetchAll()
+    func fetchAll() throws -> [Restaurant] {
+        try repository.fetchAll()
     }
 
-    func save(_ restaurant: Restaurant) async throws {
-        try await repository.save(restaurant)
+    func save(_ restaurant: Restaurant) throws {
+        try repository.save(restaurant)
     }
 }
 ```
+
+> **Note:** SwiftData repositories are `@MainActor` isolated and use synchronous methods. No `async/await` needed!
 
 #### 4. Use in ViewModel
 
@@ -173,8 +253,9 @@ actor RestaurantRepository {
 import ARCLogger
 
 @MainActor
-final class RestaurantsViewModel: ObservableObject {
-    @Published var restaurants: [Restaurant] = []
+@Observable
+final class RestaurantsViewModel {
+    private(set) var restaurants: [Restaurant] = []
     private let repository: RestaurantRepository
     private let logger = ARCLogger(category: "RestaurantsViewModel")
 
@@ -182,9 +263,9 @@ final class RestaurantsViewModel: ObservableObject {
         self.repository = repository
     }
 
-    func loadRestaurants() async {
+    func loadRestaurants() {
         do {
-            restaurants = try await repository.fetchAll()
+            restaurants = try repository.fetchAll()
             logger.info("Loaded restaurants", metadata: [
                 "count": .public(String(restaurants.count))
             ])
@@ -202,9 +283,24 @@ final class RestaurantsViewModel: ObservableObject {
 #### SwiftData (Recommended)
 
 ```swift
+// Model must conform to SwiftDataEntity (not Sendable/Codable)
+@Model
+final class Restaurant: SwiftDataEntity {
+    var id: UUID
+    var name: String
+}
+
+// Create storage and repository (both @MainActor)
 let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
-let repository = SwiftDataRepository(storage: storage, cachePolicy: .default)
+let repository = SwiftDataRepository(storage: storage)
+
+// Synchronous API (on MainActor)
+let restaurants = try repository.fetchAll()
+try repository.save(restaurant)
+try repository.delete(id: restaurant.id)
 ```
+
+> **Important:** SwiftData storage/repository are `@MainActor` isolated with synchronous methods. SwiftData's internal faulting provides caching, so no `CacheManager` is used.
 
 #### InMemory (Testing)
 
@@ -249,16 +345,21 @@ let repository = KeychainRepository<AuthToken>(
 
 #### Caching
 
+Caching is available for InMemory, UserDefaults, and Keychain repositories:
+
 ```swift
 // Aggressive caching (1 hour TTL, 500 items)
-let repository = SwiftDataRepository(storage: storage, cachePolicy: .aggressive)
+let repository = InMemoryRepository<Note>(cachePolicy: .aggressive)
 
 // No caching (always fresh)
-let repository = SwiftDataRepository(storage: storage, cachePolicy: .noCache)
+let repository = InMemoryRepository<Note>(cachePolicy: .noCache)
 
 // Custom policy
 let customPolicy = CachePolicy(ttl: 600, maxSize: 200, strategy: .lru)
+let repository = InMemoryRepository<Note>(cachePolicy: customPolicy)
 ```
+
+> **Note:** `SwiftDataRepository` does not use `CacheManager`. SwiftData provides its own internal caching through object faulting.
 
 #### Queries with Predicates
 
@@ -338,7 +439,7 @@ Sources/ARCStorage/
 │   ├── Models/         # StorageError, QueryDescriptor, SortDescriptor
 │   └── Extensions/     # Identifiable, Predicate helpers
 ├── Implementations/
-│   ├── SwiftData/      # SwiftDataStorage, SwiftDataRepository
+│   ├── SwiftData/      # SwiftDataEntity, SwiftDataStorage, SwiftDataRepository
 │   ├── InMemory/       # InMemoryStorage, InMemoryRepository
 │   ├── UserDefaults/   # UserDefaultsStorage, UserDefaultsRepository
 │   └── Keychain/       # KeychainStorage, KeychainRepository, KeychainAccessibility

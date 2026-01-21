@@ -90,7 +90,7 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         node.next = head
         node.prev = nil
 
-        if let head = head {
+        if let head {
             head.prev = node
         }
 
@@ -121,7 +121,7 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     }
 
     private func removeTail() {
-        guard let tail = tail else { return }
+        guard let tail else { return }
         cache.removeValue(forKey: tail.key)
         removeNode(tail)
         currentSize -= 1

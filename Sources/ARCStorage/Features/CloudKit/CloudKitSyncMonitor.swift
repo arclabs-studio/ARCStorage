@@ -218,13 +218,13 @@ public enum SyncStatus: Sendable {
     public var description: String {
         switch self {
         case .idle:
-            return "Idle"
+            "Idle"
         case .syncing:
-            return "Syncing..."
+            "Syncing..."
         case .synced:
-            return "Synced"
+            "Synced"
         case let .error(error):
-            return "Error: \(error.localizedDescription)"
+            "Error: \(error.localizedDescription)"
         }
     }
 
@@ -253,11 +253,11 @@ extension SyncStatus: Equatable {
         case (.idle, .idle),
              (.syncing, .syncing),
              (.synced, .synced):
-            return true
+            true
         case (.error, .error):
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 }

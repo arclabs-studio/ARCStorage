@@ -3,6 +3,9 @@ build/
 DerivedData/
 .swiftpm/
 .build/
+
+# Claude Code (local settings and skills)
+.claude/
 xcuserdata/
 .DS_Store
 .idea/

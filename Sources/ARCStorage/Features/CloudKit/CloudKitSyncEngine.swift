@@ -136,7 +136,7 @@ public actor CloudKitSyncEngineManager {
         }
     }
 
-    fileprivate func persistState(_ serialization: CKSyncEngine.State.Serialization) {
+    private func persistState(_ serialization: CKSyncEngine.State.Serialization) {
         do {
             let data = try serialization.data()
             UserDefaults.standard.set(data, forKey: stateKey)
@@ -215,6 +215,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
 /// Implement this protocol to respond to sync events and provide
 /// records to be synced.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
+// swiftlint:disable:next class_delegate_protocol
 public protocol CloudKitSyncEngineDelegate: Actor {
     /// Called when account status changes.
     func syncEngine(didReceiveAccountChange change: CKSyncEngine.Event.AccountChange) async
@@ -265,13 +266,13 @@ public enum CloudKitSyncError: Error, LocalizedError, Sendable {
     public var errorDescription: String? {
         switch self {
         case .engineNotStarted:
-            return "CloudKit sync engine has not been started"
+            "CloudKit sync engine has not been started"
         case let .fetchFailed(error):
-            return "Failed to fetch changes: \(error.localizedDescription)"
+            "Failed to fetch changes: \(error.localizedDescription)"
         case let .sendFailed(error):
-            return "Failed to send changes: \(error.localizedDescription)"
+            "Failed to send changes: \(error.localizedDescription)"
         case .accountNotAvailable:
-            return "iCloud account is not available"
+            "iCloud account is not available"
         }
     }
 }

@@ -1,109 +1,99 @@
 import Foundation
 import SwiftData
 
-/// Repository implementation with caching on top of SwiftDataStorage.
+/// Repository implementation for SwiftData entities.
 ///
-/// Provides a high-level interface for domain operations with automatic
-/// caching using the cache-aside pattern.
+/// Provides a high-level interface for domain operations with SwiftData persistence.
+///
+/// ## Swift 6 Concurrency Compatibility
+///
+/// This repository is isolated to `@MainActor` because SwiftData `@Model` classes
+/// cannot conform to `Sendable` in Swift 6 strict concurrency mode.
+///
+/// This repository does **not** conform to ``Repository`` because that protocol
+/// requires `Sendable` entities.
+///
+/// Unlike other repository implementations, this class does not use ``CacheManager``
+/// because `CacheManager` requires `Sendable` values. However, SwiftData provides
+/// its own internal caching (object faulting), so explicit caching is not necessary.
 ///
 /// ## Topics
 /// ### Initialization
-/// - ``init(storage:cachePolicy:)``
+/// - ``init(storage:)``
 ///
 /// ## Example
 /// ```swift
 /// let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
-/// let repository = SwiftDataRepository(
-///     storage: storage,
-///     cachePolicy: .default
-/// )
+/// let repository = SwiftDataRepository(storage: storage)
 ///
-/// // Use in ViewModel
-/// let restaurants = try await repository.fetchAll()
+/// // Use in ViewModel (must be @MainActor)
+/// let restaurants = try repository.fetchAll()
 /// ```
-public actor SwiftDataRepository<T>: Repository where T: PersistentModel & Identifiable & Codable & Sendable,
-T.ID: Sendable & Hashable {
-    public typealias Entity = T
-
+@MainActor
+public final class SwiftDataRepository<T: SwiftDataEntity> {
     private let storage: SwiftDataStorage<T>
-    private let cache: CacheManager<T.ID, T>
 
     /// Creates a new repository.
     ///
     /// - Parameters:
     ///   - storage: The underlying SwiftData storage
-    ///   - cachePolicy: The caching policy to use
-    public init(
-        storage: SwiftDataStorage<T>,
-        cachePolicy: CachePolicy = .default
-    ) {
+    public init(storage: SwiftDataStorage<T>) {
         self.storage = storage
-        cache = CacheManager(policy: cachePolicy)
     }
 
-    public func save(_ entity: T) async throws {
-        try await storage.save(entity)
-        await cache.set(entity, for: entity.id)
-    }
-
-    public func fetchAll() async throws -> [T] {
-        let entities = try await storage.fetchAll()
-
-        // Update cache with fetched entities
-        for entity in entities {
-            await cache.set(entity, for: entity.id)
-        }
-
-        return entities
-    }
-
-    public func fetch(id: T.ID) async throws -> T? {
-        // Check cache first
-        if let cached = await cache.get(id) {
-            return cached
-        }
-
-        // Fetch from storage
-        guard let entity = try await storage.fetch(id: id) else {
-            return nil
-        }
-
-        // Update cache
-        await cache.set(entity, for: id)
-
-        return entity
-    }
-
-    public func delete(id: T.ID) async throws {
-        try await storage.delete(id: id)
-        await cache.invalidate(id)
-    }
-
-    public func invalidateCache() async {
-        await cache.invalidate()
-    }
-}
-
-extension SwiftDataRepository {
-    /// Fetches entities matching a predicate.
+    /// Saves or updates an entity.
     ///
-    /// This is a convenience method that bypasses caching for complex queries.
+    /// - Parameter entity: The entity to save
+    /// - Throws: ``StorageError`` if the operation fails
+    public func save(_ entity: T) throws {
+        try storage.save(entity)
+    }
+
+    /// Fetches all entities.
+    ///
+    /// - Returns: Array of all entities
+    /// - Throws: ``StorageError`` if the operation fails
+    public func fetchAll() throws -> [T] {
+        try storage.fetchAll()
+    }
+
+    /// Fetches an entity by its identifier.
+    ///
+    /// - Parameter id: The unique identifier
+    /// - Returns: The entity if found, `nil` otherwise
+    /// - Throws: ``StorageError`` if the operation fails
+    public func fetch(id: T.ID) throws -> T? {
+        try storage.fetch(id: id)
+    }
+
+    /// Deletes an entity by its identifier.
+    ///
+    /// - Parameter id: The unique identifier
+    /// - Throws: ``StorageError`` if the operation fails
+    public func delete(id: T.ID) throws {
+        try storage.delete(id: id)
+    }
+
+    /// Fetches entities matching a predicate.
     ///
     /// - Parameter predicate: The predicate to match
     /// - Returns: Array of matching entities
-    public func fetch(matching predicate: Predicate<T>) async throws -> [T] {
-        try await storage.fetch(matching: predicate)
+    public func fetch(matching predicate: Predicate<T>) throws -> [T] {
+        try storage.fetch(matching: predicate)
     }
 
     /// Saves multiple entities in a batch.
     ///
     /// - Parameter entities: Entities to save
-    public func saveAll(_ entities: [T]) async throws {
-        try await storage.saveAll(entities)
+    public func saveAll(_ entities: [T]) throws {
+        try storage.saveAll(entities)
+    }
 
-        // Update cache
-        for entity in entities {
-            await cache.set(entity, for: entity.id)
-        }
+    /// Deletes all entities.
+    ///
+    /// - Warning: This operation cannot be undone
+    /// - Throws: ``StorageError`` if the delete operation fails
+    public func deleteAll() throws {
+        try storage.deleteAll()
     }
 }

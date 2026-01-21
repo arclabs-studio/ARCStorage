@@ -3,8 +3,20 @@ import SwiftData
 
 /// SwiftData-backed storage implementation.
 ///
-/// Uses `@ModelActor` for thread-safe ModelContext operations.
+/// Provides thread-safe ModelContext operations isolated to the MainActor.
 /// Supports all CRUD operations with SwiftData's persistence layer.
+///
+/// ## Swift 6 Concurrency Compatibility
+///
+/// This storage is isolated to `@MainActor` because SwiftData `@Model` classes
+/// cannot conform to `Sendable` in Swift 6 strict concurrency mode. The `@Model`
+/// macro generates conformances isolated to the main actor, so all SwiftData
+/// operations must occur on the main actor.
+///
+/// This storage does **not** conform to ``StorageProvider`` because that protocol
+/// requires `Sendable` entities.
+///
+/// Use ``SwiftDataEntity`` protocol for your models instead of requiring `Sendable`.
 ///
 /// ## Topics
 /// ### Initialization
@@ -14,7 +26,7 @@ import SwiftData
 /// For optimal fetch performance, add an index to your model's id property:
 /// ```swift
 /// @Model
-/// final class Restaurant: Identifiable, Codable {
+/// final class Restaurant: SwiftDataEntity {
 ///     @Attribute(.unique)
 ///     var id: UUID
 ///     var name: String
@@ -24,7 +36,7 @@ import SwiftData
 /// ## Example
 /// ```swift
 /// @Model
-/// final class Restaurant: Identifiable, Codable {
+/// final class Restaurant: SwiftDataEntity {
 ///     var id: UUID
 ///     var name: String
 /// }
@@ -32,21 +44,29 @@ import SwiftData
 /// let container = try ModelContainer(for: Restaurant.self)
 /// let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
 /// ```
-@ModelActor
-public actor SwiftDataStorage<T>: StorageProvider where T: PersistentModel & Identifiable & Codable & Sendable,
-T.ID: Sendable & Hashable {
-    public typealias Entity = T
+@MainActor
+public final class SwiftDataStorage<T: SwiftDataEntity> {
+    private let modelContainer: ModelContainer
+    private let modelContext: ModelContext
 
     /// Tracks registered objects for faster lookups.
     private var registeredObjects: [T.ID: T] = [:]
 
-    public func save(_ entity: T) async throws {
+    /// Creates a new SwiftData storage.
+    ///
+    /// - Parameter modelContainer: The model container to use for persistence
+    public init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+        modelContext = modelContainer.mainContext
+    }
+
+    public func save(_ entity: T) throws {
         modelContext.insert(entity)
         registeredObjects[entity.id] = entity
         try saveContext()
     }
 
-    public func saveAll(_ entities: [T]) async throws {
+    public func saveAll(_ entities: [T]) throws {
         for entity in entities {
             modelContext.insert(entity)
             registeredObjects[entity.id] = entity
@@ -54,7 +74,7 @@ T.ID: Sendable & Hashable {
         try saveContext()
     }
 
-    public func fetch(id: T.ID) async throws -> T? {
+    public func fetch(id: T.ID) throws -> T? {
         // 1. Check registered objects first (O(1) lookup)
         if let cached = registeredObjects[id] {
             // Verify it's still valid in the context
@@ -92,18 +112,18 @@ T.ID: Sendable & Hashable {
         }
     }
 
-    public func fetchAll() async throws -> [T] {
+    public func fetchAll() throws -> [T] {
         let descriptor = FetchDescriptor<T>()
         return try modelContext.fetch(descriptor)
     }
 
-    public func fetch(matching predicate: Predicate<T>) async throws -> [T] {
+    public func fetch(matching predicate: Predicate<T>) throws -> [T] {
         let descriptor = FetchDescriptor<T>(predicate: predicate)
         return try modelContext.fetch(descriptor)
     }
 
-    public func delete(id: T.ID) async throws {
-        guard let entity = try await fetch(id: id) else {
+    public func delete(id: T.ID) throws {
+        guard let entity = try fetch(id: id) else {
             throw StorageError.entityNotFound(id: id)
         }
         modelContext.delete(entity)
@@ -111,26 +131,13 @@ T.ID: Sendable & Hashable {
         try saveContext()
     }
 
-    public func deleteAll() async throws {
-        let entities = try await fetchAll()
+    public func deleteAll() throws {
+        let entities = try fetchAll()
         for entity in entities {
             modelContext.delete(entity)
         }
         registeredObjects.removeAll()
         try saveContext()
-    }
-
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
-        do {
-            let result = try await block()
-            try saveContext()
-            return result
-        } catch {
-            modelContext.rollback()
-            throw StorageError.transactionFailed(underlying: error)
-        }
     }
 
     // MARK: - Private Methods
