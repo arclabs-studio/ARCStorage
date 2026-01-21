@@ -189,7 +189,7 @@ import SwiftData
 /// - <doc:Testing>
 public enum ARCStorage {
     /// Current version of ARCStorage.
-    public static let version = "1.0.0"
+    public static let version = "1.2.0"
 
     /// Framework identifier.
     public static let identifier = "com.arclabs.arcstorage"
