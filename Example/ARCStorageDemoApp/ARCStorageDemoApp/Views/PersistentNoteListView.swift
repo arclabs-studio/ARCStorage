@@ -1,6 +1,6 @@
 //
 //  PersistentNoteListView.swift
-//  ExampleApp
+//  ARCStorageDemoApp
 //
 //  Created by ARC Labs Studio on 21/01/2026.
 //

@@ -1,27 +1,33 @@
 //
-//  AddNoteView.swift
-//  ExampleApp
+//  NoteDetailView.swift
+//  ARCStorageDemoApp
 //
 //  Created by ARC Labs Studio on 28/12/2024.
 //
 
 import SwiftUI
 
-struct AddNoteView: View {
+struct NoteDetailView: View {
     // MARK: Private Properties
 
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""
-    @State private var content = ""
-    @State private var color: NoteColor = .yellow
-    @State private var isPinned = false
+    @State private var title: String
+    @State private var content: String
+    @State private var color: NoteColor
+    @State private var isPinned: Bool
 
+    private let note: Note
     private let onSave: (Note) async -> Void
 
     // MARK: Initialization
 
-    init(onSave: @escaping (Note) async -> Void) {
+    init(note: Note, onSave: @escaping (Note) async -> Void) {
+        self.note = note
         self.onSave = onSave
+        _title = State(initialValue: note.title)
+        _content = State(initialValue: note.content)
+        _color = State(initialValue: note.color)
+        _isPinned = State(initialValue: note.isPinned)
     }
 
     // MARK: Body
@@ -47,10 +53,20 @@ struct AddNoteView: View {
                         }
                     }
 
-                    Toggle("Pin this note", isOn: $isPinned)
+                    Toggle("Pinned", isOn: $isPinned)
+                }
+
+                Section("Info") {
+                    LabeledContent("Created") {
+                        Text(note.createdAt, style: .date)
+                    }
+
+                    LabeledContent("Last Modified") {
+                        Text(note.updatedAt, style: .relative)
+                    }
                 }
             }
-            .navigationTitle("New Note")
+            .navigationTitle("Edit Note")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -60,9 +76,9 @@ struct AddNoteView: View {
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
+                    Button("Save") {
                         Task {
-                            await addNote()
+                            await saveNote()
                         }
                     }
                     .disabled(title.isEmpty)
@@ -74,16 +90,19 @@ struct AddNoteView: View {
 
 // MARK: - Private Functions
 
-extension AddNoteView {
-    fileprivate func addNote() async {
-        let note = Note(
+extension NoteDetailView {
+    fileprivate func saveNote() async {
+        let updated = Note(
+            id: note.id,
             title: title,
             content: content,
+            createdAt: note.createdAt,
+            updatedAt: Date(),
             isPinned: isPinned,
             color: color
         )
 
-        await onSave(note)
+        await onSave(updated)
         dismiss()
     }
 
@@ -101,5 +120,5 @@ extension AddNoteView {
 // MARK: - Preview
 
 #Preview {
-    AddNoteView { _ in }
+    NoteDetailView(note: Note.samples[0]) { _ in }
 }

@@ -1,6 +1,6 @@
 //
-//  ExampleApp.swift
-//  ExampleApp
+//  ARCStorageDemoApp.swift
+//  ARCStorageDemoApp
 //
 //  Created by ARC Labs Studio on 28/12/2024.
 //
@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct ExampleApp: App {
+struct ARCStorageDemoApp: App {
     // MARK: Private Properties
 
     private let notesViewModel: NotesViewModel
@@ -33,7 +33,7 @@ struct ExampleApp: App {
 
         // Settings: UserDefaults storage (persistent)
         let settingsRepository = UserDefaultsRepository<AppSettings>(
-            keyPrefix: "ExampleApp.Settings"
+            keyPrefix: "ARCStorageDemoApp.Settings"
         )
         settingsViewModel = SettingsViewModel(repository: settingsRepository)
 
