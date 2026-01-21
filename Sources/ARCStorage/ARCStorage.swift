@@ -32,6 +32,7 @@ import SwiftData
 /// - ``TransactionContext``
 ///
 /// ### SwiftData Integration
+/// - ``SwiftDataEntity``
 /// - ``SwiftDataStorage``
 /// - ``SwiftDataRepository``
 /// - ``SwiftDataConfiguration``
@@ -77,12 +78,11 @@ import SwiftData
 ///
 /// ### 1. Define Your Model
 ///
-/// For SwiftData, your model must conform to `PersistentModel`, `Identifiable`,
-/// `Codable`, and `Sendable`:
+/// For SwiftData, your model must conform to ``SwiftDataEntity``:
 ///
 /// ```swift
 /// @Model
-/// final class Restaurant: Identifiable, Codable {
+/// final class Restaurant: SwiftDataEntity {
 ///     @Attribute(.unique) var id: UUID
 ///     var name: String
 ///     var rating: Double
@@ -94,6 +94,10 @@ import SwiftData
 ///     }
 /// }
 /// ```
+///
+/// > Note: SwiftData models do not require `Codable` or `Sendable` conformance.
+/// > The `@Model` macro handles serialization, and Swift 6 strict concurrency
+/// > makes `Sendable` conformance problematic for `@Model` classes.
 ///
 /// ### 2. Configure Storage
 ///
@@ -126,16 +130,16 @@ import SwiftData
 /// @Observable
 /// final class RestaurantsStore {
 ///     private(set) var restaurants: [Restaurant] = []
-///     private let repository: any Repository<Restaurant>
+///     private let repository: SwiftDataRepository<Restaurant>
 ///     private let logger = ARCLogger(category: "RestaurantsStore")
 ///
-///     init(repository: any Repository<Restaurant>) {
+///     init(repository: SwiftDataRepository<Restaurant>) {
 ///         self.repository = repository
 ///     }
 ///
-///     func loadRestaurants() async {
+///     func loadRestaurants() {
 ///         do {
-///             restaurants = try await repository.fetchAll()
+///             restaurants = try repository.fetchAll()
 ///             logger.info("Loaded restaurants", metadata: [
 ///                 "count": .public(String(restaurants.count))
 ///             ])
@@ -147,6 +151,11 @@ import SwiftData
 ///     }
 /// }
 /// ```
+///
+/// > Important: `SwiftDataRepository` is `@MainActor` isolated and does not conform
+/// > to the generic `Repository` protocol because SwiftData models cannot be `Sendable`
+/// > in Swift 6. Use the concrete type directly. All operations are synchronous since
+/// > they run on the MainActor.
 ///
 /// ## Testing
 ///
