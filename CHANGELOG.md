@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `PersistentNotesViewModel` with synchronous MainActor API
   - `PersistentNoteListView` with full CRUD operations
 
+- **SwiftData Tests**
+  - `SwiftDataStorageTests` with comprehensive test coverage
+  - Tests for CRUD operations, batch operations, predicates, and error handling
+
 ### Changed
 
 - **SwiftDataStorage Architecture** ⚠️ Breaking Change
@@ -86,6 +90,11 @@ let restaurants = try repository.fetchAll()
 - Other storage backends (InMemory, UserDefaults, Keychain) are **unchanged**
 - They still require `Codable & Sendable` and use async/await
 - Use structs for these backends, `@Model` classes only for SwiftData
+
+### Project
+
+- **Demo App Renamed** - `ExampleApp` → `ARCStorageDemoApp` following ARCKnowledge naming conventions
+- **Code Quality** - Fixed SwiftFormat and SwiftLint violations across the codebase
 
 ## [1.1.0] - 2026-01-05
 
