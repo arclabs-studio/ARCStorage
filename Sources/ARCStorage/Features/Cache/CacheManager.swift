@@ -153,14 +153,14 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     }
 
     private func evictEntries(count: Int) {
-        let keysToEvict: [Key]
-
-        switch policy.strategy {
+        // swiftlint:disable switch_case_alignment
+        let keysToEvict: [Key] = switch policy.strategy {
         case .lru:
-            keysToEvict = Array(accessOrder.prefix(count))
+            Array(accessOrder.prefix(count))
         case .fifo:
-            keysToEvict = Array(cache.keys.prefix(count))
+            Array(cache.keys.prefix(count))
         }
+        // swiftlint:enable switch_case_alignment
 
         for key in keysToEvict {
             cache.removeValue(forKey: key)

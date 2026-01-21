@@ -1,6 +1,6 @@
 //
 //  AuthView.swift
-//  ExampleApp
+//  ARCStorageDemoApp
 //
 //  Created by ARC Labs Studio on 05/01/2026.
 //

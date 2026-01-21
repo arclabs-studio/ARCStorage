@@ -1,4 +1,4 @@
-# ExampleApp
+# ARCStorageDemoApp
 
 Demo application for **ARCStorage** package.
 
@@ -10,7 +10,7 @@ Demo application for **ARCStorage** package.
 
 ## Running the Example
 
-1. Open `ExampleApp.xcodeproj` in Xcode
+1. Open `ARCStorageDemoApp.xcodeproj` in Xcode
 2. The ARCStorage package is referenced locally from the parent directory (`../..`)
 3. Select an iOS simulator and press Run (Cmd+R)
 
@@ -59,8 +59,8 @@ The Settings tab demonstrates `UserDefaultsRepository<AppSettings>` with:
 ## Project Structure
 
 ```
-ExampleApp/
-├── ExampleApp.swift         # App entry point
+ARCStorageDemoApp/
+├── ARCStorageDemoApp.swift  # App entry point
 ├── ContentView.swift        # Main tab view
 ├── Model/
 │   ├── Note.swift           # Note entity
@@ -103,13 +103,13 @@ let notesRepository = InMemoryRepository<Note>()
 
 // UserDefaults for settings (persistent storage)
 let settingsRepository = UserDefaultsRepository<AppSettings>(
-    keyPrefix: "ExampleApp.Settings"
+    keyPrefix: "ARCStorageDemoApp.Settings"
 )
 
 // Keychain for auth tokens (secure storage with security level)
 let authViewModel = AuthViewModel(
     securityLevel: .whenUnlockedThisDeviceOnly,
-    service: "com.arclabs.exampleapp.auth"
+    service: "com.arclabs.arcstoragedemoapp.auth"
 )
 ```
 

@@ -1,17 +1,19 @@
 //
 //  ContentView.swift
-//  ExampleApp
+//  ARCStorageDemoApp
 //
 //  Created by ARC Labs Studio on 28/12/2024.
 //
 
 import ARCStorage
+import SwiftData
 import SwiftUI
 
 struct ContentView: View {
     // MARK: Private Properties
 
     private let notesViewModel: NotesViewModel
+    private let persistentNotesViewModel: PersistentNotesViewModel
     private let settingsViewModel: SettingsViewModel
     private let authViewModel: AuthViewModel
 
@@ -19,10 +21,12 @@ struct ContentView: View {
 
     init(
         notesViewModel: NotesViewModel,
+        persistentNotesViewModel: PersistentNotesViewModel,
         settingsViewModel: SettingsViewModel,
         authViewModel: AuthViewModel
     ) {
         self.notesViewModel = notesViewModel
+        self.persistentNotesViewModel = persistentNotesViewModel
         self.settingsViewModel = settingsViewModel
         self.authViewModel = authViewModel
     }
@@ -31,8 +35,12 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            Tab("Notes", systemImage: "note.text") {
+            Tab("In-Memory", systemImage: "memorychip") {
                 NoteListView(viewModel: notesViewModel)
+            }
+
+            Tab("SwiftData", systemImage: "externaldrive.fill") {
+                PersistentNoteListView(viewModel: persistentNotesViewModel)
             }
 
             Tab("Secure", systemImage: "lock.shield") {
@@ -49,9 +57,17 @@ struct ContentView: View {
 // MARK: - Preview
 
 #Preview("Light Mode") {
-    ContentView(
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
+    let repository = SwiftDataRepository(storage: storage)
+
+    return ContentView(
         notesViewModel: NotesViewModel(
             repository: InMemoryRepository<Note>()
+        ),
+        persistentNotesViewModel: PersistentNotesViewModel(
+            repository: repository
         ),
         settingsViewModel: SettingsViewModel(
             repository: UserDefaultsRepository<AppSettings>(
@@ -66,9 +82,17 @@ struct ContentView: View {
 }
 
 #Preview("Dark Mode") {
-    ContentView(
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
+    let repository = SwiftDataRepository(storage: storage)
+
+    return ContentView(
         notesViewModel: NotesViewModel(
             repository: InMemoryRepository<Note>()
+        ),
+        persistentNotesViewModel: PersistentNotesViewModel(
+            repository: repository
         ),
         settingsViewModel: SettingsViewModel(
             repository: UserDefaultsRepository<AppSettings>(
