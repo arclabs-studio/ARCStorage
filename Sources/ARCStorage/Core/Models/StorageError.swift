@@ -36,7 +36,7 @@ public enum StorageError: Error, @unchecked Sendable {
     ///
     /// - Parameter id: The ID that was not found
     /// - Returns: A StorageError.notFound with string representation of the ID
-    public static func entityNotFound<ID>(id: ID) -> StorageError {
+    public static func entityNotFound(id: some Any) -> StorageError {
         .notFound(id: String(describing: id))
     }
 }
@@ -46,17 +46,17 @@ extension StorageError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case let .notFound(id):
-            return "Entity with ID '\(id)' was not found"
+            "Entity with ID '\(id)' was not found"
         case let .saveFailed(error):
-            return "Failed to save entity: \(error.localizedDescription)"
+            "Failed to save entity: \(error.localizedDescription)"
         case let .fetchFailed(error):
-            return "Failed to fetch entities: \(error.localizedDescription)"
+            "Failed to fetch entities: \(error.localizedDescription)"
         case let .deleteFailed(error):
-            return "Failed to delete entity: \(error.localizedDescription)"
+            "Failed to delete entity: \(error.localizedDescription)"
         case .invalidData:
-            return "Data is invalid or corrupted"
+            "Data is invalid or corrupted"
         case let .transactionFailed(error):
-            return "Transaction failed: \(error.localizedDescription)"
+            "Transaction failed: \(error.localizedDescription)"
         }
     }
 }

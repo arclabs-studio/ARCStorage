@@ -215,7 +215,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
 /// Implement this protocol to respond to sync events and provide
 /// records to be synced.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-// swiftlint:disable:next class_delegate_protocol
+// swiftlint:disable:next class_delegate_protocol - Inherits from Actor for concurrency safety
 public protocol CloudKitSyncEngineDelegate: Actor {
     /// Called when account status changes.
     func syncEngine(didReceiveAccountChange change: CKSyncEngine.Event.AccountChange) async

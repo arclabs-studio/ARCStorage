@@ -45,15 +45,15 @@ public enum KeychainAccessibility: Sendable {
     var securityAttribute: CFString {
         switch self {
         case .whenUnlocked:
-            return kSecAttrAccessibleWhenUnlocked
+            kSecAttrAccessibleWhenUnlocked
         case .whenUnlockedThisDeviceOnly:
-            return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            kSecAttrAccessibleWhenUnlockedThisDeviceOnly
         case .afterFirstUnlock:
-            return kSecAttrAccessibleAfterFirstUnlock
+            kSecAttrAccessibleAfterFirstUnlock
         case .afterFirstUnlockThisDeviceOnly:
-            return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         case .whenPasscodeSetThisDeviceOnly:
-            return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+            kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
         }
     }
 }
@@ -182,7 +182,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
             kSecMatchLimit as String: kSecMatchLimitAll
         ]
 
-        if let accessGroup = accessGroup {
+        if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
         }
 
@@ -277,7 +277,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
             kSecAttrAccessible as String: accessibility.securityAttribute
         ]
 
-        if let accessGroup = accessGroup {
+        if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
         }
 

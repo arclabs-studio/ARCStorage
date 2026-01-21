@@ -57,7 +57,7 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
     /// - Parameter modelContainer: The model container to use for persistence
     public init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
-        self.modelContext = modelContainer.mainContext
+        modelContext = modelContainer.mainContext
     }
 
     public func save(_ entity: T) throws {
