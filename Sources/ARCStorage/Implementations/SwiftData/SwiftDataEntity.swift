@@ -17,18 +17,102 @@ import SwiftData
 /// may conflict with the macro-generated code in Swift 6. SwiftData handles serialization
 /// internally, so `Codable` conformance is not required for persistence.
 ///
-/// ## Example
+/// ## Best Practices
+///
+/// ### Use @Attribute(.unique) for ID Properties
+///
+/// Adding `@Attribute(.unique)` to your `id` property creates a database index, enabling
+/// O(1) lookups by ID instead of O(n) table scans:
 ///
 /// ```swift
 /// @Model
 /// final class Restaurant: SwiftDataEntity {
-///     var id: UUID
-///     var name: String
+///     @Attribute(.unique)  // Creates database index for fast lookups
+///     var id: UUID = UUID()
+///     var name: String = ""
+///     var rating: Double = 0.0
+/// }
+/// ```
 ///
-///     init(id: UUID = UUID(), name: String) {
+/// ### CloudKit Compatibility
+///
+/// When using CloudKit synchronization, your models must follow specific requirements:
+///
+/// - **All properties must be optional OR have default values**
+/// - **All relationships must be optional**
+///
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()          // ✅ Has default value
+///     var name: String = ""          // ✅ Has default value
+///     var description: String?       // ✅ Optional
+///     var rating: Double?            // ✅ Optional
+///
+///     @Relationship(deleteRule: .cascade)
+///     var reviews: [Review]?         // ✅ Optional relationship
+///
+///     var owner: Owner?              // ✅ Optional inverse relationship
+/// }
+/// ```
+///
+/// ### Property Transformations
+///
+/// For complex types that aren't natively supported by SwiftData, use transformable attributes:
+///
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()
+///
+///     @Attribute(.transformable(by: CLLocationCoordinate2DTransformer.self))
+///     var location: CLLocationCoordinate2D?
+/// }
+/// ```
+///
+/// ## Example
+///
+/// ### Basic Model
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()
+///     var name: String = ""
+///     var cuisine: String = ""
+///     var rating: Double = 0.0
+///
+///     init(id: UUID = UUID(), name: String, cuisine: String, rating: Double = 0.0) {
 ///         self.id = id
 ///         self.name = name
+///         self.cuisine = cuisine
+///         self.rating = rating
 ///     }
+/// }
+/// ```
+///
+/// ### Model with Relationships
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()
+///     var name: String = ""
+///
+///     @Relationship(deleteRule: .cascade, inverse: \Review.restaurant)
+///     var reviews: [Review]? = []
+/// }
+///
+/// @Model
+/// final class Review: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()
+///     var text: String = ""
+///     var rating: Int = 0
+///
+///     var restaurant: Restaurant?
 /// }
 /// ```
 ///

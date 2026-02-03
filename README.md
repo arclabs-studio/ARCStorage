@@ -61,7 +61,9 @@ class RestaurantsViewModel: ObservableObject {
 - ✅ **Secure Storage** - Keychain integration for sensitive data
 - ✅ **Built-in Caching** - LRU cache with configurable TTL
 - ✅ **Thread-Safe** - Swift 6 concurrency (actors, Sendable, MainActor)
-- ✅ **CloudKit Ready** - Optional iCloud synchronization
+- ✅ **CloudKit Ready** - Optional iCloud synchronization with sync monitoring
+- ✅ **Relationship Prefetching** - Avoid N+1 queries with built-in prefetching
+- ✅ **Schema Migrations** - VersionedSchema support with custom migration stages
 
 ---
 
@@ -367,7 +369,36 @@ let repository = InMemoryRepository<Note>(cachePolicy: customPolicy)
 let predicate = #Predicate<Restaurant> { restaurant in
     restaurant.rating >= 4.0 && restaurant.cuisine == "Italian"
 }
-let results = try await repository.fetch(matching: predicate)
+let results = try repository.fetch(matching: predicate)
+```
+
+#### Relationship Prefetching
+
+Avoid N+1 query problems by prefetching relationships:
+
+```swift
+// Prefetch reviews when fetching restaurants
+let restaurants = try repository.fetchAll(
+    prefetching: [\Restaurant.reviews]
+)
+
+// Accessing reviews won't trigger additional queries
+for restaurant in restaurants {
+    print(restaurant.reviews?.count ?? 0)
+}
+```
+
+#### Advanced Fetch with Sorting and Pagination
+
+```swift
+let predicate = #Predicate<Restaurant> { $0.isOpen }
+let restaurants = try repository.fetch(
+    matching: predicate,
+    sortedBy: [Foundation.SortDescriptor(\.rating, order: .reverse)],
+    limit: 20,
+    offset: 0,
+    prefetching: [\Restaurant.reviews]
+)
 ```
 
 #### CloudKit Sync

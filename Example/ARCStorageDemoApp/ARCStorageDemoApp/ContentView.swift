@@ -43,6 +43,10 @@ struct ContentView: View {
                 PersistentNoteListView(viewModel: persistentNotesViewModel)
             }
 
+            Tab("CloudKit", systemImage: "icloud") {
+                CloudKitSyncView()
+            }
+
             Tab("Secure", systemImage: "lock.shield") {
                 AuthView(viewModel: authViewModel)
             }

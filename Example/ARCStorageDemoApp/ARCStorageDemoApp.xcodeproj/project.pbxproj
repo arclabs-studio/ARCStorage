@@ -25,6 +25,7 @@
 		E80000340000000000000034 /* PersistentNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000310000000000000031 /* PersistentNote.swift */; };
 		E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000320000000000000032 /* PersistentNotesViewModel.swift */; };
 		E80000360000000000000036 /* PersistentNoteListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000330000000000000033 /* PersistentNoteListView.swift */; };
+		E80000380000000000000038 /* CloudKitSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000370000000000000037 /* CloudKitSyncView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +46,7 @@
 		E80000310000000000000031 /* PersistentNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNote.swift; sourceTree = "<group>"; };
 		E80000320000000000000032 /* PersistentNotesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNotesViewModel.swift; sourceTree = "<group>"; };
 		E80000330000000000000033 /* PersistentNoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNoteListView.swift; sourceTree = "<group>"; };
+		E80000370000000000000037 /* CloudKitSyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncView.swift; sourceTree = "<group>"; };
 		E8PROD0000000000000000PR /* ARCStorageDemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARCStorageDemoApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -109,6 +111,7 @@
 				E80000200000000000000020 /* SettingsView.swift */,
 				E80000300000000000000030 /* AuthView.swift */,
 				E80000330000000000000033 /* PersistentNoteListView.swift */,
+				E80000370000000000000037 /* CloudKitSyncView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -215,6 +218,7 @@
 				E80000340000000000000034 /* PersistentNote.swift in Sources */,
 				E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */,
 				E80000360000000000000036 /* PersistentNoteListView.swift in Sources */,
+				E80000380000000000000038 /* CloudKitSyncView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
