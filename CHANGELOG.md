@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-03
+
+### Added
+
+- **SwiftData Prefetching API**
+  - New `prefetch(ids:)` method for batch loading entities by ID
+  - Optimized for reducing round-trips when loading related data
+
+- **SwiftData Migration Support**
+  - `SwiftDataMigration` helper for schema version management
+  - Support for lightweight and custom migrations
+  - Migration plan validation utilities
+
+- **CloudKit Documentation**
+  - Comprehensive CloudKit integration guide
+  - Best practices for sync conflict resolution
+  - Troubleshooting common sync issues
+
+### Changed
+
+- **CI/CD Improvements**
+  - Added Claude GitHub Actions workflows for automated assistance
+  - Updated workflow permissions for proper access
+
+### Documentation
+
+- Updated CLAUDE.md with make commands and testing patterns
+
 ## [1.2.0] - 2026-01-21
 
 ### Added
