@@ -32,15 +32,15 @@ final class AuthViewModel {
     var securityLevelDescription: String {
         switch securityLevel {
         case .whenUnlocked:
-            return "When Unlocked (Default)"
+            "When Unlocked (Default)"
         case .whenUnlockedThisDeviceOnly:
-            return "When Unlocked (This Device Only)"
+            "When Unlocked (This Device Only)"
         case .afterFirstUnlock:
-            return "After First Unlock"
+            "After First Unlock"
         case .afterFirstUnlockThisDeviceOnly:
-            return "After First Unlock (This Device Only)"
+            "After First Unlock (This Device Only)"
         case .whenPasscodeSetThisDeviceOnly:
-            return "When Passcode Set (Most Secure)"
+            "When Passcode Set (Most Secure)"
         }
     }
 

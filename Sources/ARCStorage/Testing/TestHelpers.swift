@@ -2,10 +2,10 @@ import Foundation
 
 #if DEBUG
 
-/// Test fixtures and utilities for ARCStorage testing.
-///
-/// This file contains helper types and functions for creating
-/// test data and validating storage operations.
+// Test fixtures and utilities for ARCStorage testing.
+//
+// This file contains helper types and functions for creating
+// test data and validating storage operations.
 
 /// Sample test model for demonstrations and tests.
 public struct TestModel: Codable, Identifiable, Sendable {

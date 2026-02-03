@@ -14,11 +14,18 @@ import SwiftData
 /// This model conforms to `SwiftDataEntity` which does NOT require
 /// `Sendable` or `Codable` - making it fully compatible with Swift 6
 /// strict concurrency mode.
+///
+/// ## Best Practices Demonstrated
+///
+/// - Uses `@Attribute(.unique)` on `id` for database indexing and O(1) lookups
+/// - All properties have default values for CloudKit compatibility
+/// - Follows SwiftData naming conventions
 @Model
 final class PersistentNote: SwiftDataEntity {
     // MARK: Properties
 
-    var id: UUID
+    /// Unique identifier with database index for fast lookups.
+    @Attribute(.unique) var id: UUID
     var title: String
     var content: String
     var createdAt: Date
@@ -76,7 +83,7 @@ extension PersistentNote {
                 title: "MainActor Isolation",
                 content: "SwiftDataStorage and SwiftDataRepository are @MainActor isolated for safety.",
                 colorName: "green"
-            ),
+            )
         ]
     }
 }

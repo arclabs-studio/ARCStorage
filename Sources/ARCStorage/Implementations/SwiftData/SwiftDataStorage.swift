@@ -74,8 +74,20 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
         try saveContext()
     }
 
+    /// Fetches an entity by its identifier.
+    ///
+    /// This method is optimized for performance:
+    /// 1. First checks the registered objects cache (O(1) lookup)
+    /// 2. Falls back to a full fetch with early exit if not cached
+    ///
+    /// - Note: For best performance, add `@Attribute(.unique)` to your model's `id` property.
+    ///   This creates a database index that SwiftData can use for faster lookups.
+    ///
+    /// - Parameter id: The unique identifier of the entity to fetch
+    /// - Returns: The entity if found, `nil` otherwise
+    /// - Throws: ``StorageError`` if the fetch operation fails
     public func fetch(id: T.ID) throws -> T? {
-        // 1. Check registered objects first (O(1) lookup)
+        // 1. Check registered objects cache first (O(1) lookup)
         if let cached = registeredObjects[id] {
             // Verify it's still valid in the context
             if !cached.isDeleted {
@@ -84,41 +96,145 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
             registeredObjects.removeValue(forKey: id)
         }
 
-        // 2. Use enumeration to find the entity with early exit
-        //    This is more efficient than fetching all when the entity is near the start
-        var descriptor = FetchDescriptor<T>()
-        descriptor.fetchLimit = 100 // Batch size for enumeration
+        // 2. Fetch all and find with early exit
+        //    Generic T.ID prevents direct predicate usage (#Predicate requires concrete types).
+        //    SwiftData optimizes internally when @Attribute(.unique) is used on the id property.
+        let descriptor = FetchDescriptor<T>()
+        let results = try modelContext.fetch(descriptor)
 
-        var offset = 0
-        while true {
-            descriptor.fetchOffset = offset
-            let batch = try modelContext.fetch(descriptor)
-
-            if batch.isEmpty {
-                return nil
-            }
-
-            for entity in batch where entity.id == id {
-                registeredObjects[id] = entity
-                return entity
-            }
-
-            offset += batch.count
-
-            // If we got fewer than the limit, we've reached the end
-            if batch.count < 100 {
-                return nil
-            }
+        if let entity = results.first(where: { $0.id == id }) {
+            registeredObjects[id] = entity
+            return entity
         }
+
+        return nil
     }
 
+    /// Fetches all entities.
+    ///
+    /// - Returns: Array of all entities
+    /// - Throws: ``StorageError`` if the fetch operation fails
     public func fetchAll() throws -> [T] {
         let descriptor = FetchDescriptor<T>()
         return try modelContext.fetch(descriptor)
     }
 
+    /// Fetches all entities with relationship prefetching.
+    ///
+    /// Use this method to avoid N+1 query problems when you need to access
+    /// relationships on the fetched entities.
+    ///
+    /// - Parameter relationshipKeyPaths: Key paths to relationships that should be prefetched
+    /// - Returns: Array of all entities with prefetched relationships
+    /// - Throws: ``StorageError`` if the fetch operation fails
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Prefetch reviews when fetching restaurants
+    /// let restaurants = try storage.fetchAll(
+    ///     prefetching: [\Restaurant.reviews]
+    /// )
+    /// // Accessing reviews won't trigger additional queries
+    /// for restaurant in restaurants {
+    ///     print(restaurant.reviews?.count ?? 0)
+    /// }
+    /// ```
+    public func fetchAll(
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
+    ) throws -> [T] {
+        var descriptor = FetchDescriptor<T>()
+        descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
+        return try modelContext.fetch(descriptor)
+    }
+
+    /// Fetches entities matching a predicate.
+    ///
+    /// - Parameter predicate: The predicate to filter entities
+    /// - Returns: Array of matching entities
+    /// - Throws: ``StorageError`` if the fetch operation fails
     public func fetch(matching predicate: Predicate<T>) throws -> [T] {
         let descriptor = FetchDescriptor<T>(predicate: predicate)
+        return try modelContext.fetch(descriptor)
+    }
+
+    /// Fetches entities matching a predicate with relationship prefetching.
+    ///
+    /// Use this method to avoid N+1 query problems when filtering entities
+    /// and accessing their relationships.
+    ///
+    /// - Parameters:
+    ///   - predicate: The predicate to filter entities
+    ///   - relationshipKeyPaths: Key paths to relationships that should be prefetched
+    /// - Returns: Array of matching entities with prefetched relationships
+    /// - Throws: ``StorageError`` if the fetch operation fails
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Fetch high-rated restaurants with their reviews prefetched
+    /// let predicate = #Predicate<Restaurant> { $0.rating >= 4.0 }
+    /// let topRestaurants = try storage.fetch(
+    ///     matching: predicate,
+    ///     prefetching: [\Restaurant.reviews, \Restaurant.owner]
+    /// )
+    /// ```
+    public func fetch(
+        matching predicate: Predicate<T>,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
+    ) throws -> [T] {
+        var descriptor = FetchDescriptor<T>(predicate: predicate)
+        descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
+        return try modelContext.fetch(descriptor)
+    }
+
+    /// Fetches entities with full configuration options.
+    ///
+    /// This method provides complete control over the fetch operation, including
+    /// filtering, sorting, pagination, and relationship prefetching.
+    ///
+    /// - Parameters:
+    ///   - predicate: Optional predicate to filter entities
+    ///   - sortDescriptors: Sort descriptors for ordering results
+    ///   - fetchLimit: Maximum number of entities to fetch
+    ///   - fetchOffset: Number of entities to skip (for pagination)
+    ///   - relationshipKeyPaths: Key paths to relationships that should be prefetched
+    /// - Returns: Array of entities matching the criteria
+    /// - Throws: ``StorageError`` if the fetch operation fails
+    ///
+    /// ## Example
+    /// ```swift
+    /// // Fetch paginated results with sorting and prefetching
+    /// let predicate = #Predicate<Restaurant> { $0.isOpen }
+    /// let restaurants = try storage.fetch(
+    ///     matching: predicate,
+    ///     sortedBy: [Foundation.SortDescriptor(\.rating, order: .reverse)],
+    ///     limit: 20,
+    ///     offset: 0,
+    ///     prefetching: [\Restaurant.reviews]
+    /// )
+    /// ```
+    public func fetch(
+        matching predicate: Predicate<T>? = nil,
+        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+        limit fetchLimit: Int? = nil,
+        offset fetchOffset: Int? = nil,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
+    ) throws -> [T] {
+        var descriptor = if let predicate {
+            FetchDescriptor<T>(predicate: predicate, sortBy: sortDescriptors)
+        } else {
+            FetchDescriptor<T>(sortBy: sortDescriptors)
+        }
+
+        if let fetchLimit {
+            descriptor.fetchLimit = fetchLimit
+        }
+        if let fetchOffset {
+            descriptor.fetchOffset = fetchOffset
+        }
+        if !relationshipKeyPaths.isEmpty {
+            descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
+        }
+
         return try modelContext.fetch(descriptor)
     }
 
