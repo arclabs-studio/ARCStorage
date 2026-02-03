@@ -63,7 +63,7 @@ struct NoteListView: View {
 // MARK: - Subviews
 
 extension NoteListView {
-    fileprivate var notesList: some View {
+    private var notesList: some View {
         List {
             ForEach(viewModel.notes) { note in
                 NoteRowView(note: note)
@@ -97,7 +97,7 @@ extension NoteListView {
         }
     }
 
-    fileprivate var emptyView: some View {
+    private var emptyView: some View {
         ContentUnavailableView {
             Label("No Notes", systemImage: "note.text")
         } description: {
@@ -112,7 +112,7 @@ extension NoteListView {
         }
     }
 
-    fileprivate func errorView(_ message: String) -> some View {
+    private func errorView(_ message: String) -> some View {
         ContentUnavailableView {
             Label("Error", systemImage: "exclamationmark.triangle")
         } description: {
@@ -127,7 +127,7 @@ extension NoteListView {
         }
     }
 
-    @ToolbarContentBuilder fileprivate var toolbarContent: some ToolbarContent {
+    @ToolbarContentBuilder private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button {
                 showAddNote = true

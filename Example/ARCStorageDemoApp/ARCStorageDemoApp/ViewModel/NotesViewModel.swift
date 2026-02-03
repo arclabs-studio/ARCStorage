@@ -115,7 +115,7 @@ final class NotesViewModel {
 // MARK: - Private Functions
 
 extension NotesViewModel {
-    fileprivate func sortNotes() {
+    private func sortNotes() {
         notes.sort { first, second in
             if first.isPinned != second.isPinned {
                 return first.isPinned

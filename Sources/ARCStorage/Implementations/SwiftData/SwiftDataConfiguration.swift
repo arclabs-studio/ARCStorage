@@ -6,12 +6,77 @@ import Foundation
 /// This configuration sets up SwiftData with support for CloudKit sync,
 /// autosave, and custom model configurations.
 ///
+/// ## CloudKit Requirements
+///
+/// When `isCloudKitEnabled` is `true`, your models must follow specific requirements
+/// to ensure CloudKit compatibility:
+///
+/// ### Property Requirements
+///
+/// **All properties must be optional OR have default values.** CloudKit sync can create
+/// partial objects during sync conflicts, so every property needs a valid default state.
+///
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)
+///     var id: UUID = UUID()     // ✅ Has default value
+///     var name: String = ""     // ✅ Has default value
+///     var rating: Double?       // ✅ Optional
+///     var cuisineType: String?  // ✅ Optional
+/// }
+/// ```
+///
+/// ### Relationship Requirements
+///
+/// **All relationships must be optional.** CloudKit cannot guarantee that related
+/// objects will sync simultaneously, so relationships must handle missing references.
+///
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     var id: UUID = UUID()
+///     var name: String = ""
+///
+///     // ✅ Optional relationship - required for CloudKit
+///     @Relationship(deleteRule: .cascade)
+///     var reviews: [Review]?
+///
+///     // ✅ Optional inverse relationship
+///     var owner: Owner?
+/// }
+/// ```
+///
+/// ### Index Requirements
+///
+/// Use `@Attribute(.unique)` on your `id` property to create an index for faster lookups:
+///
+/// ```swift
+/// @Model
+/// final class Restaurant: SwiftDataEntity {
+///     @Attribute(.unique)  // Creates database index
+///     var id: UUID = UUID()
+///     // ...
+/// }
+/// ```
+///
 /// ## Topics
 /// ### Creating Configuration
 /// - ``init(schema:isCloudKitEnabled:allowsSave:)``
 /// - ``makeContainer()``
 ///
 /// ## Example
+///
+/// ### Basic Setup
+/// ```swift
+/// let config = SwiftDataConfiguration(
+///     schema: Schema([Restaurant.self, Review.self]),
+///     isCloudKitEnabled: false
+/// )
+/// let container = try config.makeContainer()
+/// ```
+///
+/// ### CloudKit Setup
 /// ```swift
 /// let config = SwiftDataConfiguration(
 ///     schema: Schema([Restaurant.self, Review.self]),

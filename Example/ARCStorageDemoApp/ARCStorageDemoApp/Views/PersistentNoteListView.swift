@@ -60,7 +60,7 @@ struct PersistentNoteListView: View {
 // MARK: - Subviews
 
 extension PersistentNoteListView {
-    fileprivate var notesList: some View {
+    private var notesList: some View {
         List {
             Section {
                 ForEach(viewModel.notes) { note in
@@ -96,7 +96,7 @@ extension PersistentNoteListView {
         }
     }
 
-    fileprivate var emptyView: some View {
+    private var emptyView: some View {
         ContentUnavailableView {
             Label("No Persistent Notes", systemImage: "externaldrive")
         } description: {
@@ -109,7 +109,7 @@ extension PersistentNoteListView {
         }
     }
 
-    fileprivate func errorView(_ message: String) -> some View {
+    private func errorView(_ message: String) -> some View {
         ContentUnavailableView {
             Label("Error", systemImage: "exclamationmark.triangle")
         } description: {
@@ -122,7 +122,7 @@ extension PersistentNoteListView {
         }
     }
 
-    fileprivate var addNoteSheet: some View {
+    private var addNoteSheet: some View {
         NavigationStack {
             Form {
                 Section("Note Details") {
@@ -167,7 +167,7 @@ extension PersistentNoteListView {
         .presentationDetents([.medium])
     }
 
-    fileprivate func editNoteSheet(_ note: PersistentNote) -> some View {
+    private func editNoteSheet(_ note: PersistentNote) -> some View {
         NavigationStack {
             Form {
                 Section("Note Details") {
@@ -208,7 +208,7 @@ extension PersistentNoteListView {
         .presentationDetents([.medium])
     }
 
-    @ToolbarContentBuilder fileprivate var toolbarContent: some ToolbarContent {
+    @ToolbarContentBuilder private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button {
                 showAddNote = true

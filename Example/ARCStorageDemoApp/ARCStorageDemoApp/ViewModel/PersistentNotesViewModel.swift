@@ -113,7 +113,7 @@ final class PersistentNotesViewModel {
 // MARK: - Private Functions
 
 extension PersistentNotesViewModel {
-    fileprivate func sortNotes() {
+    private func sortNotes() {
         notes.sort { first, second in
             if first.isPinned != second.isPinned {
                 return first.isPinned

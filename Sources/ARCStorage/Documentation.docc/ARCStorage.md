@@ -14,6 +14,17 @@ The library supports multiple storage backends:
 
 ## Topics
 
+### Essentials
+
+- <doc:GettingStarted>
+- <doc:RepositoryPattern>
+
+### SwiftData
+
+- <doc:SwiftDataIntegration>
+- <doc:CloudKitIntegration>
+- <doc:MigrationGuide>
+
 ### Core Protocols
 
 - ``StorageProvider``
@@ -34,6 +45,11 @@ The library supports multiple storage backends:
 - ``KeychainRepository``
 - ``SwiftDataRepository``
 
+### Configuration
+
+- ``SwiftDataConfiguration``
+- ``CloudKitConfiguration``
+
 ### Caching
 
 - ``CacheManager``
@@ -42,9 +58,15 @@ The library supports multiple storage backends:
 
 ### CloudKit Integration
 
-- ``CloudKitConfiguration``
 - ``CloudKitSyncMonitor``
 - ``CloudKitSyncEngineManager``
+- ``SyncStatus``
+
+### Migration
+
+- ``SwiftDataMigrationStage``
+- ``MigrationPlan``
+- ``MigrationManager``
 
 ### Models
 
@@ -54,5 +76,6 @@ The library supports multiple storage backends:
 
 ### Testing
 
+- <doc:Testing>
 - ``MockRepository``
 - ``MockStorageProvider``
