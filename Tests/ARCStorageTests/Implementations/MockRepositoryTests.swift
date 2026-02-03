@@ -69,7 +69,7 @@ struct MockRepositoryTests {
     }
 
     @Test("Reset clears all state")
-    func reset_clearsAllState() async throws {
+    func reset_clearsAllState() async {
         let repository = MockRepository<TestModel>()
         await repository.setMockEntities(TestModel.allFixtures)
         try? await repository.save(TestModel.fixture1)
