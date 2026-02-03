@@ -121,8 +121,7 @@ struct CloudKitSyncView: View {
 
     // MARK: Status Icon
 
-    @ViewBuilder
-    private var statusIcon: some View {
+    @ViewBuilder private var statusIcon: some View {
         switch monitor.status {
         case .idle:
             Image(systemName: "cloud")

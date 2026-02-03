@@ -83,7 +83,7 @@ extension PersistentNote {
                 title: "MainActor Isolation",
                 content: "SwiftDataStorage and SwiftDataRepository are @MainActor isolated for safety.",
                 colorName: "green"
-            ),
+            )
         ]
     }
 }

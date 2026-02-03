@@ -54,7 +54,7 @@ struct SettingsView: View {
 // MARK: - Sections
 
 extension SettingsView {
-    fileprivate var displaySection: some View {
+    private var displaySection: some View {
         Section("Display") {
             Toggle("Show Pinned First", isOn: Binding(
                 get: { viewModel.settings.showPinnedFirst },
@@ -65,7 +65,7 @@ extension SettingsView {
         }
     }
 
-    fileprivate var notesSection: some View {
+    private var notesSection: some View {
         Section("Notes") {
             Picker("Default Color", selection: Binding(
                 get: { viewModel.settings.defaultNoteColor },
@@ -92,7 +92,7 @@ extension SettingsView {
         }
     }
 
-    fileprivate var cacheSection: some View {
+    private var cacheSection: some View {
         Section {
             Button("Refresh from Storage") {
                 Task {
@@ -110,7 +110,7 @@ extension SettingsView {
         }
     }
 
-    fileprivate var infoSection: some View {
+    private var infoSection: some View {
         Section("Info") {
             if let lastSave = viewModel.lastSaveDate {
                 LabeledContent("Last Saved") {

@@ -75,7 +75,7 @@ struct AddNoteView: View {
 // MARK: - Private Functions
 
 extension AddNoteView {
-    fileprivate func addNote() async {
+    private func addNote() async {
         let note = Note(
             title: title,
             content: content,
@@ -87,7 +87,7 @@ extension AddNoteView {
         dismiss()
     }
 
-    fileprivate func colorFor(_ noteColor: NoteColor) -> Color {
+    private func colorFor(_ noteColor: NoteColor) -> Color {
         switch noteColor {
         case .yellow: .yellow
         case .blue: .blue

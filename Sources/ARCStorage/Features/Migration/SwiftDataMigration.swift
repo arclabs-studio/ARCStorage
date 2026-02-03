@@ -174,9 +174,9 @@ public typealias SwiftDataMigrationStage = MigrationStage
 /// )
 /// ```
 @MainActor
-public func makeVersionedContainer<S: VersionedSchema, M: SchemaMigrationPlan>(
+public func makeVersionedContainer<S: VersionedSchema>(
     schema _: S.Type,
-    migrationPlan: M.Type,
+    migrationPlan: (some SchemaMigrationPlan).Type,
     isCloudKitEnabled: Bool = false
 ) throws -> ModelContainer {
     let modelConfiguration = ModelConfiguration(
@@ -212,9 +212,9 @@ extension SwiftDataConfiguration {
     /// )
     /// let container = try config.makeContainer(migrationPlan: RestaurantMigrationPlan.self)
     /// ```
-    public init<M: SchemaMigrationPlan>(
+    public init(
         schema: Schema,
-        migrationPlan _: M.Type,
+        migrationPlan _: (some SchemaMigrationPlan).Type,
         isCloudKitEnabled: Bool = false,
         allowsSave: Bool = true
     ) {
@@ -241,8 +241,8 @@ extension SwiftDataConfiguration {
     ///     migrationPlan: RestaurantMigrationPlan.self
     /// )
     /// ```
-    public func makeContainer<M: SchemaMigrationPlan>(
-        migrationPlan: M.Type
+    public func makeContainer(
+        migrationPlan: (some SchemaMigrationPlan).Type
     ) throws -> ModelContainer {
         try ModelContainer(
             for: schema,
