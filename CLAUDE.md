@@ -6,16 +6,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build the package
-swift build
+swift build                # or: make build
 
-# Run all tests
-swift test
+# Run all tests (parallel)
+swift test --parallel      # or: make test
 
 # Run a specific test
 swift test --filter ARCStorageTests.RepositoryIntegrationTests/testFullCRUDFlow
 
 # Run tests in a specific file
 swift test --filter ARCStorageTests.LRUCacheTests
+
+# Linting and formatting
+make lint                  # Run SwiftLint
+make format                # Check formatting (dry-run)
+make fix                   # Apply SwiftFormat
+
+# Clean build artifacts
+make clean
 ```
 
 ## Architecture
@@ -93,4 +101,26 @@ Sources/ARCStorage/
 
 **Error Handling**: All operations throw `StorageError` (defined in `Core/Models/StorageError.swift`).
 
-**Testing**: Use `MockRepository<T>` for unit tests with `Sendable` entities, `InMemoryRepository<T>` for integration tests. Test fixtures use pattern `TestModel.fixture1`, `TestModel.allFixtures`. For SwiftData tests, use actual `@Model` classes with `SwiftDataEntity` conformance.
+**Testing**: Use `MockRepository<T>` for unit tests with `Sendable` entities, `InMemoryRepository<T>` for integration tests. For SwiftData tests, use actual `@Model` classes with `SwiftDataEntity` conformance.
+
+## Testing Patterns
+
+**Test Fixtures** (defined in `Testing/TestHelpers.swift`):
+- `TestModel.fixture1`, `.fixture2`, `.fixture3` - Deterministic UUIDs for assertions
+- `TestModel.allFixtures` - Array of all fixtures
+- `SimpleTestModel.fixture1`, `.fixture2` - String ID variants for UserDefaults/Keychain
+
+**SwiftData Test Setup** (in-memory container):
+```swift
+@MainActor
+func makeTestContainer() throws -> ModelContainer {
+    let schema = Schema([YourModel.self])
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    return try ModelContainer(for: schema, configurations: [config])
+}
+```
+
+**MockRepository Tracking** (for verifying ViewModel calls):
+- `mockRepo.saveCallCount`, `fetchAllCallCount`, `fetchCallCount`, `deleteCallCount`
+- `mockRepo.shouldThrowError = .notFound(...)` - Simulate errors
+- `mockRepo.mockEntities = [...]` - Inject test data
