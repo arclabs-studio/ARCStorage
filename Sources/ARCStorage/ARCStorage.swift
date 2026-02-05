@@ -45,6 +45,11 @@ import SwiftData
 /// - ``KeychainStorage``
 /// - ``KeychainRepository``
 ///
+/// ### Preferences
+/// - ``PreferenceKey``
+/// - ``PreferenceStorage``
+/// - ``PreferenceStorageProtocol``
+///
 /// ### Caching
 /// - ``CacheManager``
 /// - ``LRUCache``
@@ -54,6 +59,7 @@ import SwiftData
 /// ### Testing
 /// - ``MockRepository``
 /// - ``MockStorageProvider``
+/// - ``MockPreferenceStorage``
 /// - ``TestHelpers``
 ///
 /// ### CloudKit

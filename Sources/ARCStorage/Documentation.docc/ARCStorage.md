@@ -18,6 +18,7 @@ The library supports multiple storage backends:
 
 - <doc:GettingStarted>
 - <doc:RepositoryPattern>
+- <doc:Preferences>
 
 ### SwiftData
 
@@ -44,6 +45,12 @@ The library supports multiple storage backends:
 - ``UserDefaultsRepository``
 - ``KeychainRepository``
 - ``SwiftDataRepository``
+
+### Preferences
+
+- ``PreferenceKey``
+- ``PreferenceStorage``
+- ``PreferenceStorageProtocol``
 
 ### Configuration
 
@@ -79,3 +86,4 @@ The library supports multiple storage backends:
 - <doc:Testing>
 - ``MockRepository``
 - ``MockStorageProvider``
+- ``MockPreferenceStorage``

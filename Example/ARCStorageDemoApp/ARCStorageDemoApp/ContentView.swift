@@ -15,6 +15,7 @@ struct ContentView: View {
     private let notesViewModel: NotesViewModel
     private let persistentNotesViewModel: PersistentNotesViewModel
     private let settingsViewModel: SettingsViewModel
+    private let preferencesViewModel: PreferencesViewModel
     private let authViewModel: AuthViewModel
 
     // MARK: Initialization
@@ -23,11 +24,13 @@ struct ContentView: View {
         notesViewModel: NotesViewModel,
         persistentNotesViewModel: PersistentNotesViewModel,
         settingsViewModel: SettingsViewModel,
+        preferencesViewModel: PreferencesViewModel,
         authViewModel: AuthViewModel
     ) {
         self.notesViewModel = notesViewModel
         self.persistentNotesViewModel = persistentNotesViewModel
         self.settingsViewModel = settingsViewModel
+        self.preferencesViewModel = preferencesViewModel
         self.authViewModel = authViewModel
     }
 
@@ -54,6 +57,10 @@ struct ContentView: View {
             Tab("Settings", systemImage: "gear") {
                 SettingsView(viewModel: settingsViewModel)
             }
+
+            Tab("Preferences", systemImage: "slider.horizontal.3") {
+                PreferencesView(viewModel: preferencesViewModel)
+            }
         }
     }
 }
@@ -77,6 +84,9 @@ struct ContentView: View {
             repository: UserDefaultsRepository<AppSettings>(
                 keyPrefix: "Preview.Settings"
             )
+        ),
+        preferencesViewModel: PreferencesViewModel(
+            preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")
         ),
         authViewModel: AuthViewModel(
             securityLevel: .whenUnlockedThisDeviceOnly
@@ -102,6 +112,9 @@ struct ContentView: View {
             repository: UserDefaultsRepository<AppSettings>(
                 keyPrefix: "Preview.Settings"
             )
+        ),
+        preferencesViewModel: PreferencesViewModel(
+            preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")
         ),
         authViewModel: AuthViewModel(
             securityLevel: .whenPasscodeSetThisDeviceOnly
