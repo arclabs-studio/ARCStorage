@@ -16,6 +16,7 @@ struct ARCStorageDemoApp: App {
     private let notesViewModel: NotesViewModel
     private let persistentNotesViewModel: PersistentNotesViewModel
     private let settingsViewModel: SettingsViewModel
+    private let preferencesViewModel: PreferencesViewModel
     private let authViewModel: AuthViewModel
 
     // MARK: Initialization
@@ -31,11 +32,17 @@ struct ARCStorageDemoApp: App {
         let persistentRepository = SwiftDataRepository(storage: persistentStorage)
         persistentNotesViewModel = PersistentNotesViewModel(repository: persistentRepository)
 
-        // Settings: UserDefaults storage (persistent)
+        // Settings: UserDefaults storage (persistent, async, entity-based)
         let settingsRepository = UserDefaultsRepository<AppSettings>(
             keyPrefix: "ARCStorageDemoApp.Settings"
         )
         settingsViewModel = SettingsViewModel(repository: settingsRepository)
+
+        // Preferences: PreferenceStorage (synchronous, key-value based)
+        // Note: This is created synchronously - no async required!
+        preferencesViewModel = PreferencesViewModel(
+            preferences: PreferenceStorage(keyPrefix: "ARCStorageDemoApp.Prefs")
+        )
 
         // Auth: Keychain storage (secure, with high security level)
         authViewModel = AuthViewModel(
@@ -52,8 +59,10 @@ struct ARCStorageDemoApp: App {
                 notesViewModel: notesViewModel,
                 persistentNotesViewModel: persistentNotesViewModel,
                 settingsViewModel: settingsViewModel,
+                preferencesViewModel: preferencesViewModel,
                 authViewModel: authViewModel
             )
+            .preferredColorScheme(preferencesViewModel.isDarkModeEnabled ? .dark : .light)
         }
     }
 }

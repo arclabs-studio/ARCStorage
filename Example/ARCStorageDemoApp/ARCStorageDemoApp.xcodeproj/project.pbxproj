@@ -26,6 +26,9 @@
 		E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000320000000000000032 /* PersistentNotesViewModel.swift */; };
 		E80000360000000000000036 /* PersistentNoteListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000330000000000000033 /* PersistentNoteListView.swift */; };
 		E80000380000000000000038 /* CloudKitSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000370000000000000037 /* CloudKitSyncView.swift */; };
+		E80000420000000000000042 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000390000000000000039 /* AppPreferences.swift */; };
+		E80000430000000000000043 /* PreferencesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000400000000000000040 /* PreferencesViewModel.swift */; };
+		E80000440000000000000044 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E80000410000000000000041 /* PreferencesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +50,9 @@
 		E80000320000000000000032 /* PersistentNotesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNotesViewModel.swift; sourceTree = "<group>"; };
 		E80000330000000000000033 /* PersistentNoteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentNoteListView.swift; sourceTree = "<group>"; };
 		E80000370000000000000037 /* CloudKitSyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitSyncView.swift; sourceTree = "<group>"; };
+		E80000390000000000000039 /* AppPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
+		E80000400000000000000040 /* PreferencesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesViewModel.swift; sourceTree = "<group>"; };
+		E80000410000000000000041 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		E8PROD0000000000000000PR /* ARCStorageDemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARCStorageDemoApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -69,6 +75,7 @@
 				E80000220000000000000022 /* AppSettings.swift */,
 				E80000260000000000000026 /* AuthToken.swift */,
 				E80000310000000000000031 /* PersistentNote.swift */,
+				E80000390000000000000039 /* AppPreferences.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -112,6 +119,7 @@
 				E80000300000000000000030 /* AuthView.swift */,
 				E80000330000000000000033 /* PersistentNoteListView.swift */,
 				E80000370000000000000037 /* CloudKitSyncView.swift */,
+				E80000410000000000000041 /* PreferencesView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -123,6 +131,7 @@
 				E80000240000000000000024 /* SettingsViewModel.swift */,
 				E80000280000000000000028 /* AuthViewModel.swift */,
 				E80000320000000000000032 /* PersistentNotesViewModel.swift */,
+				E80000400000000000000040 /* PreferencesViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -219,6 +228,9 @@
 				E80000350000000000000035 /* PersistentNotesViewModel.swift in Sources */,
 				E80000360000000000000036 /* PersistentNoteListView.swift in Sources */,
 				E80000380000000000000038 /* CloudKitSyncView.swift in Sources */,
+				E80000420000000000000042 /* AppPreferences.swift in Sources */,
+				E80000430000000000000043 /* PreferencesViewModel.swift in Sources */,
+				E80000440000000000000044 /* PreferencesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
