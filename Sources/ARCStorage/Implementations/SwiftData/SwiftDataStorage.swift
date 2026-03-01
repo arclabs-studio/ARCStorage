@@ -44,8 +44,7 @@ import SwiftData
 /// let container = try ModelContainer(for: Restaurant.self)
 /// let storage = SwiftDataStorage<Restaurant>(modelContainer: container)
 /// ```
-@MainActor
-public final class SwiftDataStorage<T: SwiftDataEntity> {
+@MainActor public final class SwiftDataStorage<T: SwiftDataEntity> {
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
 
@@ -139,9 +138,7 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
     ///     print(restaurant.reviews?.count ?? 0)
     /// }
     /// ```
-    public func fetchAll(
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
-    ) throws -> [T] {
+    public func fetchAll(prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
         var descriptor = FetchDescriptor<T>()
         descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
         return try modelContext.fetch(descriptor)
@@ -177,10 +174,8 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
     ///     prefetching: [\Restaurant.reviews, \Restaurant.owner]
     /// )
     /// ```
-    public func fetch(
-        matching predicate: Predicate<T>,
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
-    ) throws -> [T] {
+    public func fetch(matching predicate: Predicate<T>,
+                      prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
         var descriptor = FetchDescriptor<T>(predicate: predicate)
         descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
         return try modelContext.fetch(descriptor)
@@ -212,13 +207,11 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(
-        matching predicate: Predicate<T>? = nil,
-        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
-        limit fetchLimit: Int? = nil,
-        offset fetchOffset: Int? = nil,
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
-    ) throws -> [T] {
+    public func fetch(matching predicate: Predicate<T>? = nil,
+                      sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+                      limit fetchLimit: Int? = nil,
+                      offset fetchOffset: Int? = nil,
+                      prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []) throws -> [T] {
         var descriptor = if let predicate {
             FetchDescriptor<T>(predicate: predicate, sortBy: sortDescriptors)
         } else {

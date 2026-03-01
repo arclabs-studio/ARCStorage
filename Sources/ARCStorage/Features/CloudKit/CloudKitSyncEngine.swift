@@ -25,8 +25,7 @@ import Foundation
 /// )
 /// try await engine.sendChanges()
 /// ```
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-public actor CloudKitSyncEngineManager {
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) public actor CloudKitSyncEngineManager {
     /// The underlying CKSyncEngine instance.
     private var syncEngine: CKSyncEngine?
 
@@ -48,11 +47,9 @@ public actor CloudKitSyncEngineManager {
     ///   - configuration: The CloudKit configuration
     ///   - delegate: The delegate for handling sync events
     ///   - stateKey: Key for persisting sync state in UserDefaults
-    public init(
-        configuration: CloudKitConfiguration,
-        delegate: any CloudKitSyncEngineDelegate,
-        stateKey: String = "com.arcstorage.cloudkit.syncState"
-    ) {
+    public init(configuration: CloudKitConfiguration,
+                delegate: any CloudKitSyncEngineDelegate,
+                stateKey: String = "com.arcstorage.cloudkit.syncState") {
         self.configuration = configuration
         self.delegate = delegate
         self.stateKey = stateKey
@@ -70,11 +67,9 @@ public actor CloudKitSyncEngineManager {
 
         // Create the sync engine configuration
         let engineDelegate = SyncEngineDelegate(manager: self)
-        var engineConfig = CKSyncEngine.Configuration(
-            database: database,
-            stateSerialization: stateSerialization,
-            delegate: engineDelegate
-        )
+        var engineConfig = CKSyncEngine.Configuration(database: database,
+                                                      stateSerialization: stateSerialization,
+                                                      delegate: engineDelegate)
 
         // Configure automatic sync based on our configuration
         engineConfig.automaticallySync = configuration.autoSync
@@ -177,9 +172,8 @@ public actor CloudKitSyncEngineManager {
         }
     }
 
-    fileprivate func nextRecordZoneChangeBatch(
-        _ context: CKSyncEngine.SendChangesContext
-    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    fileprivate func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext) async -> CKSyncEngine
+    .RecordZoneChangeBatch? {
         await delegate?.syncEngine(nextRecordZoneChangeBatchFor: context)
     }
 }
@@ -200,10 +194,8 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
         }
     }
 
-    func nextRecordZoneChangeBatch(
-        _ context: CKSyncEngine.SendChangesContext,
-        syncEngine _: CKSyncEngine
-    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext,
+                                   syncEngine _: CKSyncEngine) async -> CKSyncEngine.RecordZoneChangeBatch? {
         await manager.nextRecordZoneChangeBatch(context)
     }
 }
@@ -215,8 +207,7 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
 /// Implement this protocol to respond to sync events and provide
 /// records to be synced.
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-// swiftlint:disable:next class_delegate_protocol
-public protocol CloudKitSyncEngineDelegate: Actor {
+public protocol CloudKitSyncEngineDelegate: Actor, AnyObject {
     /// Called when account status changes.
     func syncEngine(didReceiveAccountChange change: CKSyncEngine.Event.AccountChange) async
 
@@ -233,15 +224,13 @@ public protocol CloudKitSyncEngineDelegate: Actor {
     func syncEngine(didSendRecordZoneChanges changes: CKSyncEngine.Event.SentRecordZoneChanges) async
 
     /// Provides the next batch of record zone changes to send.
-    func syncEngine(
-        nextRecordZoneChangeBatchFor context: CKSyncEngine.SendChangesContext
-    ) async -> CKSyncEngine.RecordZoneChangeBatch?
+    func syncEngine(nextRecordZoneChangeBatchFor context: CKSyncEngine.SendChangesContext) async -> CKSyncEngine
+        .RecordZoneChangeBatch?
 }
 
 // MARK: - Default Implementations
 
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-extension CloudKitSyncEngineDelegate {
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) extension CloudKitSyncEngineDelegate {
     public func syncEngine(didReceiveAccountChange _: CKSyncEngine.Event.AccountChange) async {}
     public func syncEngine(didFetchDatabaseChanges _: CKSyncEngine.Event.FetchedDatabaseChanges) async {}
     public func syncEngine(didSendDatabaseChanges _: CKSyncEngine.Event.SentDatabaseChanges) async {}
@@ -279,8 +268,7 @@ public enum CloudKitSyncError: Error, LocalizedError, Sendable {
 
 // MARK: - CKSyncEngine.State.Serialization Extension
 
-@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-extension CKSyncEngine.State.Serialization {
+@available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *) extension CKSyncEngine.State.Serialization {
     fileprivate init(from data: Data) throws {
         let decoder = JSONDecoder()
         self = try decoder.decode(CKSyncEngine.State.Serialization.self, from: data)

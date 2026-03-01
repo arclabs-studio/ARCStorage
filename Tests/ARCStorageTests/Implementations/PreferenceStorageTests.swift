@@ -45,12 +45,10 @@ private struct TestConfig: Codable, Sendable, Equatable {
 
 // MARK: - PreferenceStorage Tests
 
-@Suite("PreferenceStorage Tests")
-struct PreferenceStorageTests {
+@Suite("PreferenceStorage Tests") struct PreferenceStorageTests {
     // MARK: - Get Tests
 
-    @Test("Get returns default value when not set")
-    func get_returnsDefaultValue_whenNotSet() {
+    @Test("Get returns default value when not set") func get_returnsDefaultValue_whenNotSet() {
         // Given
         let sut = makeSUT()
 
@@ -61,8 +59,7 @@ struct PreferenceStorageTests {
         #expect(result == "default")
     }
 
-    @Test("Get returns stored value after set")
-    func get_returnsStoredValue_afterSet() {
+    @Test("Get returns stored value after set") func get_returnsStoredValue_afterSet() {
         // Given
         let sut = makeSUT()
         sut.set("custom value", for: TestPreferences.StringValue.self)
@@ -74,8 +71,7 @@ struct PreferenceStorageTests {
         #expect(result == "custom value")
     }
 
-    @Test("Get returns default value after remove")
-    func get_returnsDefaultValue_afterRemove() {
+    @Test("Get returns default value after remove") func get_returnsDefaultValue_afterRemove() {
         // Given
         let sut = makeSUT()
         sut.set("custom value", for: TestPreferences.StringValue.self)
@@ -90,8 +86,7 @@ struct PreferenceStorageTests {
 
     // MARK: - Set Tests
 
-    @Test("Set stores integer value")
-    func set_storesIntegerValue() {
+    @Test("Set stores integer value") func set_storesIntegerValue() {
         // Given
         let sut = makeSUT()
 
@@ -102,8 +97,7 @@ struct PreferenceStorageTests {
         #expect(sut.get(TestPreferences.IntValue.self) == 100)
     }
 
-    @Test("Set stores boolean value")
-    func set_storesBooleanValue() {
+    @Test("Set stores boolean value") func set_storesBooleanValue() {
         // Given
         let sut = makeSUT()
 
@@ -114,8 +108,7 @@ struct PreferenceStorageTests {
         #expect(sut.get(TestPreferences.BoolValue.self) == true)
     }
 
-    @Test("Set overwrites existing value")
-    func set_overwritesExistingValue() {
+    @Test("Set overwrites existing value") func set_overwritesExistingValue() {
         // Given
         let sut = makeSUT()
         sut.set("first", for: TestPreferences.StringValue.self)
@@ -129,8 +122,7 @@ struct PreferenceStorageTests {
 
     // MARK: - Remove Tests
 
-    @Test("Remove clears stored value")
-    func remove_clearsStoredValue() {
+    @Test("Remove clears stored value") func remove_clearsStoredValue() {
         // Given
         let sut = makeSUT()
         sut.set("value", for: TestPreferences.StringValue.self)
@@ -142,8 +134,7 @@ struct PreferenceStorageTests {
         #expect(sut.hasValue(for: TestPreferences.StringValue.self) == false)
     }
 
-    @Test("Remove does not throw when key not set")
-    func remove_doesNotThrow_whenKeyNotSet() {
+    @Test("Remove does not throw when key not set") func remove_doesNotThrow_whenKeyNotSet() {
         // Given
         let sut = makeSUT()
 
@@ -153,8 +144,7 @@ struct PreferenceStorageTests {
 
     // MARK: - HasValue Tests
 
-    @Test("HasValue returns false when not set")
-    func hasValue_returnsFalse_whenNotSet() {
+    @Test("HasValue returns false when not set") func hasValue_returnsFalse_whenNotSet() {
         // Given
         let sut = makeSUT()
 
@@ -165,8 +155,7 @@ struct PreferenceStorageTests {
         #expect(result == false)
     }
 
-    @Test("HasValue returns true after set")
-    func hasValue_returnsTrue_afterSet() {
+    @Test("HasValue returns true after set") func hasValue_returnsTrue_afterSet() {
         // Given
         let sut = makeSUT()
         sut.set("value", for: TestPreferences.StringValue.self)
@@ -178,8 +167,7 @@ struct PreferenceStorageTests {
         #expect(result == true)
     }
 
-    @Test("HasValue returns false after remove")
-    func hasValue_returnsFalse_afterRemove() {
+    @Test("HasValue returns false after remove") func hasValue_returnsFalse_afterRemove() {
         // Given
         let sut = makeSUT()
         sut.set("value", for: TestPreferences.StringValue.self)
@@ -194,8 +182,7 @@ struct PreferenceStorageTests {
 
     // MARK: - Enum Value Tests
 
-    @Test("Stores and retrieves enum values")
-    func storesAndRetrievesEnumValues() {
+    @Test("Stores and retrieves enum values") func storesAndRetrievesEnumValues() {
         // Given
         let sut = makeSUT()
 
@@ -206,8 +193,7 @@ struct PreferenceStorageTests {
         #expect(sut.get(TestPreferences.EnumValue.self) == .staging)
     }
 
-    @Test("Returns default enum value when not set")
-    func returnsDefaultEnumValue_whenNotSet() {
+    @Test("Returns default enum value when not set") func returnsDefaultEnumValue_whenNotSet() {
         // Given
         let sut = makeSUT()
 
@@ -220,8 +206,7 @@ struct PreferenceStorageTests {
 
     // MARK: - Complex Value Tests
 
-    @Test("Stores and retrieves complex Codable values")
-    func storesAndRetrievesComplexValues() {
+    @Test("Stores and retrieves complex Codable values") func storesAndRetrievesComplexValues() {
         // Given
         let sut = makeSUT()
         let config = TestConfig(name: "custom", enabled: true, count: 42)
@@ -235,8 +220,7 @@ struct PreferenceStorageTests {
 
     // MARK: - Key Prefix Tests
 
-    @Test("Different key prefixes store independently")
-    func differentKeyPrefixes_storeIndependently() {
+    @Test("Different key prefixes store independently") func differentKeyPrefixes_storeIndependently() {
         // Given
         let userDefaults = UserDefaults.standard
         let sut1 = PreferenceStorage(userDefaults: userDefaults, keyPrefix: "test.prefix1.\(UUID().uuidString)")
@@ -254,19 +238,15 @@ struct PreferenceStorageTests {
     // MARK: - Factory Method
 
     private func makeSUT() -> PreferenceStorage {
-        PreferenceStorage(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+        PreferenceStorage(userDefaults: .standard,
+                          keyPrefix: "test.\(UUID().uuidString)")
     }
 }
 
 // MARK: - MockPreferenceStorage Tests
 
-@Suite("MockPreferenceStorage Tests")
-struct MockPreferenceStorageTests {
-    @Test("Tracks get calls")
-    func tracksGetCalls() {
+@Suite("MockPreferenceStorage Tests") struct MockPreferenceStorageTests {
+    @Test("Tracks get calls") func tracksGetCalls() {
         // Given
         let sut = MockPreferenceStorage()
 
@@ -279,8 +259,7 @@ struct MockPreferenceStorageTests {
         #expect(sut.lastAccessedKey == "test.int")
     }
 
-    @Test("Tracks set calls")
-    func tracksSetCalls() {
+    @Test("Tracks set calls") func tracksSetCalls() {
         // Given
         let sut = MockPreferenceStorage()
 
@@ -292,8 +271,7 @@ struct MockPreferenceStorageTests {
         #expect(sut.lastAccessedKey == "test.string")
     }
 
-    @Test("Tracks remove calls")
-    func tracksRemoveCalls() {
+    @Test("Tracks remove calls") func tracksRemoveCalls() {
         // Given
         let sut = MockPreferenceStorage()
 
@@ -305,8 +283,7 @@ struct MockPreferenceStorageTests {
         #expect(sut.lastAccessedKey == "test.bool")
     }
 
-    @Test("Tracks hasValue calls")
-    func tracksHasValueCalls() {
+    @Test("Tracks hasValue calls") func tracksHasValueCalls() {
         // Given
         let sut = MockPreferenceStorage()
 
@@ -318,8 +295,7 @@ struct MockPreferenceStorageTests {
         #expect(sut.lastAccessedKey == "test.enum")
     }
 
-    @Test("setMockValue prepopulates data")
-    func setMockValue_prepopulatesData() {
+    @Test("setMockValue prepopulates data") func setMockValue_prepopulatesData() {
         // Given
         let sut = MockPreferenceStorage()
         sut.setMockValue("preset", for: TestPreferences.StringValue.self)
@@ -331,8 +307,7 @@ struct MockPreferenceStorageTests {
         #expect(result == "preset")
     }
 
-    @Test("Reset clears all state")
-    func reset_clearsAllState() {
+    @Test("Reset clears all state") func reset_clearsAllState() {
         // Given
         let sut = MockPreferenceStorage()
         sut.set("value", for: TestPreferences.StringValue.self)

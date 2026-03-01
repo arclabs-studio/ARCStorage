@@ -34,10 +34,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - userDefaults: The UserDefaults instance to use
     ///   - keyPrefix: Prefix for all keys to avoid conflicts
-    public init(
-        userDefaults: UserDefaults = .standard,
-        keyPrefix: String = "ARCStorage"
-    ) {
+    public init(userDefaults: UserDefaults = .standard,
+                keyPrefix: String = "ARCStorage") {
         self.userDefaults = userDefaults
         self.keyPrefix = keyPrefix
     }
@@ -120,9 +118,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         }
     }
 
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
+    public func performTransaction<Result: Sendable>(_ block: @Sendable () async throws -> Result) async throws
+    -> Result {
         // UserDefaults doesn't support transactions, so we just execute the block
         do {
             return try await block()

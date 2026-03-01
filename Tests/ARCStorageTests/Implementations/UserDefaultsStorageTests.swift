@@ -2,14 +2,10 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("UserDefaultsStorage Tests")
-struct UserDefaultsStorageTests {
-    @Test("Save and fetch works correctly")
-    func saveAndFetch_worksCorrectly() async throws {
-        let storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+@Suite("UserDefaultsStorage Tests") struct UserDefaultsStorageTests {
+    @Test("Save and fetch works correctly") func saveAndFetch_worksCorrectly() async throws {
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,
+                                                           keyPrefix: "test.\(UUID().uuidString)")
         let model = SimpleTestModel.fixture1
 
         try await storage.save(model)
@@ -22,12 +18,9 @@ struct UserDefaultsStorageTests {
         try await storage.deleteAll()
     }
 
-    @Test("Fetch all returns all saved entities")
-    func fetchAll_returnsAllSavedEntities() async throws {
-        let storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+    @Test("Fetch all returns all saved entities") func fetchAll_returnsAllSavedEntities() async throws {
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,
+                                                           keyPrefix: "test.\(UUID().uuidString)")
 
         try await storage.save(SimpleTestModel.fixture1)
         try await storage.save(SimpleTestModel.fixture2)
@@ -40,12 +33,9 @@ struct UserDefaultsStorageTests {
         try await storage.deleteAll()
     }
 
-    @Test("Delete removes entity")
-    func delete_removesEntity() async throws {
-        let storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+    @Test("Delete removes entity") func delete_removesEntity() async throws {
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,
+                                                           keyPrefix: "test.\(UUID().uuidString)")
         let model = SimpleTestModel.fixture1
 
         try await storage.save(model)
@@ -55,12 +45,9 @@ struct UserDefaultsStorageTests {
         #expect(fetched == nil)
     }
 
-    @Test("Delete all clears storage")
-    func deleteAll_clearsStorage() async throws {
-        let storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+    @Test("Delete all clears storage") func deleteAll_clearsStorage() async throws {
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,
+                                                           keyPrefix: "test.\(UUID().uuidString)")
 
         try await storage.save(SimpleTestModel.fixture1)
         try await storage.save(SimpleTestModel.fixture2)
@@ -71,12 +58,9 @@ struct UserDefaultsStorageTests {
         #expect(fetched.isEmpty)
     }
 
-    @Test("Update replaces existing entity")
-    func update_replacesExistingEntity() async throws {
-        let storage = UserDefaultsStorage<SimpleTestModel>(
-            userDefaults: .standard,
-            keyPrefix: "test.\(UUID().uuidString)"
-        )
+    @Test("Update replaces existing entity") func update_replacesExistingEntity() async throws {
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,
+                                                           keyPrefix: "test.\(UUID().uuidString)")
         var model = SimpleTestModel.fixture1
 
         try await storage.save(model)

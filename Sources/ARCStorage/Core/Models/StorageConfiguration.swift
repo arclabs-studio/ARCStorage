@@ -28,11 +28,9 @@ public struct StorageConfiguration: Sendable {
     ///   - identifier: Unique identifier
     ///   - isEncrypted: Enable encryption
     ///   - isAutosaveEnabled: Enable autosave
-    public init(
-        identifier: String,
-        isEncrypted: Bool = false,
-        isAutosaveEnabled: Bool = true
-    ) {
+    public init(identifier: String,
+                isEncrypted: Bool = false,
+                isAutosaveEnabled: Bool = true) {
         self.identifier = identifier
         self.isEncrypted = isEncrypted
         self.isAutosaveEnabled = isAutosaveEnabled

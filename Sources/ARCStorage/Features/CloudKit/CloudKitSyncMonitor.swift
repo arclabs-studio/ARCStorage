@@ -27,8 +27,7 @@ import Observation
 /// ```
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
 @Observable
-@MainActor
-public final class CloudKitSyncMonitor {
+@MainActor public final class CloudKitSyncMonitor {
     /// Current sync status.
     public private(set) var status: SyncStatus = .idle
 
@@ -110,11 +109,9 @@ public final class CloudKitSyncMonitor {
     // MARK: - Private Methods
 
     private func setupNotificationObservers() {
-        NotificationCenter.default.addObserver(
-            forName: NSNotification.Name.CKAccountChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.CKAccountChanged,
+                                               object: nil,
+                                               queue: .main) { [weak self] _ in
             Task { @MainActor in
                 await self?.handleAccountChange()
             }
@@ -122,11 +119,9 @@ public final class CloudKitSyncMonitor {
     }
 
     private func removeNotificationObservers() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: NSNotification.Name.CKAccountChanged,
-            object: nil
-        )
+        NotificationCenter.default.removeObserver(self,
+                                                  name: NSNotification.Name.CKAccountChanged,
+                                                  object: nil)
     }
 
     private func handleAccountChange() async {
@@ -165,8 +160,7 @@ public final class CloudKitSyncMonitor {
 /// For new code, prefer using `CloudKitSyncMonitor` which uses the modern `@Observable` macro.
 @available(iOS, deprecated: 17.0, message: "Use CloudKitSyncMonitor with @Observable instead")
 @available(macOS, deprecated: 14.0, message: "Use CloudKitSyncMonitor with @Observable instead")
-@MainActor
-public class LegacyCloudKitSyncMonitor: ObservableObject {
+@MainActor public class LegacyCloudKitSyncMonitor: ObservableObject {
     /// Current sync status.
     @Published public private(set) var status: SyncStatus = .idle
 
