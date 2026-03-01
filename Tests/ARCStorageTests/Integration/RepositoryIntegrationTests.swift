@@ -2,10 +2,8 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("Repository Integration Tests")
-struct RepositoryIntegrationTests {
-    @Test("Full CRUD flow completes successfully")
-    func fullCRUDFlow_completesSuccessfully() async throws {
+@Suite("Repository Integration Tests") struct RepositoryIntegrationTests {
+    @Test("Full CRUD flow completes successfully") func fullCRUDFlow_completesSuccessfully() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
@@ -32,8 +30,7 @@ struct RepositoryIntegrationTests {
         #expect(fetchedAfterDelete == nil)
     }
 
-    @Test("Cache integration populates on fetch")
-    func cacheIntegration_populatesOnFetch() async throws {
+    @Test("Cache integration populates on fetch") func cacheIntegration_populatesOnFetch() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
@@ -48,8 +45,7 @@ struct RepositoryIntegrationTests {
         #expect(fetched1?.id == fetched2?.id)
     }
 
-    @Test("Cache invalidation clears cache")
-    func cacheInvalidation_clearsCache() async throws {
+    @Test("Cache invalidation clears cache") func cacheInvalidation_clearsCache() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1
 
@@ -63,8 +59,7 @@ struct RepositoryIntegrationTests {
         #expect(fetched != nil)
     }
 
-    @Test("Batch operations work correctly")
-    func batchOperations_workCorrectly() async throws {
+    @Test("Batch operations work correctly") func batchOperations_workCorrectly() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let models = TestModel.allFixtures
 
@@ -86,8 +81,7 @@ struct RepositoryIntegrationTests {
         #expect(fetchedAfterDelete.isEmpty)
     }
 
-    @Test("Concurrent operations are thread-safe")
-    func concurrentOperations_areThreadSafe() async throws {
+    @Test("Concurrent operations are thread-safe") func concurrentOperations_areThreadSafe() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let iterations = 50
 

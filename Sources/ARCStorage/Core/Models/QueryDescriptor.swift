@@ -33,12 +33,10 @@ public struct QueryDescriptor<T: Sendable>: Sendable {
     ///   - sortBy: Sort descriptors
     ///   - limit: Maximum results
     ///   - offset: Results to skip
-    public init(
-        predicate: Predicate<T>? = nil,
-        sortBy: [SortDescriptor<T>] = [],
-        limit: Int? = nil,
-        offset: Int? = nil
-    ) {
+    public init(predicate: Predicate<T>? = nil,
+                sortBy: [SortDescriptor<T>] = [],
+                limit: Int? = nil,
+                offset: Int? = nil) {
         self.predicate = predicate
         self.sortBy = sortBy
         self.limit = limit

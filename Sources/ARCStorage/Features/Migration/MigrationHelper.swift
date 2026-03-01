@@ -25,10 +25,8 @@ public enum MigrationHelper {
     ///   - currentVersion: Current schema version
     ///   - targetVersion: Target schema version
     /// - Returns: Whether migration is needed
-    public static func needsMigration(
-        from currentVersion: String,
-        to targetVersion: String
-    ) -> Bool {
+    public static func needsMigration(from currentVersion: String,
+                                      to targetVersion: String) -> Bool {
         currentVersion != targetVersion
     }
 

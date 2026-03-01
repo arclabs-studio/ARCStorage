@@ -103,18 +103,14 @@ public struct SwiftDataConfiguration: Sendable {
     ///   - schema: The schema containing model definitions
     ///   - isCloudKitEnabled: Enable CloudKit synchronization
     ///   - allowsSave: Allow manual save operations
-    public init(
-        schema: Schema,
-        isCloudKitEnabled: Bool = false,
-        allowsSave: Bool = true
-    ) {
+    public init(schema: Schema,
+                isCloudKitEnabled: Bool = false,
+                allowsSave: Bool = true) {
         self.schema = schema
         self.isCloudKitEnabled = isCloudKitEnabled
         self.allowsSave = allowsSave
-        modelConfiguration = ModelConfiguration(
-            allowsSave: allowsSave,
-            cloudKitDatabase: isCloudKitEnabled ? .automatic : .none
-        )
+        modelConfiguration = ModelConfiguration(allowsSave: allowsSave,
+                                                cloudKitDatabase: isCloudKitEnabled ? .automatic : .none)
     }
 
     /// Creates a model container from this configuration.
@@ -122,9 +118,7 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
     public func makeContainer() throws -> ModelContainer {
-        try ModelContainer(
-            for: schema,
-            configurations: [modelConfiguration]
-        )
+        try ModelContainer(for: schema,
+                           configurations: [modelConfiguration])
     }
 }

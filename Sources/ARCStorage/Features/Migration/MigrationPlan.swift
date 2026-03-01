@@ -31,11 +31,9 @@ public struct MigrationPlan: Sendable {
     ///   - sourceVersion: Starting version
     ///   - destinationVersion: Target version
     ///   - transform: Migration transformation
-    public init(
-        sourceVersion: String,
-        destinationVersion: String,
-        transform: @escaping @Sendable (MigrationContext) async throws -> Void
-    ) {
+    public init(sourceVersion: String,
+                destinationVersion: String,
+                transform: @escaping @Sendable (MigrationContext) async throws -> Void) {
         self.sourceVersion = sourceVersion
         self.destinationVersion = destinationVersion
         self.transform = transform
@@ -82,20 +80,16 @@ public actor MigrationManager {
         let applicablePlans = plans.filter { $0.sourceVersion == currentVersion }
 
         for plan in applicablePlans where plan.destinationVersion == destinationVersion {
-            let context = MigrationContext(
-                sourceVersion: plan.sourceVersion,
-                destinationVersion: plan.destinationVersion
-            )
+            let context = MigrationContext(sourceVersion: plan.sourceVersion,
+                                           destinationVersion: plan.destinationVersion)
 
             try await plan.transform(context)
             currentVersion = plan.destinationVersion
         }
 
         guard currentVersion == destinationVersion else {
-            throw MigrationError.noMigrationPath(
-                from: sourceVersion,
-                to: destinationVersion
-            )
+            throw MigrationError.noMigrationPath(from: sourceVersion,
+                                                 to: destinationVersion)
         }
     }
 }

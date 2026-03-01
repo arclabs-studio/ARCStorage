@@ -1,10 +1,8 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("LRUCache Tests")
-struct LRUCacheTests {
-    @Test("Basic set and get works correctly")
-    func basicSetAndGet_worksCorrectly() async {
+@Suite("LRUCache Tests") struct LRUCacheTests {
+    @Test("Basic set and get works correctly") func basicSetAndGet_worksCorrectly() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")
@@ -20,8 +18,7 @@ struct LRUCacheTests {
         #expect(value3 == 3)
     }
 
-    @Test("Capacity eviction removes oldest entry")
-    func capacityEviction_removesOldestEntry() async {
+    @Test("Capacity eviction removes oldest entry") func capacityEviction_removesOldestEntry() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
@@ -37,8 +34,7 @@ struct LRUCacheTests {
         #expect(value3 == 3)
     }
 
-    @Test("LRU ordering preserves recently accessed")
-    func lruOrdering_preservesRecentlyAccessed() async {
+    @Test("LRU ordering preserves recently accessed") func lruOrdering_preservesRecentlyAccessed() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
@@ -59,8 +55,7 @@ struct LRUCacheTests {
         #expect(value3 == 3)
     }
 
-    @Test("Update replaces existing value")
-    func update_replacesExistingValue() async {
+    @Test("Update replaces existing value") func update_replacesExistingValue() async {
         let cache = LRUCache<String, Int>(capacity: 2)
 
         await cache.set(1, for: "one")
@@ -70,8 +65,7 @@ struct LRUCacheTests {
         #expect(value == 2)
     }
 
-    @Test("Remove deletes specific entry")
-    func remove_deletesSpecificEntry() async {
+    @Test("Remove deletes specific entry") func remove_deletesSpecificEntry() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")
@@ -86,8 +80,7 @@ struct LRUCacheTests {
         #expect(value2 == 2)
     }
 
-    @Test("Clear removes all entries")
-    func clear_removesAllEntries() async {
+    @Test("Clear removes all entries") func clear_removesAllEntries() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 
         await cache.set(1, for: "one")

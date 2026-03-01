@@ -1,10 +1,8 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("CacheManager Tests")
-struct CacheManagerTests {
-    @Test("Set and get works correctly")
-    func setAndGet_worksCorrectly() async {
+@Suite("CacheManager Tests") struct CacheManagerTests {
+    @Test("Set and get works correctly") func setAndGet_worksCorrectly() async {
         let cache = CacheManager<String, Int>(policy: .default)
 
         await cache.set(42, for: "key1")
@@ -13,8 +11,7 @@ struct CacheManagerTests {
         #expect(value == 42)
     }
 
-    @Test("Cache expires after TTL")
-    func cacheExpiration_afterTTL() async throws {
+    @Test("Cache expires after TTL") func cacheExpiration_afterTTL() async throws {
         let shortTTL = CachePolicy(ttl: 0.1, maxSize: 10, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: shortTTL)
 
@@ -27,8 +24,7 @@ struct CacheManagerTests {
         #expect(value == nil)
     }
 
-    @Test("Cache evicts when at capacity")
-    func cacheEviction_whenAtCapacity() async {
+    @Test("Cache evicts when at capacity") func cacheEviction_whenAtCapacity() async {
         let policy = CachePolicy(ttl: 3600, maxSize: 2, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: policy)
 
@@ -45,8 +41,7 @@ struct CacheManagerTests {
         #expect(value3 == 3)
     }
 
-    @Test("LRU ordering preserves recently used")
-    func lruOrdering_preservesRecentlyUsed() async {
+    @Test("LRU ordering preserves recently used") func lruOrdering_preservesRecentlyUsed() async {
         let policy = CachePolicy(ttl: 3600, maxSize: 2, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: policy)
 
@@ -68,8 +63,7 @@ struct CacheManagerTests {
         #expect(value3 == 3)
     }
 
-    @Test("Invalidate removes specific key")
-    func invalidate_removesSpecificKey() async {
+    @Test("Invalidate removes specific key") func invalidate_removesSpecificKey() async {
         let cache = CacheManager<String, Int>(policy: .default)
 
         await cache.set(42, for: "key1")
@@ -79,8 +73,7 @@ struct CacheManagerTests {
         #expect(value == nil)
     }
 
-    @Test("Invalidate all removes all entries")
-    func invalidateAll_removesAllEntries() async {
+    @Test("Invalidate all removes all entries") func invalidateAll_removesAllEntries() async {
         let cache = CacheManager<String, Int>(policy: .default)
 
         await cache.set(1, for: "key1")
@@ -94,8 +87,7 @@ struct CacheManagerTests {
         #expect(value2 == nil)
     }
 
-    @Test("NoCache policy does not cache")
-    func noCachePolicy_doesNotCache() async {
+    @Test("NoCache policy does not cache") func noCachePolicy_doesNotCache() async {
         let cache = CacheManager<String, Int>(policy: .noCache)
 
         await cache.set(42, for: "key1")

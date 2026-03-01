@@ -6,8 +6,7 @@ import Testing
 /// Test model that conforms to SwiftDataEntity.
 /// This model does NOT conform to Sendable or Codable, demonstrating
 /// Swift 6 strict concurrency compatibility.
-@Model
-final class TestSwiftDataModel: SwiftDataEntity {
+@Model final class TestSwiftDataModel: SwiftDataEntity {
     @Attribute(.unique) var id: UUID
     var name: String
     var value: Int
@@ -20,8 +19,7 @@ final class TestSwiftDataModel: SwiftDataEntity {
 }
 
 @Suite("SwiftData Storage Tests")
-@MainActor
-struct SwiftDataStorageTests {
+@MainActor struct SwiftDataStorageTests {
     /// Creates a new in-memory model container for testing.
     private func makeTestContainer() throws -> ModelContainer {
         let schema = Schema([TestSwiftDataModel.self])
@@ -29,8 +27,7 @@ struct SwiftDataStorageTests {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    @Test("Save and fetch entity")
-    func saveAndFetch() throws {
+    @Test("Save and fetch entity") func saveAndFetch() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
@@ -45,8 +42,7 @@ struct SwiftDataStorageTests {
         #expect(fetched?.value == 42)
     }
 
-    @Test("Fetch all entities")
-    func fetchAll() throws {
+    @Test("Fetch all entities") func fetchAll() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
@@ -60,8 +56,7 @@ struct SwiftDataStorageTests {
         #expect(all.count == 2)
     }
 
-    @Test("Delete entity")
-    func deleteEntity() throws {
+    @Test("Delete entity") func deleteEntity() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
@@ -75,8 +70,7 @@ struct SwiftDataStorageTests {
         #expect(fetched == nil)
     }
 
-    @Test("Delete non-existent entity throws error")
-    func deleteNonExistent() throws {
+    @Test("Delete non-existent entity throws error") func deleteNonExistent() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
@@ -85,16 +79,13 @@ struct SwiftDataStorageTests {
         }
     }
 
-    @Test("Save all entities in batch")
-    func saveAllBatch() throws {
+    @Test("Save all entities in batch") func saveAllBatch() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "Batch1", value: 10),
-            TestSwiftDataModel(name: "Batch2", value: 20),
-            TestSwiftDataModel(name: "Batch3", value: 30)
-        ]
+        let models = [TestSwiftDataModel(name: "Batch1", value: 10),
+                      TestSwiftDataModel(name: "Batch2", value: 20),
+                      TestSwiftDataModel(name: "Batch3", value: 30)]
 
         try storage.saveAll(models)
 
@@ -102,15 +93,12 @@ struct SwiftDataStorageTests {
         #expect(all.count == 3)
     }
 
-    @Test("Delete all entities")
-    func deleteAll() throws {
+    @Test("Delete all entities") func deleteAll() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "A", value: 1),
-            TestSwiftDataModel(name: "B", value: 2)
-        ]
+        let models = [TestSwiftDataModel(name: "A", value: 1),
+                      TestSwiftDataModel(name: "B", value: 2)]
 
         try storage.saveAll(models)
         try storage.deleteAll()
@@ -119,16 +107,13 @@ struct SwiftDataStorageTests {
         #expect(all.isEmpty)
     }
 
-    @Test("Fetch with predicate")
-    func fetchWithPredicate() throws {
+    @Test("Fetch with predicate") func fetchWithPredicate() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "Low", value: 10),
-            TestSwiftDataModel(name: "High", value: 100),
-            TestSwiftDataModel(name: "Medium", value: 50)
-        ]
+        let models = [TestSwiftDataModel(name: "Low", value: 10),
+                      TestSwiftDataModel(name: "High", value: 100),
+                      TestSwiftDataModel(name: "Medium", value: 50)]
 
         try storage.saveAll(models)
 
@@ -140,8 +125,7 @@ struct SwiftDataStorageTests {
 }
 
 @Suite("SwiftData Repository Tests")
-@MainActor
-struct SwiftDataRepositoryTests {
+@MainActor struct SwiftDataRepositoryTests {
     /// Creates a new in-memory model container for testing.
     private func makeTestContainer() throws -> ModelContainer {
         let schema = Schema([TestSwiftDataModel.self])
@@ -149,8 +133,7 @@ struct SwiftDataRepositoryTests {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    @Test("Full CRUD flow")
-    func fullCRUDFlow() throws {
+    @Test("Full CRUD flow") func fullCRUDFlow() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
@@ -181,8 +164,7 @@ struct SwiftDataRepositoryTests {
         #expect(deleted == nil)
     }
 
-    @Test("Batch save operations")
-    func batchSave() throws {
+    @Test("Batch save operations") func batchSave() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
@@ -194,16 +176,13 @@ struct SwiftDataRepositoryTests {
         #expect(all.count == 5)
     }
 
-    @Test("Delete all entities")
-    func deleteAll() throws {
+    @Test("Delete all entities") func deleteAll() throws {
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [
-            TestSwiftDataModel(name: "X", value: 1),
-            TestSwiftDataModel(name: "Y", value: 2)
-        ]
+        let models = [TestSwiftDataModel(name: "X", value: 1),
+                      TestSwiftDataModel(name: "Y", value: 2)]
 
         try repository.saveAll(models)
         #expect(try repository.fetchAll().count == 2)
@@ -216,8 +195,7 @@ struct SwiftDataRepositoryTests {
 // MARK: - Fetch by ID Tests
 
 @Suite("SwiftData Storage Fetch by ID Tests")
-@MainActor
-struct SwiftDataStorageFetchByIDTests {
+@MainActor struct SwiftDataStorageFetchByIDTests {
     /// Creates a new in-memory model container for testing.
     private func makeTestContainer() throws -> ModelContainer {
         let schema = Schema([TestSwiftDataModel.self])
@@ -225,8 +203,7 @@ struct SwiftDataStorageFetchByIDTests {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    @Test("Fetch by ID returns correct entity")
-    func fetchByIdReturnsCorrectEntity() throws {
+    @Test("Fetch by ID returns correct entity") func fetchByIdReturnsCorrectEntity() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -247,8 +224,7 @@ struct SwiftDataStorageFetchByIDTests {
         #expect(fetched?.value == 200)
     }
 
-    @Test("Fetch by ID returns nil for non-existent ID")
-    func fetchByIdReturnsNilForNonExistent() throws {
+    @Test("Fetch by ID returns nil for non-existent ID") func fetchByIdReturnsNilForNonExistent() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -264,8 +240,7 @@ struct SwiftDataStorageFetchByIDTests {
         #expect(fetched == nil)
     }
 
-    @Test("Fetch by ID uses registered objects cache")
-    func fetchByIdUsesCachedRegisteredObjects() throws {
+    @Test("Fetch by ID uses registered objects cache") func fetchByIdUsesCachedRegisteredObjects() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -286,8 +261,7 @@ struct SwiftDataStorageFetchByIDTests {
         #expect(firstFetch === secondFetch) // Same object reference (from cache)
     }
 
-    @Test("Fetch by ID removes deleted objects from cache")
-    func fetchByIdRemovesDeletedFromCache() throws {
+    @Test("Fetch by ID removes deleted objects from cache") func fetchByIdRemovesDeletedFromCache() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -310,8 +284,7 @@ struct SwiftDataStorageFetchByIDTests {
 // MARK: - Prefetching Tests
 
 @Suite("SwiftData Storage Prefetching Tests")
-@MainActor
-struct SwiftDataStoragePrefetchingTests {
+@MainActor struct SwiftDataStoragePrefetchingTests {
     /// Creates a new in-memory model container for testing.
     private func makeTestContainer() throws -> ModelContainer {
         let schema = Schema([TestSwiftDataModel.self])
@@ -319,17 +292,14 @@ struct SwiftDataStoragePrefetchingTests {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    @Test("Fetch all with empty prefetching returns all entities")
-    func fetchAllWithEmptyPrefetching() throws {
+    @Test("Fetch all with empty prefetching returns all entities") func fetchAllWithEmptyPrefetching() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "A", value: 1),
-            TestSwiftDataModel(name: "B", value: 2),
-            TestSwiftDataModel(name: "C", value: 3)
-        ]
+        let models = [TestSwiftDataModel(name: "A", value: 1),
+                      TestSwiftDataModel(name: "B", value: 2),
+                      TestSwiftDataModel(name: "C", value: 3)]
         try storage.saveAll(models)
 
         // When - empty prefetching array
@@ -340,17 +310,14 @@ struct SwiftDataStoragePrefetchingTests {
         #expect(results.count == 3)
     }
 
-    @Test("Fetch with predicate and prefetching filters correctly")
-    func fetchWithPredicateAndPrefetching() throws {
+    @Test("Fetch with predicate and prefetching filters correctly") func fetchWithPredicateAndPrefetching() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "Low", value: 10),
-            TestSwiftDataModel(name: "High", value: 100),
-            TestSwiftDataModel(name: "Medium", value: 50)
-        ]
+        let models = [TestSwiftDataModel(name: "Low", value: 10),
+                      TestSwiftDataModel(name: "High", value: 100),
+                      TestSwiftDataModel(name: "Medium", value: 50)]
         try storage.saveAll(models)
 
         // When
@@ -363,25 +330,20 @@ struct SwiftDataStoragePrefetchingTests {
         #expect(results.allSatisfy { $0.value >= 50 })
     }
 
-    @Test("Full configuration fetch with sorting and limit")
-    func fullConfigurationFetch() throws {
+    @Test("Full configuration fetch with sorting and limit") func fullConfigurationFetch() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [
-            TestSwiftDataModel(name: "A", value: 30),
-            TestSwiftDataModel(name: "B", value: 10),
-            TestSwiftDataModel(name: "C", value: 50),
-            TestSwiftDataModel(name: "D", value: 20),
-            TestSwiftDataModel(name: "E", value: 40)
-        ]
+        let models = [TestSwiftDataModel(name: "A", value: 30),
+                      TestSwiftDataModel(name: "B", value: 10),
+                      TestSwiftDataModel(name: "C", value: 50),
+                      TestSwiftDataModel(name: "D", value: 20),
+                      TestSwiftDataModel(name: "E", value: 40)]
         try storage.saveAll(models)
 
         // When - sort by value descending, limit to 3
-        let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [
-            Foundation.SortDescriptor(\.value, order: .reverse)
-        ]
+        let sortDescriptors = [Foundation.SortDescriptor<TestSwiftDataModel>(\.value, order: .reverse)]
         let results = try storage.fetch(sortedBy: sortDescriptors, limit: 3)
 
         // Then
@@ -391,8 +353,7 @@ struct SwiftDataStoragePrefetchingTests {
         #expect(results[2].value == 30) // A
     }
 
-    @Test("Full configuration fetch with predicate and offset")
-    func fullConfigurationFetchWithOffset() throws {
+    @Test("Full configuration fetch with predicate and offset") func fullConfigurationFetchWithOffset() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -402,15 +363,11 @@ struct SwiftDataStoragePrefetchingTests {
 
         // When - values > 3, sorted, skip first 2, take 3
         let predicate = #Predicate<TestSwiftDataModel> { $0.value > 3 }
-        let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [
-            Foundation.SortDescriptor(\.value)
-        ]
-        let results = try storage.fetch(
-            matching: predicate,
-            sortedBy: sortDescriptors,
-            limit: 3,
-            offset: 2
-        )
+        let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [Foundation.SortDescriptor(\.value)]
+        let results = try storage.fetch(matching: predicate,
+                                        sortedBy: sortDescriptors,
+                                        limit: 3,
+                                        offset: 2)
 
         // Then - should get values 6, 7, 8 (skipped 4, 5)
         #expect(results.count == 3)
@@ -423,8 +380,7 @@ struct SwiftDataStoragePrefetchingTests {
 // MARK: - Repository Prefetching Tests
 
 @Suite("SwiftData Repository Prefetching Tests")
-@MainActor
-struct SwiftDataRepositoryPrefetchingTests {
+@MainActor struct SwiftDataRepositoryPrefetchingTests {
     /// Creates a new in-memory model container for testing.
     private func makeTestContainer() throws -> ModelContainer {
         let schema = Schema([TestSwiftDataModel.self])
@@ -432,17 +388,14 @@ struct SwiftDataRepositoryPrefetchingTests {
         return try ModelContainer(for: schema, configurations: [config])
     }
 
-    @Test("Repository fetchAll with prefetching")
-    func repositoryFetchAllWithPrefetching() throws {
+    @Test("Repository fetchAll with prefetching") func repositoryFetchAllWithPrefetching() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [
-            TestSwiftDataModel(name: "X", value: 1),
-            TestSwiftDataModel(name: "Y", value: 2)
-        ]
+        let models = [TestSwiftDataModel(name: "X", value: 1),
+                      TestSwiftDataModel(name: "Y", value: 2)]
         try repository.saveAll(models)
 
         // When
@@ -453,17 +406,14 @@ struct SwiftDataRepositoryPrefetchingTests {
         #expect(results.count == 2)
     }
 
-    @Test("Repository fetch with predicate and prefetching")
-    func repositoryFetchWithPredicateAndPrefetching() throws {
+    @Test("Repository fetch with predicate and prefetching") func repositoryFetchWithPredicateAndPrefetching() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [
-            TestSwiftDataModel(name: "Low", value: 5),
-            TestSwiftDataModel(name: "High", value: 95)
-        ]
+        let models = [TestSwiftDataModel(name: "Low", value: 5),
+                      TestSwiftDataModel(name: "High", value: 95)]
         try repository.saveAll(models)
 
         // When
@@ -476,8 +426,7 @@ struct SwiftDataRepositoryPrefetchingTests {
         #expect(results.first?.name == "High")
     }
 
-    @Test("Repository full configuration fetch")
-    func repositoryFullConfigurationFetch() throws {
+    @Test("Repository full configuration fetch") func repositoryFullConfigurationFetch() throws {
         // Given
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
@@ -487,9 +436,7 @@ struct SwiftDataRepositoryPrefetchingTests {
         try repository.saveAll(models)
 
         // When
-        let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [
-            Foundation.SortDescriptor(\.value, order: .reverse)
-        ]
+        let sortDescriptors = [Foundation.SortDescriptor<TestSwiftDataModel>(\.value, order: .reverse)]
         let results = try repository.fetch(sortedBy: sortDescriptors, limit: 2)
 
         // Then

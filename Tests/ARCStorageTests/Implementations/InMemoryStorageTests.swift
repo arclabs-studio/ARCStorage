@@ -2,10 +2,8 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("InMemoryStorage Tests")
-struct InMemoryStorageTests {
-    @Test("Save and fetch works correctly")
-    func saveAndFetch_worksCorrectly() async throws {
+@Suite("InMemoryStorage Tests") struct InMemoryStorageTests {
+    @Test("Save and fetch works correctly") func saveAndFetch_worksCorrectly() async throws {
         let storage = InMemoryStorage<TestModel>()
         let model = TestModel.fixture1
 
@@ -17,8 +15,7 @@ struct InMemoryStorageTests {
         #expect(fetched?.value == model.value)
     }
 
-    @Test("Fetch all returns all saved entities")
-    func fetchAll_returnsAllSavedEntities() async throws {
+    @Test("Fetch all returns all saved entities") func fetchAll_returnsAllSavedEntities() async throws {
         let storage = InMemoryStorage<TestModel>()
         let models = TestModel.allFixtures
 
@@ -28,8 +25,7 @@ struct InMemoryStorageTests {
         #expect(fetched.count == 3)
     }
 
-    @Test("Delete removes entity")
-    func delete_removesEntity() async throws {
+    @Test("Delete removes entity") func delete_removesEntity() async throws {
         let storage = InMemoryStorage<TestModel>()
         let model = TestModel.fixture1
 
@@ -40,8 +36,7 @@ struct InMemoryStorageTests {
         #expect(fetched == nil)
     }
 
-    @Test("Delete non-existent throws notFound error")
-    func deleteNonExistent_throwsNotFoundError() async throws {
+    @Test("Delete non-existent throws notFound error") func deleteNonExistent_throwsNotFoundError() async throws {
         let storage = InMemoryStorage<TestModel>()
         let nonExistentID = UUID()
 
@@ -50,8 +45,7 @@ struct InMemoryStorageTests {
         }
     }
 
-    @Test("Delete all clears storage")
-    func deleteAll_clearsStorage() async throws {
+    @Test("Delete all clears storage") func deleteAll_clearsStorage() async throws {
         let storage = InMemoryStorage<TestModel>()
         try await storage.saveAll(TestModel.allFixtures)
 
@@ -61,8 +55,7 @@ struct InMemoryStorageTests {
         #expect(fetched.isEmpty)
     }
 
-    @Test("Fetch with predicate filters correctly")
-    func fetchWithPredicate_filtersCorrectly() async throws {
+    @Test("Fetch with predicate filters correctly") func fetchWithPredicate_filtersCorrectly() async throws {
         let storage = InMemoryStorage<TestModel>()
         try await storage.saveAll(TestModel.allFixtures)
 
@@ -73,8 +66,7 @@ struct InMemoryStorageTests {
         #expect(filtered.count == 2) // fixture2 and fixture3
     }
 
-    @Test("Transaction commits changes")
-    func transaction_commitsChanges() async throws {
+    @Test("Transaction commits changes") func transaction_commitsChanges() async throws {
         let storage = InMemoryStorage<TestModel>()
         let model1 = TestModel.fixture1
         let model2 = TestModel.fixture2
@@ -88,8 +80,7 @@ struct InMemoryStorageTests {
         #expect(fetched.count == 2)
     }
 
-    @Test("Transaction rollback on error")
-    func transactionRollback_onError() async throws {
+    @Test("Transaction rollback on error") func transactionRollback_onError() async throws {
         let storage = InMemoryStorage<TestModel>()
         let model1 = TestModel.fixture1
 
@@ -107,8 +98,7 @@ struct InMemoryStorageTests {
         #expect(fetched.isEmpty)
     }
 
-    @Test("Concurrent access is thread-safe")
-    func concurrentAccess_isThreadSafe() async throws {
+    @Test("Concurrent access is thread-safe") func concurrentAccess_isThreadSafe() async throws {
         let storage = InMemoryStorage<TestModel>()
         let iterations = 100
 

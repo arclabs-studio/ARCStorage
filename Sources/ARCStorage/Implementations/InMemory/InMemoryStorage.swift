@@ -59,9 +59,8 @@ public actor InMemoryStorage<T: Codable & Sendable & Identifiable>: StorageProvi
         entities.removeAll()
     }
 
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
+    public func performTransaction<Result: Sendable>(_ block: @Sendable () async throws -> Result) async throws
+    -> Result {
         let snapshot = entities
 
         do {

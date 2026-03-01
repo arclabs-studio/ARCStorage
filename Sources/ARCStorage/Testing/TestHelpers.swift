@@ -14,12 +14,10 @@ public struct TestModel: Codable, Identifiable, Sendable {
     public var value: Int
     public var createdAt: Date
 
-    public init(
-        id: UUID = UUID(),
-        name: String,
-        value: Int,
-        createdAt: Date = Date()
-    ) {
+    public init(id: UUID = UUID(),
+                name: String,
+                value: Int,
+                createdAt: Date = Date()) {
         self.id = id
         self.name = name
         self.value = value
@@ -81,10 +79,8 @@ public enum TestHelpers {
     public static func makeTemporaryDirectory() throws -> URL {
         let tempDir = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)
-        try FileManager.default.createDirectory(
-            at: tempDir,
-            withIntermediateDirectories: true
-        )
+        try FileManager.default.createDirectory(at: tempDir,
+                                                withIntermediateDirectories: true)
         return tempDir
     }
 
@@ -94,10 +90,8 @@ public enum TestHelpers {
     }
 
     /// Waits for an async condition to be true.
-    public static func wait(
-        timeout: TimeInterval = 1.0,
-        condition: @escaping () async -> Bool
-    ) async throws {
+    public static func wait(timeout: TimeInterval = 1.0,
+                            condition: @escaping () async -> Bool) async throws {
         let deadline = Date().addingTimeInterval(timeout)
 
         while Date() < deadline {
