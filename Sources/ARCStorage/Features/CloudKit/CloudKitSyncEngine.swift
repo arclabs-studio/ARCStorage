@@ -185,20 +185,20 @@ import Foundation
 // MARK: - CKSyncEngineDelegate Implementation
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendable {
+private final class SyncEngineDelegate: CKSyncEngineDelegate, Sendable {
     private let manager: CloudKitSyncEngineManager
 
     init(manager: CloudKitSyncEngineManager) {
         self.manager = manager
     }
 
-    func handleEvent(_ event: CKSyncEngine.Event, syncEngine _: CKSyncEngine) {
+    nonisolated func handleEvent(_ event: CKSyncEngine.Event, syncEngine _: CKSyncEngine) {
         Task {
             await manager.handleEvent(event)
         }
     }
 
-    func nextRecordZoneChangeBatch(
+    nonisolated func nextRecordZoneChangeBatch(
         _ context: CKSyncEngine.SendChangesContext,
         syncEngine _: CKSyncEngine
     ) async -> CKSyncEngine.RecordZoneChangeBatch? {
