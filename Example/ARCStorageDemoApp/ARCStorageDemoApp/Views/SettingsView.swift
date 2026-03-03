@@ -133,10 +133,6 @@ extension SettingsView {
 
 #Preview {
     SettingsView(
-        viewModel: SettingsViewModel(
-            repository: UserDefaultsRepository<AppSettings>(
-                keyPrefix: "Preview.Settings"
-            )
-        )
+        viewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings"))
     )
 }

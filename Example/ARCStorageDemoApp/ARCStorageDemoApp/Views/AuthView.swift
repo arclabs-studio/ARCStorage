@@ -156,13 +156,9 @@ struct AuthView: View {
 // MARK: - Preview
 
 #Preview("With Token") {
-    AuthView(
-        viewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly)
-    )
+    AuthView(viewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly))
 }
 
 #Preview("No Token") {
-    AuthView(
-        viewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly)
-    )
+    AuthView(viewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly))
 }

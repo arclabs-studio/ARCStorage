@@ -83,9 +83,11 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "Batch1", value: 10),
-                      TestSwiftDataModel(name: "Batch2", value: 20),
-                      TestSwiftDataModel(name: "Batch3", value: 30)]
+        let models = [
+            TestSwiftDataModel(name: "Batch1", value: 10),
+            TestSwiftDataModel(name: "Batch2", value: 20),
+            TestSwiftDataModel(name: "Batch3", value: 30)
+        ]
 
         try storage.saveAll(models)
 
@@ -97,8 +99,10 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "A", value: 1),
-                      TestSwiftDataModel(name: "B", value: 2)]
+        let models = [
+            TestSwiftDataModel(name: "A", value: 1),
+            TestSwiftDataModel(name: "B", value: 2)
+        ]
 
         try storage.saveAll(models)
         try storage.deleteAll()
@@ -111,9 +115,11 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "Low", value: 10),
-                      TestSwiftDataModel(name: "High", value: 100),
-                      TestSwiftDataModel(name: "Medium", value: 50)]
+        let models = [
+            TestSwiftDataModel(name: "Low", value: 10),
+            TestSwiftDataModel(name: "High", value: 100),
+            TestSwiftDataModel(name: "Medium", value: 50)
+        ]
 
         try storage.saveAll(models)
 
@@ -181,8 +187,10 @@ import Testing
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [TestSwiftDataModel(name: "X", value: 1),
-                      TestSwiftDataModel(name: "Y", value: 2)]
+        let models = [
+            TestSwiftDataModel(name: "X", value: 1),
+            TestSwiftDataModel(name: "Y", value: 2)
+        ]
 
         try repository.saveAll(models)
         #expect(try repository.fetchAll().count == 2)
@@ -297,9 +305,11 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "A", value: 1),
-                      TestSwiftDataModel(name: "B", value: 2),
-                      TestSwiftDataModel(name: "C", value: 3)]
+        let models = [
+            TestSwiftDataModel(name: "A", value: 1),
+            TestSwiftDataModel(name: "B", value: 2),
+            TestSwiftDataModel(name: "C", value: 3)
+        ]
         try storage.saveAll(models)
 
         // When - empty prefetching array
@@ -315,9 +325,11 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "Low", value: 10),
-                      TestSwiftDataModel(name: "High", value: 100),
-                      TestSwiftDataModel(name: "Medium", value: 50)]
+        let models = [
+            TestSwiftDataModel(name: "Low", value: 10),
+            TestSwiftDataModel(name: "High", value: 100),
+            TestSwiftDataModel(name: "Medium", value: 50)
+        ]
         try storage.saveAll(models)
 
         // When
@@ -335,11 +347,13 @@ import Testing
         let container = try makeTestContainer()
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
 
-        let models = [TestSwiftDataModel(name: "A", value: 30),
-                      TestSwiftDataModel(name: "B", value: 10),
-                      TestSwiftDataModel(name: "C", value: 50),
-                      TestSwiftDataModel(name: "D", value: 20),
-                      TestSwiftDataModel(name: "E", value: 40)]
+        let models = [
+            TestSwiftDataModel(name: "A", value: 30),
+            TestSwiftDataModel(name: "B", value: 10),
+            TestSwiftDataModel(name: "C", value: 50),
+            TestSwiftDataModel(name: "D", value: 20),
+            TestSwiftDataModel(name: "E", value: 40)
+        ]
         try storage.saveAll(models)
 
         // When - sort by value descending, limit to 3
@@ -364,10 +378,12 @@ import Testing
         // When - values > 3, sorted, skip first 2, take 3
         let predicate = #Predicate<TestSwiftDataModel> { $0.value > 3 }
         let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [Foundation.SortDescriptor(\.value)]
-        let results = try storage.fetch(matching: predicate,
-                                        sortedBy: sortDescriptors,
-                                        limit: 3,
-                                        offset: 2)
+        let results = try storage.fetch(
+            matching: predicate,
+            sortedBy: sortDescriptors,
+            limit: 3,
+            offset: 2
+        )
 
         // Then - should get values 6, 7, 8 (skipped 4, 5)
         #expect(results.count == 3)
@@ -394,8 +410,10 @@ import Testing
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [TestSwiftDataModel(name: "X", value: 1),
-                      TestSwiftDataModel(name: "Y", value: 2)]
+        let models = [
+            TestSwiftDataModel(name: "X", value: 1),
+            TestSwiftDataModel(name: "Y", value: 2)
+        ]
         try repository.saveAll(models)
 
         // When
@@ -412,8 +430,10 @@ import Testing
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let repository = SwiftDataRepository(storage: storage)
 
-        let models = [TestSwiftDataModel(name: "Low", value: 5),
-                      TestSwiftDataModel(name: "High", value: 95)]
+        let models = [
+            TestSwiftDataModel(name: "Low", value: 5),
+            TestSwiftDataModel(name: "High", value: 95)
+        ]
         try repository.saveAll(models)
 
         // When

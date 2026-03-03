@@ -119,7 +119,10 @@ extension PreferencesView {
             Text("Info")
         } footer: {
             Text(
-                "PreferenceStorage provides synchronous access to simple key-value preferences, ideal for use in initializers."
+                """
+                PreferenceStorage provides synchronous access to simple \
+                key-value preferences, ideal for use in initializers.
+                """
             )
         }
     }
@@ -128,9 +131,5 @@ extension PreferencesView {
 // MARK: - Preview
 
 #Preview {
-    PreferencesView(
-        viewModel: PreferencesViewModel(
-            preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")
-        )
-    )
+    PreferencesView(viewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")))
 }

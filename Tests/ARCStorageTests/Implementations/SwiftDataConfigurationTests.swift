@@ -16,8 +16,7 @@ import Testing
     }
 
     private func makeSUT(cloudKit: CloudKitOption = .disabled) -> SwiftDataConfiguration {
-        SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
-                               cloudKit: cloudKit)
+        SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]), cloudKit: cloudKit)
     }
 
     @Test("Default cloudKit is disabled") func defaultCloudKit_isDisabled() {

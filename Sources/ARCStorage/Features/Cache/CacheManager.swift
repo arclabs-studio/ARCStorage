@@ -153,14 +153,12 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     }
 
     private func evictEntries(count: Int) {
-        // swiftlint:disable switch_case_alignment
         let keysToEvict: [Key] = switch policy.strategy {
         case .lru:
             Array(accessOrder.prefix(count))
         case .fifo:
             Array(cache.keys.prefix(count))
         }
-        // swiftlint:enable switch_case_alignment
 
         for key in keysToEvict {
             cache.removeValue(forKey: key)
@@ -202,14 +200,18 @@ final class MemoryPressureHandler: @unchecked Sendable {
     private func setupNotifications() {
         #if canImport(UIKit) && !os(watchOS)
         // iOS, tvOS, visionOS
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(handleMemoryWarning),
-                                               name: UIApplication.didReceiveMemoryWarningNotification,
-                                               object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
         #elseif os(macOS)
         // macOS uses dispatch source for memory pressure
-        dispatchSource = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical],
-                                                                 queue: .main)
+        dispatchSource = DispatchSource.makeMemoryPressureSource(
+            eventMask: [.warning, .critical],
+            queue: .main
+        )
         dispatchSource?.setEventHandler { [weak self] in
             guard let source = self?.dispatchSource else { return }
             let event = source.data
@@ -222,18 +224,22 @@ final class MemoryPressureHandler: @unchecked Sendable {
         dispatchSource?.resume()
         #elseif os(watchOS)
         // watchOS - use ProcessInfo for memory warnings
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(handleMemoryWarning),
-                                               name: .init("NSProcessInfoPowerStateDidChangeNotification"),
-                                               object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryWarning),
+            name: .init("NSProcessInfoPowerStateDidChangeNotification"),
+            object: nil
+        )
         #endif
     }
 
     private func teardownNotifications() {
         #if canImport(UIKit) && !os(watchOS)
-        NotificationCenter.default.removeObserver(self,
-                                                  name: UIApplication.didReceiveMemoryWarningNotification,
-                                                  object: nil)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
         #elseif os(macOS)
         dispatchSource?.cancel()
         dispatchSource = nil

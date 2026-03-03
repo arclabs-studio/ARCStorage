@@ -238,8 +238,7 @@ private struct TestConfig: Codable, Sendable, Equatable {
     // MARK: - Factory Method
 
     private func makeSUT() -> PreferenceStorage {
-        PreferenceStorage(userDefaults: .standard,
-                          keyPrefix: "test.\(UUID().uuidString)")
+        PreferenceStorage(userDefaults: .standard, keyPrefix: "test.\(UUID().uuidString)")
     }
 }
 

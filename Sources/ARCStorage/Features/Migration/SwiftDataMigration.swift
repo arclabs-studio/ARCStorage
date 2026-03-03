@@ -172,10 +172,11 @@ public typealias SwiftDataMigrationStage = MigrationStage
 ///     cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 /// )
 /// ```
-@MainActor public func makeVersionedContainer<S: VersionedSchema>(schema _: S.Type,
-                                                                  migrationPlan: (some SchemaMigrationPlan).Type,
-                                                                  cloudKit: CloudKitOption = .disabled) throws
--> ModelContainer {
+@MainActor public func makeVersionedContainer<S: VersionedSchema>(
+    schema _: S.Type,
+    migrationPlan: (some SchemaMigrationPlan).Type,
+    cloudKit: CloudKitOption = .disabled
+) throws -> ModelContainer {
     let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
     case .disabled:
         .none
@@ -185,9 +186,11 @@ public typealias SwiftDataMigrationStage = MigrationStage
 
     let modelConfiguration = ModelConfiguration(cloudKitDatabase: cloudKitDatabase)
 
-    return try ModelContainer(for: Schema(versionedSchema: S.self),
-                              migrationPlan: migrationPlan,
-                              configurations: [modelConfiguration])
+    return try ModelContainer(
+        for: Schema(versionedSchema: S.self),
+        migrationPlan: migrationPlan,
+        configurations: [modelConfiguration]
+    )
 }
 
 // MARK: - SwiftDataConfiguration Extension
@@ -212,13 +215,13 @@ extension SwiftDataConfiguration {
     /// )
     /// let container = try config.makeContainer(migrationPlan: RestaurantMigrationPlan.self)
     /// ```
-    public init(schema: Schema,
-                migrationPlan _: (some SchemaMigrationPlan).Type,
-                cloudKit: CloudKitOption = .disabled,
-                allowsSave: Bool = true) {
-        self.init(schema: schema,
-                  cloudKit: cloudKit,
-                  allowsSave: allowsSave)
+    public init(
+        schema: Schema,
+        migrationPlan _: (some SchemaMigrationPlan).Type,
+        cloudKit: CloudKitOption = .disabled,
+        allowsSave: Bool = true
+    ) {
+        self.init(schema: schema, cloudKit: cloudKit, allowsSave: allowsSave)
     }
 
     /// Creates a model container with migration plan support.
@@ -237,8 +240,10 @@ extension SwiftDataConfiguration {
     /// )
     /// ```
     public func makeContainer(migrationPlan: (some SchemaMigrationPlan).Type) throws -> ModelContainer {
-        try ModelContainer(for: schema,
-                           migrationPlan: migrationPlan,
-                           configurations: [modelConfiguration])
+        try ModelContainer(
+            for: schema,
+            migrationPlan: migrationPlan,
+            configurations: [modelConfiguration]
+        )
     }
 }

@@ -11,11 +11,10 @@
 
 # Brace style
 --allman false
---wraparguments after-first
---wrapparameters after-first
---wrapcollections after-first
---closingparen same-line
---disable wrapMultilineStatementBraces
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
 
 # Imports
 --importgrouping testable-bottom

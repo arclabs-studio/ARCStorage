@@ -12,8 +12,7 @@ import Foundation
 ///
 /// Demonstrates secure storage with `KeychainAccessibility` levels.
 @MainActor
-@Observable
-final class AuthViewModel {
+@Observable final class AuthViewModel {
     // MARK: Public Properties
 
     /// Current authentication token, if any.

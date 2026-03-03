@@ -104,9 +104,11 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     ///   - service: The service identifier for keychain items
     ///   - accessGroup: Optional access group for shared keychain access
     ///   - accessibility: When keychain items can be accessed. Defaults to `.whenUnlocked`
-    public init(service: String,
-                accessGroup: String? = nil,
-                accessibility: KeychainAccessibility = .whenUnlocked) {
+    public init(
+        service: String,
+        accessGroup: String? = nil,
+        accessibility: KeychainAccessibility = .whenUnlocked
+    ) {
         self.service = service
         self.accessGroup = accessGroup
         self.accessibility = accessibility
@@ -173,10 +175,12 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func fetchAll() async throws -> [T] {
-        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-                                    kSecAttrService as String: service,
-                                    kSecReturnData as String: true,
-                                    kSecMatchLimit as String: kSecMatchLimitAll]
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitAll
+        ]
 
         if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
@@ -239,8 +243,10 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func deleteAll() async throws {
-        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-                                    kSecAttrService as String: service]
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service
+        ]
 
         let status = SecItemDelete(query as CFDictionary)
 
@@ -263,10 +269,12 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     // MARK: - Private Methods
 
     private func makeQuery(for account: String) -> [String: Any] {
-        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-                                    kSecAttrService as String: service,
-                                    kSecAttrAccount as String: account,
-                                    kSecAttrAccessible as String: accessibility.securityAttribute]
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecAttrAccessible as String: accessibility.securityAttribute
+        ]
 
         if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
@@ -276,8 +284,10 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     private func makeKeychainError(_ status: OSStatus) -> NSError {
-        NSError(domain: NSOSStatusErrorDomain,
-                code: Int(status),
-                userInfo: [NSLocalizedDescriptionKey: "Keychain error: \(status)"])
+        NSError(
+            domain: NSOSStatusErrorDomain,
+            code: Int(status),
+            userInfo: [NSLocalizedDescriptionKey: "Keychain error: \(status)"]
+        )
     }
 }

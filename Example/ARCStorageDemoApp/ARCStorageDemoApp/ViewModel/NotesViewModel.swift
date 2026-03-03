@@ -12,8 +12,7 @@ import Foundation
 ///
 /// Demonstrates CRUD operations with ARCStorage's Repository protocol.
 @MainActor
-@Observable
-final class NotesViewModel {
+@Observable final class NotesViewModel {
     // MARK: Public Properties
 
     private(set) var notes: [Note] = []

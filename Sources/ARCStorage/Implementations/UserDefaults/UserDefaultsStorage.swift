@@ -34,8 +34,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - userDefaults: The UserDefaults instance to use
     ///   - keyPrefix: Prefix for all keys to avoid conflicts
-    public init(userDefaults: UserDefaults = .standard,
-                keyPrefix: String = "ARCStorage") {
+    public init(userDefaults: UserDefaults = .standard, keyPrefix: String = "ARCStorage") {
         self.userDefaults = userDefaults
         self.keyPrefix = keyPrefix
     }

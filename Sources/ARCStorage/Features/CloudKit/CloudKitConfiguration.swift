@@ -32,10 +32,12 @@ public struct CloudKitConfiguration: Sendable {
     ///   - conflictResolution: Conflict resolution strategy
     ///   - autoSync: Enable automatic sync
     ///   - syncInterval: Time between automatic syncs
-    public init(containerIdentifier: String,
-                conflictResolution: ConflictResolutionStrategy = .serverWins,
-                autoSync: Bool = true,
-                syncInterval: TimeInterval = 300) {
+    public init(
+        containerIdentifier: String,
+        conflictResolution: ConflictResolutionStrategy = .serverWins,
+        autoSync: Bool = true,
+        syncInterval: TimeInterval = 300
+    ) {
         self.containerIdentifier = containerIdentifier
         self.conflictResolution = conflictResolution
         self.autoSync = autoSync

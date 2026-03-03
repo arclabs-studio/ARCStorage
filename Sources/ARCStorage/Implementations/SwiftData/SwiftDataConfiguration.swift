@@ -118,9 +118,11 @@ public struct SwiftDataConfiguration: Sendable {
     ///   - schema: The schema containing model definitions
     ///   - cloudKit: CloudKit sync option (default: `.disabled`)
     ///   - allowsSave: Allow manual save operations (default: `true`)
-    public init(schema: Schema,
-                cloudKit: CloudKitOption = .disabled,
-                allowsSave: Bool = true) {
+    public init(
+        schema: Schema,
+        cloudKit: CloudKitOption = .disabled,
+        allowsSave: Bool = true
+    ) {
         self.schema = schema
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave
@@ -132,8 +134,7 @@ public struct SwiftDataConfiguration: Sendable {
             .private(containerIdentifier)
         }
 
-        modelConfiguration = ModelConfiguration(allowsSave: allowsSave,
-                                                cloudKitDatabase: cloudKitDatabase)
+        modelConfiguration = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: cloudKitDatabase)
     }
 
     /// Creates a new SwiftData configuration.
@@ -142,13 +143,17 @@ public struct SwiftDataConfiguration: Sendable {
     ///   - schema: The schema containing model definitions
     ///   - isCloudKitEnabled: Enable CloudKit synchronization
     ///   - allowsSave: Allow manual save operations
-    @available(*, deprecated, message: "Use init(schema:cloudKit:allowsSave:) instead") public init(schema: Schema,
-                                                                                                    isCloudKitEnabled: Bool,
-                                                                                                    allowsSave: Bool =
-                                                                                                        true) {
-        self.init(schema: schema,
-                  cloudKit: isCloudKitEnabled ? .enabled(containerIdentifier: "") : .disabled,
-                  allowsSave: allowsSave)
+    @available(*, deprecated, message: "Use init(schema:cloudKit:allowsSave:) instead") public init(
+        schema: Schema,
+        isCloudKitEnabled: Bool,
+        allowsSave: Bool =
+            true
+    ) {
+        self.init(
+            schema: schema,
+            cloudKit: isCloudKitEnabled ? .enabled(containerIdentifier: "") : .disabled,
+            allowsSave: allowsSave
+        )
     }
 
     /// Creates a model container from this configuration.
@@ -156,8 +161,7 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
     public func makeContainer() throws -> ModelContainer {
-        try ModelContainer(for: schema,
-                           configurations: [modelConfiguration])
+        try ModelContainer(for: schema, configurations: [modelConfiguration])
     }
 
     /// Creates a model container with automatic fallback for CloudKit.
@@ -198,8 +202,7 @@ public struct SwiftDataConfiguration: Sendable {
     // MARK: - Private
 
     private func makeLocalOnlyContainer() throws -> ModelContainer {
-        let localConfig = ModelConfiguration(allowsSave: allowsSave,
-                                             cloudKitDatabase: .none)
+        let localConfig = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: [localConfig])
     }
 }

@@ -9,8 +9,7 @@ import ARCStorage
 import SwiftData
 import SwiftUI
 
-@main
-struct ARCStorageDemoApp: App {
+@main struct ARCStorageDemoApp: App {
     // MARK: Private Properties
 
     private let notesViewModel: NotesViewModel
@@ -27,22 +26,20 @@ struct ARCStorageDemoApp: App {
         notesViewModel = NotesViewModel(repository: notesRepository)
 
         // Persistent Notes: SwiftData storage (persistent, Swift 6 compatible)
-        let modelContainer = try! ModelContainer(for: PersistentNote.self)
+        // swiftlint:disable:next no_force_try force_try
+        let modelContainer = try! ModelContainer(for: PersistentNote.self) // App cannot function without storage
         let persistentStorage = SwiftDataStorage<PersistentNote>(modelContainer: modelContainer)
         let persistentRepository = SwiftDataRepository(storage: persistentStorage)
         persistentNotesViewModel = PersistentNotesViewModel(repository: persistentRepository)
 
         // Settings: UserDefaults storage (persistent, async, entity-based)
-        let settingsRepository = UserDefaultsRepository<AppSettings>(
-            keyPrefix: "ARCStorageDemoApp.Settings"
-        )
+        let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "ARCStorageDemoApp.Settings")
         settingsViewModel = SettingsViewModel(repository: settingsRepository)
 
         // Preferences: PreferenceStorage (synchronous, key-value based)
         // Note: This is created synchronously - no async required!
-        preferencesViewModel = PreferencesViewModel(
-            preferences: PreferenceStorage(keyPrefix: "ARCStorageDemoApp.Prefs")
-        )
+        preferencesViewModel =
+            PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "ARCStorageDemoApp.Prefs"))
 
         // Auth: Keychain storage (secure, with high security level)
         authViewModel = AuthViewModel(

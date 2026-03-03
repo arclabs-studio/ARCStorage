@@ -89,15 +89,21 @@ struct CloudKitSyncView: View {
                 Text("CloudKit Model Checklist")
                     .font(.headline)
 
-                RequirementRow(icon: "checkmark.circle.fill",
-                               text: "All properties have defaults or are optional",
-                               color: .green)
-                RequirementRow(icon: "checkmark.circle.fill",
-                               text: "All relationships are optional",
-                               color: .green)
-                RequirementRow(icon: "checkmark.circle.fill",
-                               text: "@Attribute(.unique) on id property",
-                               color: .green)
+                RequirementRow(
+                    icon: "checkmark.circle.fill",
+                    text: "All properties have defaults or are optional",
+                    color: .green
+                )
+                RequirementRow(
+                    icon: "checkmark.circle.fill",
+                    text: "All relationships are optional",
+                    color: .green
+                )
+                RequirementRow(
+                    icon: "checkmark.circle.fill",
+                    text: "@Attribute(.unique) on id property",
+                    color: .green
+                )
             }
             .padding(.vertical, 4)
         } header: {
@@ -180,47 +186,53 @@ private struct CloudKitRequirementsSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    requirementSection(title: "Property Requirements",
-                                       description: """
-                                       All properties must be optional OR have default values. \
-                                       CloudKit sync can create partial objects during sync conflicts.
-                                       """,
-                                       code: """
-                                       @Model
-                                       final class Note: SwiftDataEntity {
-                                           @Attribute(.unique)
-                                           var id: UUID = UUID()     // Has default
-                                           var title: String = ""    // Has default
-                                           var content: String?      // Optional
-                                       }
-                                       """)
+                    requirementSection(
+                        title: "Property Requirements",
+                        description: """
+                        All properties must be optional OR have default values. \
+                        CloudKit sync can create partial objects during sync conflicts.
+                        """,
+                        code: """
+                        @Model
+                        final class Note: SwiftDataEntity {
+                            @Attribute(.unique)
+                            var id: UUID = UUID()     // Has default
+                            var title: String = ""    // Has default
+                            var content: String?      // Optional
+                        }
+                        """
+                    )
 
-                    requirementSection(title: "Relationship Requirements",
-                                       description: """
-                                       All relationships must be optional. CloudKit cannot guarantee \
-                                       that related objects will sync simultaneously.
-                                       """,
-                                       code: """
-                                       @Model
-                                       final class Note: SwiftDataEntity {
-                                           // ...
-                                           @Relationship(deleteRule: .cascade)
-                                           var tags: [Tag]?  // Optional
-                                       }
-                                       """)
+                    requirementSection(
+                        title: "Relationship Requirements",
+                        description: """
+                        All relationships must be optional. CloudKit cannot guarantee \
+                        that related objects will sync simultaneously.
+                        """,
+                        code: """
+                        @Model
+                        final class Note: SwiftDataEntity {
+                            // ...
+                            @Relationship(deleteRule: .cascade)
+                            var tags: [Tag]?  // Optional
+                        }
+                        """
+                    )
 
-                    requirementSection(title: "Index for Fast Lookups",
-                                       description: """
-                                       Use @Attribute(.unique) on your id property to create a database \
-                                       index for O(1) lookups instead of O(n) table scans.
-                                       """,
-                                       code: """
-                                       @Model
-                                       final class Note: SwiftDataEntity {
-                                           @Attribute(.unique)  // Creates index
-                                           var id: UUID = UUID()
-                                       }
-                                       """)
+                    requirementSection(
+                        title: "Index for Fast Lookups",
+                        description: """
+                        Use @Attribute(.unique) on your id property to create a database \
+                        index for O(1) lookups instead of O(n) table scans.
+                        """,
+                        code: """
+                        @Model
+                        final class Note: SwiftDataEntity {
+                            @Attribute(.unique)  // Creates index
+                            var id: UUID = UUID()
+                        }
+                        """
+                    )
                 }
                 .padding()
             }
