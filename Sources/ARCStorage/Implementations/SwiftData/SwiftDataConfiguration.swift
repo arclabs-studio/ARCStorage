@@ -160,7 +160,7 @@ public struct SwiftDataConfiguration: Sendable {
     ///
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
-    public func makeContainer() throws -> ModelContainer {
+    @MainActor public func makeContainer() throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: [modelConfiguration])
     }
 
@@ -176,7 +176,7 @@ public struct SwiftDataConfiguration: Sendable {
     ///
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
-    public func makeContainerWithFallback() async throws -> ModelContainer {
+    @MainActor public func makeContainerWithFallback() async throws -> ModelContainer {
         switch cloudKit {
         case .disabled:
             return try makeContainer()
@@ -201,7 +201,7 @@ public struct SwiftDataConfiguration: Sendable {
 
     // MARK: - Private
 
-    private func makeLocalOnlyContainer() throws -> ModelContainer {
+    @MainActor private func makeLocalOnlyContainer() throws -> ModelContainer {
         let localConfig = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: [localConfig])
     }
