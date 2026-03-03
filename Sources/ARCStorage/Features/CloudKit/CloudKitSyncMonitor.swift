@@ -1,5 +1,5 @@
 import CloudKit
-@preconcurrency import Foundation
+import Foundation
 import Observation
 
 /// Monitors iCloud account status for CloudKit-enabled SwiftData configurations.
@@ -51,8 +51,8 @@ import Observation
     /// The CloudKit container identifier.
     private let containerIdentifier: String
 
-    /// Task for observing account change notifications.
-    private var observationTask: Task<Void, Never>?
+    /// Observer token for `CKAccountChanged` notifications.
+    private var notificationToken: (any NSObjectProtocol)?
 
     /// Creates a new sync monitor.
     ///
@@ -75,8 +75,10 @@ import Observation
     /// Stops monitoring iCloud account status.
     public func stopMonitoring() {
         isMonitoring = false
-        observationTask?.cancel()
-        observationTask = nil
+        if let token = notificationToken {
+            NotificationCenter.default.removeObserver(token)
+            notificationToken = nil
+        }
     }
 
     // MARK: - Private
@@ -93,11 +95,15 @@ import Observation
     }
 
     private func observeAccountChanges() {
-        observationTask?.cancel()
-        observationTask = Task { [weak self] in
-            let notifications = NotificationCenter.default.notifications(named: .CKAccountChanged)
-            for await _ in notifications {
-                guard !Task.isCancelled else { break }
+        if let token = notificationToken {
+            NotificationCenter.default.removeObserver(token)
+        }
+        notificationToken = NotificationCenter.default.addObserver(
+            forName: .CKAccountChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
                 await self?.checkAccountStatus()
             }
         }
