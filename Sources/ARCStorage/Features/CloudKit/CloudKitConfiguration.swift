@@ -45,6 +45,10 @@ public struct CloudKitConfiguration: Sendable {
     }
 }
 
+// TODO: ConflictResolutionStrategy is defined and stored in CloudKitConfiguration but
+// never consulted by CloudKitSyncEngineManager during event handling. Either implement
+// conflict resolution logic in the sync engine or remove this type.
+
 /// Strategies for resolving CloudKit sync conflicts.
 public enum ConflictResolutionStrategy: Sendable {
     /// Server data always wins.
