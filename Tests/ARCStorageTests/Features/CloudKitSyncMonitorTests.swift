@@ -41,4 +41,20 @@ import Testing
         // Then
         #expect(sut.isMonitoring == false)
     }
+
+    @Test("stopMonitoring cancels observation task") func stopMonitoring_cancelsObservation() {
+        // Given
+        let sut = makeSUT()
+
+        // When — stop without starting should be safe (idempotent)
+        sut.stopMonitoring()
+        sut.stopMonitoring()
+
+        // Then
+        #expect(sut.isMonitoring == false)
+    }
+
+    // Note: Tests for startMonitoring() require CloudKit entitlements because
+    // CKContainer.accountStatus() hangs in package test environments without them.
+    // Full integration tests for startMonitoring belong in the demo app.
 }
