@@ -63,8 +63,11 @@ import SwiftData
 /// - ``TestHelpers``
 ///
 /// ### CloudKit
-/// - ``CloudKitConfiguration``
+/// - ``CloudKitOption``
+/// - ``SyncState``
+/// - ``UnavailableReason``
 /// - ``CloudKitSyncMonitor``
+/// - ``CloudKitConfiguration``
 /// - ``CloudKitSyncEngineManager``
 /// - ``CloudKitSyncEngineDelegate``
 /// - ``CloudKitSyncError``
@@ -115,9 +118,9 @@ import SwiftData
 ///
 /// let config = SwiftDataConfiguration(
 ///     schema: Schema([Restaurant.self]),
-///     isCloudKitEnabled: true
+///     cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 /// )
-/// let container = try config.makeContainer()
+/// let container = try await config.makeContainerWithFallback()
 /// ```
 ///
 /// ### 3. Create Repository
@@ -195,7 +198,7 @@ import SwiftData
 /// - <doc:Testing>
 public enum ARCStorage {
     /// Current version of ARCStorage.
-    public static let version = "1.2.0"
+    public static let version = "1.3.0"
 
     /// Framework identifier.
     public static let identifier = "com.arclabs.arcstorage"
