@@ -94,7 +94,7 @@ import Observation
 
     private func observeAccountChanges() {
         observationTask?.cancel()
-        observationTask = Task.detached { [weak self] in
+        observationTask = Task { [weak self] in
             let notifications = NotificationCenter.default.notifications(named: .CKAccountChanged)
             for await _ in notifications {
                 guard !Task.isCancelled else { break }
