@@ -20,7 +20,6 @@ import Foundation
 /// ```swift
 /// @Model
 /// final class Restaurant: SwiftDataEntity {
-///     @Attribute(.unique)
 ///     var id: UUID = UUID()     // Has default value
 ///     var name: String = ""     // Has default value
 ///     var rating: Double?       // Optional
@@ -48,22 +47,12 @@ import Foundation
 /// }
 /// ```
 ///
-/// ### Index Requirements
+/// ### Unique Constraints
 ///
-/// Use `@Attribute(.unique)` on your `id` property to create an index for faster lookups:
-///
-/// ```swift
-/// @Model
-/// final class Restaurant: SwiftDataEntity {
-///     @Attribute(.unique)  // Creates database index
-///     var id: UUID = UUID()
-///     // ...
-/// }
-/// ```
-///
-/// > Note: `@Attribute(.unique)` is not compatible with CloudKit sync.
-/// > CloudKit uses its own record identifiers. If you need unique constraints
-/// > with CloudKit, enforce them in your application logic instead.
+/// > Important: `@Attribute(.unique)` is **not compatible** with CloudKit sync.
+/// > CloudKit uses its own record identifiers and unique constraints cause sync
+/// > failures. Only use `@Attribute(.unique)` for local-only models.
+/// > If you need uniqueness with CloudKit, enforce it in your application logic.
 ///
 /// ## Topics
 /// ### Creating Configuration
@@ -160,7 +149,7 @@ public struct SwiftDataConfiguration: Sendable {
     ///
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
-    public func makeContainer() throws -> ModelContainer {
+    @MainActor public func makeContainer() throws -> ModelContainer {
         try ModelContainer(for: schema, configurations: [modelConfiguration])
     }
 
@@ -176,7 +165,7 @@ public struct SwiftDataConfiguration: Sendable {
     ///
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
-    public func makeContainerWithFallback() async throws -> ModelContainer {
+    @MainActor public func makeContainerWithFallback() async throws -> ModelContainer {
         switch cloudKit {
         case .disabled:
             return try makeContainer()
@@ -201,7 +190,7 @@ public struct SwiftDataConfiguration: Sendable {
 
     // MARK: - Private
 
-    private func makeLocalOnlyContainer() throws -> ModelContainer {
+    @MainActor private func makeLocalOnlyContainer() throws -> ModelContainer {
         let localConfig = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: [localConfig])
     }

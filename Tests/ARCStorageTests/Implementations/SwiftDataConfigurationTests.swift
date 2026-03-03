@@ -67,4 +67,40 @@ import Testing
         // Then
         #expect(sut.cloudKit == option)
     }
+
+    @Test("allowsSave defaults to true") func allowsSave_defaultsToTrue() {
+        // Given
+        let sut = makeSUT()
+
+        // Then
+        #expect(sut.allowsSave == true)
+    }
+
+    @Test("allowsSave can be set to false") func allowsSave_canBeSetToFalse() {
+        // Given
+        let sut = SwiftDataConfiguration(
+            schema: Schema([ConfigTestModel.self]),
+            cloudKit: .disabled,
+            allowsSave: false
+        )
+
+        // Then
+        #expect(sut.allowsSave == false)
+    }
+
+    @Test("makeContainerWithFallback with disabled creates container")
+    func makeContainerWithFallback_disabled_createsContainer() async throws {
+        // Given
+        let sut = makeSUT(cloudKit: .disabled)
+
+        // When
+        let container = try await sut.makeContainerWithFallback()
+
+        // Then
+        #expect(container.schema.entities.isEmpty == false)
+    }
+
+    // Note: makeContainerWithFallback with CloudKit enabled calls CKContainer.accountStatus()
+    // which hangs in package test environments without CloudKit entitlements.
+    // Full integration tests for CloudKit fallback belong in the demo app.
 }

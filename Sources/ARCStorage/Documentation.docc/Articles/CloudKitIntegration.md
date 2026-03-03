@@ -40,7 +40,6 @@ All properties must be optional OR have default values:
 ```swift
 @Model
 final class Restaurant: SwiftDataEntity {
-    @Attribute(.unique)
     var id: UUID = UUID()          // ✅ Has default value
     var name: String = ""          // ✅ Has default value
     var description: String?       // ✅ Optional
@@ -56,7 +55,6 @@ All relationships must be optional:
 ```swift
 @Model
 final class Restaurant: SwiftDataEntity {
-    @Attribute(.unique)
     var id: UUID = UUID()
     var name: String = ""
 
@@ -70,7 +68,6 @@ final class Restaurant: SwiftDataEntity {
 
 @Model
 final class Review: SwiftDataEntity {
-    @Attribute(.unique)
     var id: UUID = UUID()
     var text: String = ""
     var rating: Int = 0
@@ -80,44 +77,54 @@ final class Review: SwiftDataEntity {
 }
 ```
 
-### Index for Performance
+### Unique Constraints
 
-Use `@Attribute(.unique)` on your `id` property for faster lookups:
-
-```swift
-@Model
-final class Restaurant: SwiftDataEntity {
-    @Attribute(.unique)  // Creates database index
-    var id: UUID = UUID()
-    // ...
-}
-```
+> Important: `@Attribute(.unique)` is **not compatible** with CloudKit sync.
+> CloudKit uses its own record identifiers and unique constraints cause
+> sync failures. Only use `@Attribute(.unique)` for local-only models:
+>
+> ```swift
+> // ✅ Local-only model — safe to use @Attribute(.unique)
+> @Model
+> final class LocalSettings: SwiftDataEntity {
+>     @Attribute(.unique) var id: UUID = UUID()
+>     var theme: String = "default"
+> }
+>
+> // ✅ CloudKit model — do NOT use @Attribute(.unique)
+> @Model
+> final class Restaurant: SwiftDataEntity {
+>     var id: UUID = UUID()
+>     var name: String = ""
+> }
+> ```
 
 ## Monitoring Sync Status
 
-Use ``CloudKitSyncMonitor`` to track sync status:
+Use ``CloudKitSyncMonitor`` to track iCloud account availability:
 
 ```swift
 import ARCStorage
 import SwiftUI
 
 struct SyncStatusView: View {
-    @State private var monitor = CloudKitSyncMonitor()
+    @State private var monitor = CloudKitSyncMonitor(
+        containerIdentifier: "iCloud.com.myapp"
+    )
 
     var body: some View {
-        VStack {
-            Text("Status: \(monitor.status.description)")
-
-            if let date = monitor.lastSyncDate {
-                Text("Last sync: \(date, style: .relative)")
+        HStack {
+            switch monitor.state {
+            case .available:
+                Image(systemName: "checkmark.icloud")
+                Text("iCloud available")
+            case .syncing:
+                ProgressView()
+                Text("Checking...")
+            case .unavailable(let reason):
+                Image(systemName: "xmark.icloud")
+                Text("Unavailable")
             }
-
-            Button("Sync Now") {
-                Task {
-                    try? await monitor.triggerSync()
-                }
-            }
-            .disabled(monitor.status.isSyncing)
         }
         .task {
             await monitor.startMonitoring()
@@ -126,33 +133,50 @@ struct SyncStatusView: View {
 }
 ```
 
-### Sync Status Values
+### Sync State Values
 
-The ``SyncStatus`` enum provides these states:
+The ``SyncState`` enum provides these states:
 
-| Status | Description |
+| State | Description |
+|-------|-------------|
+| `.available` | iCloud account is available and sync is ready |
+| `.syncing` | A sync status check is in progress |
+| `.unavailable(reason:)` | iCloud is not available |
+
+The ``UnavailableReason`` enum provides these reasons:
+
+| Reason | Description |
 |--------|-------------|
-| `.idle` | Not currently syncing |
-| `.syncing` | Sync in progress |
-| `.synced` | Sync completed successfully |
-| `.error(Error)` | Sync failed with error |
+| `.noAccount` | User is not signed in to iCloud |
+| `.restricted` | iCloud access is restricted (e.g., parental controls) |
+| `.couldNotDetermine` | Account status could not be determined |
+| `.temporarilyUnavailable` | iCloud is temporarily unavailable |
+| `.error(String)` | An error occurred while checking account status |
 
 ## Error Handling
 
-Handle sync errors gracefully:
+Handle unavailable sync states:
 
 ```swift
-if monitor.status.hasError, let error = monitor.lastError {
-    switch error {
-    case CloudKitSyncError.accountNotAvailable:
-        // User not signed into iCloud
+switch monitor.state {
+case .available:
+    // Sync is ready
+    break
+case .syncing:
+    // Checking status...
+    break
+case .unavailable(let reason):
+    switch reason {
+    case .noAccount:
         showSignInPrompt()
-    case CloudKitSyncError.networkError:
-        // Network unavailable
+    case .restricted:
+        showRestrictedAlert()
+    case .temporarilyUnavailable:
         showRetryOption()
-    default:
-        // Other errors
-        showErrorAlert(error)
+    case .couldNotDetermine:
+        showRetryOption()
+    case .error(let message):
+        showErrorAlert(message)
     }
 }
 ```
@@ -210,7 +234,7 @@ try await syncEngine.sendChanges()
 
 ### Monitoring
 - ``CloudKitSyncMonitor``
-- ``SyncStatus``
+- ``SyncState``
 
 ### Advanced
 - ``CloudKitSyncEngineManager``

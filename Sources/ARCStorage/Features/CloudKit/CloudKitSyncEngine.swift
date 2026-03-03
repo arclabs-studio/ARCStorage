@@ -61,7 +61,19 @@ import Foundation
     /// Starts the sync engine.
     ///
     /// Call this method early in your app's lifecycle to begin syncing.
+    ///
+    /// - Throws: ``CloudKitSyncError/accountNotAvailable`` if the iCloud account is not available,
+    ///   ``CloudKitSyncError/engineNotStarted`` if the delegate has been deallocated.
     public func start() async throws {
+        let accountStatus = try await container.accountStatus()
+        guard accountStatus == .available else {
+            throw CloudKitSyncError.accountNotAvailable
+        }
+
+        guard delegate != nil else {
+            throw CloudKitSyncError.engineNotStarted
+        }
+
         let database = container.privateCloudDatabase
 
         // Load persisted state if available
@@ -93,7 +105,11 @@ import Foundation
             throw CloudKitSyncError.engineNotStarted
         }
 
-        try await engine.sendChanges()
+        do {
+            try await engine.sendChanges()
+        } catch {
+            throw CloudKitSyncError.sendFailed(underlying: error)
+        }
     }
 
     /// Manually triggers fetching changes from CloudKit.
@@ -102,7 +118,11 @@ import Foundation
             throw CloudKitSyncError.engineNotStarted
         }
 
-        try await engine.fetchChanges()
+        do {
+            try await engine.fetchChanges()
+        } catch {
+            throw CloudKitSyncError.fetchFailed(underlying: error)
+        }
     }
 
     /// Adds pending record changes to be sent to CloudKit.
@@ -185,20 +205,20 @@ import Foundation
 // MARK: - CKSyncEngineDelegate Implementation
 
 @available(iOS 17.0, macOS 14.0, tvOS 17.0, watchOS 10.0, *)
-private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendable {
+private final class SyncEngineDelegate: CKSyncEngineDelegate, Sendable {
     private let manager: CloudKitSyncEngineManager
 
     init(manager: CloudKitSyncEngineManager) {
         self.manager = manager
     }
 
-    func handleEvent(_ event: CKSyncEngine.Event, syncEngine _: CKSyncEngine) {
+    nonisolated func handleEvent(_ event: CKSyncEngine.Event, syncEngine _: CKSyncEngine) {
         Task {
             await manager.handleEvent(event)
         }
     }
 
-    func nextRecordZoneChangeBatch(
+    nonisolated func nextRecordZoneChangeBatch(
         _ context: CKSyncEngine.SendChangesContext,
         syncEngine _: CKSyncEngine
     ) async -> CKSyncEngine.RecordZoneChangeBatch? {
@@ -245,7 +265,7 @@ public protocol CloudKitSyncEngineDelegate: Actor, AnyObject {
 // MARK: - Errors
 
 /// Errors that can occur during CloudKit sync operations.
-public enum CloudKitSyncError: Error, LocalizedError, Sendable {
+public enum CloudKitSyncError: Error, LocalizedError, @unchecked Sendable {
     /// The sync engine has not been started.
     case engineNotStarted
 
@@ -269,6 +289,12 @@ public enum CloudKitSyncError: Error, LocalizedError, Sendable {
         case .accountNotAvailable:
             "iCloud account is not available"
         }
+    }
+}
+
+extension CloudKitSyncError: CustomStringConvertible {
+    public var description: String {
+        errorDescription ?? "Unknown CloudKit sync error"
     }
 }
 
