@@ -106,14 +106,10 @@ public struct SwiftDataConfiguration: Sendable {
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave
 
-        // swiftlint:disable switch_case_alignment
-        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
-        case .disabled:
-            .none
-        case let .enabled(containerIdentifier):
-            .private(containerIdentifier)
+        var cloudKitDatabase: ModelConfiguration.CloudKitDatabase = .none
+        if case let .enabled(containerIdentifier) = cloudKit {
+            cloudKitDatabase = .private(containerIdentifier)
         }
-        // swiftlint:enable switch_case_alignment
 
         modelConfiguration = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: cloudKitDatabase)
     }
