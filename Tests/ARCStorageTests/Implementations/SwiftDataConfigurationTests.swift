@@ -6,8 +6,8 @@ import Testing
 @Suite("SwiftDataConfiguration Tests")
 @MainActor struct SwiftDataConfigurationTests {
     @Model final class ConfigTestModel: SwiftDataEntity {
-        @Attribute(.unique) var id: UUID
-        var name: String
+        var id = UUID()
+        var name: String = ""
 
         init(id: UUID = UUID(), name: String = "") {
             self.id = id
@@ -36,24 +36,6 @@ import Testing
 
         // Then
         #expect(container.schema.entities.isEmpty == false)
-    }
-
-    @Test("Deprecated isCloudKitEnabled returns false when disabled")
-    @available(*, deprecated) func deprecatedIsCloudKitEnabled_returnsFalse_whenDisabled() {
-        // Given
-        let sut = makeSUT(cloudKit: .disabled)
-
-        // Then
-        #expect(sut.isCloudKitEnabled == false)
-    }
-
-    @Test("Deprecated isCloudKitEnabled returns true when enabled")
-    @available(*, deprecated) func deprecatedIsCloudKitEnabled_returnsTrue_whenEnabled() {
-        // Given
-        let sut = makeSUT(cloudKit: .enabled(containerIdentifier: "iCloud.com.test"))
-
-        // Then
-        #expect(sut.isCloudKitEnabled == true)
     }
 
     @Test("cloudKit property round-trips correctly") func cloudKitProperty_roundTrips() {

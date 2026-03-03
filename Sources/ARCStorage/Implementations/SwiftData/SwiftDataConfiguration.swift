@@ -91,16 +91,6 @@ public struct SwiftDataConfiguration: Sendable {
     /// The model configuration for SwiftData.
     public let modelConfiguration: ModelConfiguration
 
-    /// Whether CloudKit sync is enabled.
-    @available(*, deprecated, message: "Use cloudKit property instead") public var isCloudKitEnabled: Bool {
-        switch cloudKit {
-        case .disabled:
-            false
-        case .enabled:
-            true
-        }
-    }
-
     /// Creates a new SwiftData configuration.
     ///
     /// - Parameters:
@@ -116,33 +106,16 @@ public struct SwiftDataConfiguration: Sendable {
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave
 
+        // swiftlint:disable switch_case_alignment
         let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
         case .disabled:
             .none
         case let .enabled(containerIdentifier):
             .private(containerIdentifier)
         }
+        // swiftlint:enable switch_case_alignment
 
         modelConfiguration = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: cloudKitDatabase)
-    }
-
-    /// Creates a new SwiftData configuration.
-    ///
-    /// - Parameters:
-    ///   - schema: The schema containing model definitions
-    ///   - isCloudKitEnabled: Enable CloudKit synchronization
-    ///   - allowsSave: Allow manual save operations
-    @available(*, deprecated, message: "Use init(schema:cloudKit:allowsSave:) instead") public init(
-        schema: Schema,
-        isCloudKitEnabled: Bool,
-        allowsSave: Bool =
-            true
-    ) {
-        self.init(
-            schema: schema,
-            cloudKit: isCloudKitEnabled ? .enabled(containerIdentifier: "") : .disabled,
-            allowsSave: allowsSave
-        )
     }
 
     /// Creates a model container from this configuration.
