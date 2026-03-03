@@ -1,5 +1,5 @@
 import CloudKit
-import Foundation
+@preconcurrency import Foundation
 import Observation
 
 /// Monitors iCloud account status for CloudKit-enabled SwiftData configurations.
