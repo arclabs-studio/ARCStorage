@@ -84,6 +84,7 @@ import Observation
     // MARK: - Private
 
     private func checkAccountStatus() async {
+        state = .syncing
         let container = CKContainer(identifier: containerIdentifier)
         do {
             let accountStatus = try await container.accountStatus()

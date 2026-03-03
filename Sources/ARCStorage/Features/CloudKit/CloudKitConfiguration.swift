@@ -1,65 +1,43 @@
 import Foundation
 
-/// Configuration for CloudKit synchronization.
+/// Configuration for manual CloudKit synchronization via ``CloudKitSyncEngineManager``.
 ///
-/// Defines how SwiftData models sync with CloudKit, including
-/// conflict resolution and sync scheduling.
+/// Use this type when you need full control over CloudKit sync with `CKSyncEngine`.
+/// For automatic SwiftData+CloudKit sync, use ``SwiftDataConfiguration`` with
+/// ``CloudKitOption/enabled(containerIdentifier:)`` instead — no manual configuration required.
 ///
 /// ## Example
 /// ```swift
-/// let cloudConfig = CloudKitConfiguration(
-///     containerIdentifier: "iCloud.com.myapp.container",
-///     conflictResolution: .serverWins
+/// let config = CloudKitConfiguration(
+///     containerIdentifier: "iCloud.com.myapp.container"
 /// )
+/// let engine = CloudKitSyncEngineManager(
+///     configuration: config,
+///     delegate: myDelegate
+/// )
+/// try await engine.start()
 /// ```
 public struct CloudKitConfiguration: Sendable {
-    /// The CloudKit container identifier.
+    /// The CloudKit container identifier (e.g., `"iCloud.com.mycompany.myapp"`).
     public let containerIdentifier: String
 
-    /// Strategy for resolving sync conflicts.
-    public let conflictResolution: ConflictResolutionStrategy
-
-    /// Whether to sync automatically.
+    /// Whether the sync engine syncs automatically when changes are detected.
+    ///
+    /// When `true`, `CKSyncEngine` pushes and fetches changes without manual calls
+    /// to ``CloudKitSyncEngineManager/sendChanges()`` or ``CloudKitSyncEngineManager/fetchChanges()``.
+    /// Default is `true`.
     public let autoSync: Bool
-
-    /// Sync interval in seconds.
-    public let syncInterval: TimeInterval
 
     /// Creates a new CloudKit configuration.
     ///
     /// - Parameters:
-    ///   - containerIdentifier: CloudKit container ID
-    ///   - conflictResolution: Conflict resolution strategy
-    ///   - autoSync: Enable automatic sync
-    ///   - syncInterval: Time between automatic syncs
+    ///   - containerIdentifier: The CloudKit container identifier
+    ///   - autoSync: Enable automatic sync (default: `true`)
     public init(
         containerIdentifier: String,
-        conflictResolution: ConflictResolutionStrategy = .serverWins,
-        autoSync: Bool = true,
-        syncInterval: TimeInterval = 300
+        autoSync: Bool = true
     ) {
         self.containerIdentifier = containerIdentifier
-        self.conflictResolution = conflictResolution
         self.autoSync = autoSync
-        self.syncInterval = syncInterval
     }
-}
-
-// TODO: ConflictResolutionStrategy is defined and stored in CloudKitConfiguration but
-// never consulted by CloudKitSyncEngineManager during event handling. Either implement
-// conflict resolution logic in the sync engine or remove this type.
-
-/// Strategies for resolving CloudKit sync conflicts.
-public enum ConflictResolutionStrategy: Sendable {
-    /// Server data always wins.
-    case serverWins
-
-    /// Local data always wins.
-    case localWins
-
-    /// Most recently modified wins.
-    case mostRecentWins
-
-    /// Custom resolution logic.
-    case custom
 }
