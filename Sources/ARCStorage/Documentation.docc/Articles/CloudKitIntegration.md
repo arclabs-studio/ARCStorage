@@ -15,9 +15,9 @@ Enable CloudKit when creating your configuration:
 ```swift
 let config = SwiftDataConfiguration(
     schema: Schema([Restaurant.self, Review.self]),
-    isCloudKitEnabled: true
+    cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 )
-let container = try config.makeContainer()
+let container = try await config.makeContainerWithFallback()
 ```
 
 ### Xcode Project Setup
