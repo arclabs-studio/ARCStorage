@@ -69,56 +69,38 @@ struct ContentView: View {
 
 #Preview("Light Mode") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    // swiftlint:disable:next no_force_try force_try
     let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
     return ContentView(
-        notesViewModel: NotesViewModel(
-            repository: InMemoryRepository<Note>()
-        ),
-        persistentNotesViewModel: PersistentNotesViewModel(
-            repository: repository
-        ),
+        notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
+        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
         settingsViewModel: SettingsViewModel(
-            repository: UserDefaultsRepository<AppSettings>(
-                keyPrefix: "Preview.Settings"
-            )
+            repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
         ),
-        preferencesViewModel: PreferencesViewModel(
-            preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")
-        ),
-        authViewModel: AuthViewModel(
-            securityLevel: .whenUnlockedThisDeviceOnly
-        )
+        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+        authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly)
     )
     .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    // swiftlint:disable:next no_force_try force_try
     let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
     return ContentView(
-        notesViewModel: NotesViewModel(
-            repository: InMemoryRepository<Note>()
-        ),
-        persistentNotesViewModel: PersistentNotesViewModel(
-            repository: repository
-        ),
+        notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
+        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
         settingsViewModel: SettingsViewModel(
-            repository: UserDefaultsRepository<AppSettings>(
-                keyPrefix: "Preview.Settings"
-            )
+            repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
         ),
-        preferencesViewModel: PreferencesViewModel(
-            preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")
-        ),
-        authViewModel: AuthViewModel(
-            securityLevel: .whenPasscodeSetThisDeviceOnly
-        )
+        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+        authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly)
     )
     .preferredColorScheme(.dark)
 }

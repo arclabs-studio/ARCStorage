@@ -174,8 +174,10 @@ import SwiftData
     ///     prefetching: [\Restaurant.reviews, \Restaurant.owner]
     /// )
     /// ```
-    public func fetch(matching predicate: Predicate<T>,
-                      prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
+    public func fetch(
+        matching predicate: Predicate<T>,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
+    ) throws -> [T] {
         var descriptor = FetchDescriptor<T>(predicate: predicate)
         descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
         return try modelContext.fetch(descriptor)
@@ -207,11 +209,13 @@ import SwiftData
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(matching predicate: Predicate<T>? = nil,
-                      sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
-                      limit fetchLimit: Int? = nil,
-                      offset fetchOffset: Int? = nil,
-                      prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []) throws -> [T] {
+    public func fetch(
+        matching predicate: Predicate<T>? = nil,
+        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+        limit fetchLimit: Int? = nil,
+        offset fetchOffset: Int? = nil,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
+    ) throws -> [T] {
         var descriptor = if let predicate {
             FetchDescriptor<T>(predicate: predicate, sortBy: sortDescriptors)
         } else {

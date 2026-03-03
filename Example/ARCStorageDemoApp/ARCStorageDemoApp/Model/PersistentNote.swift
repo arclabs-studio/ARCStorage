@@ -20,8 +20,7 @@ import SwiftData
 /// - Uses `@Attribute(.unique)` on `id` for database indexing and O(1) lookups
 /// - All properties have default values for CloudKit compatibility
 /// - Follows SwiftData naming conventions
-@Model
-final class PersistentNote: SwiftDataEntity {
+@Model final class PersistentNote: SwiftDataEntity {
     // MARK: Properties
 
     /// Unique identifier with database index for fast lookups.

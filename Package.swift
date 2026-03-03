@@ -17,27 +17,19 @@ let package = Package(
             targets: ["ARCStorage"]
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/arclabs-studio/ARCLogger", from: "1.0.0")
-    ],
+    dependencies: [.package(url: "https://github.com/arclabs-studio/ARCLogger", from: "1.0.0")],
     targets: [
         .target(
             name: "ARCStorage",
-            dependencies: [
-                .product(name: "ARCLogger", package: "ARCLogger")
-            ],
+            dependencies: [.product(name: "ARCLogger", package: "ARCLogger")],
             path: "Sources/ARCStorage",
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency")
-            ]
+            swiftSettings: [.enableUpcomingFeature("StrictConcurrency")]
         ),
         .testTarget(
             name: "ARCStorageTests",
             dependencies: ["ARCStorage"],
             path: "Tests/ARCStorageTests",
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency")
-            ]
+            swiftSettings: [.enableUpcomingFeature("StrictConcurrency")]
         )
     ],
     swiftLanguageModes: [.v6]

@@ -61,8 +61,7 @@ public struct PreferenceStorage: PreferenceStorageProtocol, @unchecked Sendable 
     /// - Parameters:
     ///   - userDefaults: The UserDefaults instance to use. Defaults to `.standard`.
     ///   - keyPrefix: Prefix for all keys to avoid collisions. Defaults to `"ARCPrefs"`.
-    public init(userDefaults: UserDefaults = .standard,
-                keyPrefix: String = "ARCPrefs") {
+    public init(userDefaults: UserDefaults = .standard, keyPrefix: String = "ARCPrefs") {
         self.userDefaults = userDefaults
         self.keyPrefix = keyPrefix
         encoder = JSONEncoder()

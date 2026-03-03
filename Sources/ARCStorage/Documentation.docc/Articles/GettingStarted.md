@@ -59,7 +59,7 @@ struct MyApp: App {
     init() {
         let config = SwiftDataConfiguration(
             schema: Schema([Restaurant.self]),
-            isCloudKitEnabled: true
+            cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
         )
         container = try! config.makeContainer()
     }

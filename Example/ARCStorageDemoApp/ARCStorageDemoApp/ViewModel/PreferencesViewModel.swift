@@ -14,8 +14,7 @@ import Foundation
 /// Unlike SettingsViewModel (which uses async UserDefaultsRepository),
 /// this uses synchronous PreferenceStorage for simple key-value access.
 @MainActor
-@Observable
-final class PreferencesViewModel {
+@Observable final class PreferencesViewModel {
     // MARK: Public Properties
 
     var isDarkModeEnabled: Bool {

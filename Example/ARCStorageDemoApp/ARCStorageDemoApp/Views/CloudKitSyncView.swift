@@ -13,12 +13,11 @@ import SwiftUI
 /// This view shows how to:
 /// - Monitor sync status using `CloudKitSyncMonitor`
 /// - Display sync state with visual indicators
-/// - Trigger manual sync operations
 /// - Show CloudKit model requirements
 struct CloudKitSyncView: View {
     // MARK: Properties
 
-    @State private var monitor = CloudKitSyncMonitor()
+    @State private var monitor = CloudKitSyncMonitor(containerIdentifier: "iCloud.com.arclabs.arcstoragedemo")
     @State private var showingRequirements = false
 
     // MARK: Body
@@ -47,10 +46,10 @@ struct CloudKitSyncView: View {
             HStack {
                 statusIcon
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(monitor.status.description)
+                    Text(statusDescription)
                         .font(.headline)
                     if let lastSync = monitor.lastSyncDate {
-                        Text("Last sync: \(lastSync, style: .relative) ago")
+                        Text("Last checked: \(lastSync, style: .relative) ago")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -58,11 +57,11 @@ struct CloudKitSyncView: View {
             }
             .padding(.vertical, 4)
 
-            if monitor.status.hasError, let error = monitor.lastError {
+            if case let .unavailable(reason) = monitor.state {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
-                    Text(error.localizedDescription)
+                        .foregroundStyle(.orange)
+                    Text(unavailableText(for: reason))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -71,21 +70,16 @@ struct CloudKitSyncView: View {
     }
 
     private var actionsSection: some View {
-        Section("Actions") {
-            Button {
-                Task {
-                    try? await monitor.triggerSync()
-                }
-            } label: {
-                Label("Sync Now", systemImage: "arrow.triangle.2.circlepath")
-            }
-            .disabled(monitor.status.isSyncing || !monitor.isActive)
-
+        Section {
             Button {
                 showingRequirements = true
             } label: {
                 Label("View CloudKit Requirements", systemImage: "doc.text")
             }
+        } header: {
+            Text("Actions")
+        } footer: {
+            Text("SwiftData handles sync automatically. No manual trigger needed.")
         }
     }
 
@@ -122,22 +116,46 @@ struct CloudKitSyncView: View {
     // MARK: Status Icon
 
     @ViewBuilder private var statusIcon: some View {
-        switch monitor.status {
-        case .idle:
-            Image(systemName: "cloud")
-                .foregroundStyle(.secondary)
+        switch monitor.state {
+        case .available:
+            Image(systemName: "checkmark.icloud.fill")
+                .foregroundStyle(.green)
                 .font(.title2)
         case .syncing:
             ProgressView()
                 .controlSize(.regular)
-        case .synced:
-            Image(systemName: "checkmark.icloud.fill")
-                .foregroundStyle(.green)
-                .font(.title2)
-        case .error:
+        case .unavailable:
             Image(systemName: "exclamationmark.icloud.fill")
-                .foregroundStyle(.red)
+                .foregroundStyle(.orange)
                 .font(.title2)
+        }
+    }
+
+    // MARK: Helpers
+
+    private var statusDescription: String {
+        switch monitor.state {
+        case .available:
+            "iCloud Available"
+        case .syncing:
+            "Checking..."
+        case .unavailable:
+            "iCloud Unavailable"
+        }
+    }
+
+    private func unavailableText(for reason: UnavailableReason) -> String {
+        switch reason {
+        case .noAccount:
+            "Sign in to iCloud in Settings to enable sync."
+        case .restricted:
+            "iCloud access is restricted on this device."
+        case .temporarilyUnavailable:
+            "iCloud is temporarily unavailable. Try again later."
+        case .couldNotDetermine:
+            "Could not determine iCloud status."
+        case let .error(message):
+            "Error: \(message)"
         }
     }
 }

@@ -47,9 +47,11 @@ import Foundation
     ///   - configuration: The CloudKit configuration
     ///   - delegate: The delegate for handling sync events
     ///   - stateKey: Key for persisting sync state in UserDefaults
-    public init(configuration: CloudKitConfiguration,
-                delegate: any CloudKitSyncEngineDelegate,
-                stateKey: String = "com.arcstorage.cloudkit.syncState") {
+    public init(
+        configuration: CloudKitConfiguration,
+        delegate: any CloudKitSyncEngineDelegate,
+        stateKey: String = "com.arcstorage.cloudkit.syncState"
+    ) {
         self.configuration = configuration
         self.delegate = delegate
         self.stateKey = stateKey
@@ -67,9 +69,11 @@ import Foundation
 
         // Create the sync engine configuration
         let engineDelegate = SyncEngineDelegate(manager: self)
-        var engineConfig = CKSyncEngine.Configuration(database: database,
-                                                      stateSerialization: stateSerialization,
-                                                      delegate: engineDelegate)
+        var engineConfig = CKSyncEngine.Configuration(
+            database: database,
+            stateSerialization: stateSerialization,
+            delegate: engineDelegate
+        )
 
         // Configure automatic sync based on our configuration
         engineConfig.automaticallySync = configuration.autoSync
@@ -194,8 +198,10 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, @unchecked Sendabl
         }
     }
 
-    func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext,
-                                   syncEngine _: CKSyncEngine) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    func nextRecordZoneChangeBatch(
+        _ context: CKSyncEngine.SendChangesContext,
+        syncEngine _: CKSyncEngine
+    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
         await manager.nextRecordZoneChangeBatch(context)
     }
 }

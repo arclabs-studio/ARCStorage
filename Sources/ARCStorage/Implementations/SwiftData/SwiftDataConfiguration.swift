@@ -1,15 +1,16 @@
+import CloudKit
 import Foundation
 @preconcurrency import SwiftData
 
 /// Configuration for SwiftData-based storage.
 ///
-/// This configuration sets up SwiftData with support for CloudKit sync,
+/// This configuration sets up SwiftData with optional CloudKit sync,
 /// autosave, and custom model configurations.
 ///
 /// ## CloudKit Requirements
 ///
-/// When `isCloudKitEnabled` is `true`, your models must follow specific requirements
-/// to ensure CloudKit compatibility:
+/// When `cloudKit` is set to ``CloudKitOption/enabled(containerIdentifier:)``,
+/// your models must follow specific requirements for CloudKit compatibility:
 ///
 /// ### Property Requirements
 ///
@@ -20,10 +21,10 @@ import Foundation
 /// @Model
 /// final class Restaurant: SwiftDataEntity {
 ///     @Attribute(.unique)
-///     var id: UUID = UUID()     // ✅ Has default value
-///     var name: String = ""     // ✅ Has default value
-///     var rating: Double?       // ✅ Optional
-///     var cuisineType: String?  // ✅ Optional
+///     var id: UUID = UUID()     // Has default value
+///     var name: String = ""     // Has default value
+///     var rating: Double?       // Optional
+///     var cuisineType: String?  // Optional
 /// }
 /// ```
 ///
@@ -38,11 +39,11 @@ import Foundation
 ///     var id: UUID = UUID()
 ///     var name: String = ""
 ///
-///     // ✅ Optional relationship - required for CloudKit
+///     // Optional relationship - required for CloudKit
 ///     @Relationship(deleteRule: .cascade)
 ///     var reviews: [Review]?
 ///
-///     // ✅ Optional inverse relationship
+///     // Optional inverse relationship
 ///     var owner: Owner?
 /// }
 /// ```
@@ -60,18 +61,22 @@ import Foundation
 /// }
 /// ```
 ///
+/// > Note: `@Attribute(.unique)` is not compatible with CloudKit sync.
+/// > CloudKit uses its own record identifiers. If you need unique constraints
+/// > with CloudKit, enforce them in your application logic instead.
+///
 /// ## Topics
 /// ### Creating Configuration
-/// - ``init(schema:isCloudKitEnabled:allowsSave:)``
+/// - ``init(schema:cloudKit:allowsSave:)``
 /// - ``makeContainer()``
+/// - ``makeContainerWithFallback()``
 ///
 /// ## Example
 ///
 /// ### Basic Setup
 /// ```swift
 /// let config = SwiftDataConfiguration(
-///     schema: Schema([Restaurant.self, Review.self]),
-///     isCloudKitEnabled: false
+///     schema: Schema([Restaurant.self, Review.self])
 /// )
 /// let container = try config.makeContainer()
 /// ```
@@ -80,16 +85,16 @@ import Foundation
 /// ```swift
 /// let config = SwiftDataConfiguration(
 ///     schema: Schema([Restaurant.self, Review.self]),
-///     isCloudKitEnabled: true
+///     cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 /// )
-/// let container = try config.makeContainer()
+/// let container = try await config.makeContainerWithFallback()
 /// ```
 public struct SwiftDataConfiguration: Sendable {
     /// The schema defining the models to persist.
     public let schema: Schema
 
-    /// Whether CloudKit sync is enabled.
-    public let isCloudKitEnabled: Bool
+    /// The CloudKit sync option.
+    public let cloudKit: CloudKitOption
 
     /// Whether manual saves are allowed.
     public let allowsSave: Bool
@@ -97,20 +102,58 @@ public struct SwiftDataConfiguration: Sendable {
     /// The model configuration for SwiftData.
     public let modelConfiguration: ModelConfiguration
 
+    /// Whether CloudKit sync is enabled.
+    @available(*, deprecated, message: "Use cloudKit property instead") public var isCloudKitEnabled: Bool {
+        switch cloudKit {
+        case .disabled:
+            false
+        case .enabled:
+            true
+        }
+    }
+
+    /// Creates a new SwiftData configuration.
+    ///
+    /// - Parameters:
+    ///   - schema: The schema containing model definitions
+    ///   - cloudKit: CloudKit sync option (default: `.disabled`)
+    ///   - allowsSave: Allow manual save operations (default: `true`)
+    public init(
+        schema: Schema,
+        cloudKit: CloudKitOption = .disabled,
+        allowsSave: Bool = true
+    ) {
+        self.schema = schema
+        self.cloudKit = cloudKit
+        self.allowsSave = allowsSave
+
+        let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
+        case .disabled:
+            .none
+        case let .enabled(containerIdentifier):
+            .private(containerIdentifier)
+        }
+
+        modelConfiguration = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: cloudKitDatabase)
+    }
+
     /// Creates a new SwiftData configuration.
     ///
     /// - Parameters:
     ///   - schema: The schema containing model definitions
     ///   - isCloudKitEnabled: Enable CloudKit synchronization
     ///   - allowsSave: Allow manual save operations
-    public init(schema: Schema,
-                isCloudKitEnabled: Bool = false,
-                allowsSave: Bool = true) {
-        self.schema = schema
-        self.isCloudKitEnabled = isCloudKitEnabled
-        self.allowsSave = allowsSave
-        modelConfiguration = ModelConfiguration(allowsSave: allowsSave,
-                                                cloudKitDatabase: isCloudKitEnabled ? .automatic : .none)
+    @available(*, deprecated, message: "Use init(schema:cloudKit:allowsSave:) instead") public init(
+        schema: Schema,
+        isCloudKitEnabled: Bool,
+        allowsSave: Bool =
+            true
+    ) {
+        self.init(
+            schema: schema,
+            cloudKit: isCloudKitEnabled ? .enabled(containerIdentifier: "") : .disabled,
+            allowsSave: allowsSave
+        )
     }
 
     /// Creates a model container from this configuration.
@@ -118,7 +161,48 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
     public func makeContainer() throws -> ModelContainer {
-        try ModelContainer(for: schema,
-                           configurations: [modelConfiguration])
+        try ModelContainer(for: schema, configurations: [modelConfiguration])
+    }
+
+    /// Creates a model container with automatic fallback for CloudKit.
+    ///
+    /// When CloudKit is enabled, this method checks the iCloud account status first:
+    /// - If the account is available, creates a CloudKit-enabled container.
+    /// - If the account is unavailable, falls back to a local-only container.
+    /// - If CloudKit is disabled, delegates to ``makeContainer()``.
+    ///
+    /// Use this method in your app's initialization to gracefully handle users
+    /// who are not signed in to iCloud.
+    ///
+    /// - Returns: A configured model container
+    /// - Throws: Error if container creation fails
+    public func makeContainerWithFallback() async throws -> ModelContainer {
+        switch cloudKit {
+        case .disabled:
+            return try makeContainer()
+
+        case let .enabled(containerIdentifier):
+            let container = CKContainer(identifier: containerIdentifier)
+            let accountStatus: CKAccountStatus
+            do {
+                accountStatus = try await container.accountStatus()
+            } catch {
+                return try makeLocalOnlyContainer()
+            }
+
+            switch accountStatus {
+            case .available:
+                return try makeContainer()
+            default:
+                return try makeLocalOnlyContainer()
+            }
+        }
+    }
+
+    // MARK: - Private
+
+    private func makeLocalOnlyContainer() throws -> ModelContainer {
+        let localConfig = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: .none)
+        return try ModelContainer(for: schema, configurations: [localConfig])
     }
 }

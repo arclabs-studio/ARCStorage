@@ -75,7 +75,7 @@ Sources/ARCStorage/
 │   └── Keychain/       # KeychainStorage, KeychainRepository
 ├── Features/
 │   ├── Cache/          # LRUCache, CacheManager
-│   ├── CloudKit/       # CloudKitConfiguration, CloudKitSyncMonitor
+│   ├── CloudKit/       # CloudKitOption, SyncState, CloudKitSyncMonitor, CloudKitConfiguration
 │   └── Migration/      # MigrationPlan, MigrationHelper
 └── Testing/            # MockRepository, MockStorageProvider, TestHelpers
 ```
@@ -102,6 +102,18 @@ Sources/ARCStorage/
 **Error Handling**: All operations throw `StorageError` (defined in `Core/Models/StorageError.swift`).
 
 **Testing**: Use `MockRepository<T>` for unit tests with `Sendable` entities, `InMemoryRepository<T>` for integration tests. For SwiftData tests, use actual `@Model` classes with `SwiftDataEntity` conformance.
+
+### CloudKit Synchronization
+
+Optional CloudKit sync is configured through `SwiftDataConfiguration` using `CloudKitOption`:
+
+- **`CloudKitOption`** (`Features/CloudKit/CloudKitOption.swift`): `.disabled` (default) or `.enabled(containerIdentifier:)`.
+- **`SyncState`** (`Features/CloudKit/SyncState.swift`): `.available`, `.syncing`, or `.unavailable(reason:)` for UI observation.
+- **`CloudKitSyncMonitor`** (`Features/CloudKit/CloudKitSyncMonitor.swift`): `@Observable @MainActor` class that monitors iCloud account status. Init with `containerIdentifier:`.
+- **`SwiftDataConfiguration`**: Uses `cloudKit: CloudKitOption` property. `makeContainer()` creates the container directly; `makeContainerWithFallback()` checks iCloud account status first and falls back to local-only if unavailable.
+- **`CloudKitSyncEngineManager`** (`Features/CloudKit/CloudKitSyncEngine.swift`): Manual `CKSyncEngine` wrapper for custom record sync. Separate concern from SwiftData+CloudKit.
+
+See `Docs/CLOUDKIT_INTEGRATION.md` for full setup guide.
 
 ## Testing Patterns
 

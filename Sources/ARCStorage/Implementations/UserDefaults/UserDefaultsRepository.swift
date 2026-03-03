@@ -28,10 +28,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - keyPrefix: Prefix for storage keys
     ///   - cachePolicy: The caching policy
-    public init(keyPrefix: String = "ARCStorage",
-                cachePolicy: CachePolicy = .default) {
-        storage = UserDefaultsStorage<T>(userDefaults: .standard,
-                                         keyPrefix: keyPrefix)
+    public init(keyPrefix: String = "ARCStorage", cachePolicy: CachePolicy = .default) {
+        storage = UserDefaultsStorage<T>(userDefaults: .standard, keyPrefix: keyPrefix)
         cache = CacheManager(policy: cachePolicy)
     }
 
@@ -40,8 +38,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     /// - Parameters:
     ///   - storage: Pre-configured UserDefaults storage
     ///   - cachePolicy: The caching policy
-    public init(storage: UserDefaultsStorage<T>,
-                cachePolicy: CachePolicy = .default) {
+    public init(storage: UserDefaultsStorage<T>, cachePolicy: CachePolicy = .default) {
         self.storage = storage
         cache = CacheManager(policy: cachePolicy)
     }

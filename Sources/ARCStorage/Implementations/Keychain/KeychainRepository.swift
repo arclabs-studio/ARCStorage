@@ -38,13 +38,17 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     ///   - accessGroup: Optional access group
     ///   - accessibility: When keychain items can be accessed. Defaults to `.whenUnlocked`
     ///   - cachePolicy: The caching policy
-    public init(service: String,
-                accessGroup: String? = nil,
-                accessibility: KeychainAccessibility = .whenUnlocked,
-                cachePolicy: CachePolicy = .default) {
-        storage = KeychainStorage<T>(service: service,
-                                     accessGroup: accessGroup,
-                                     accessibility: accessibility)
+    public init(
+        service: String,
+        accessGroup: String? = nil,
+        accessibility: KeychainAccessibility = .whenUnlocked,
+        cachePolicy: CachePolicy = .default
+    ) {
+        storage = KeychainStorage<T>(
+            service: service,
+            accessGroup: accessGroup,
+            accessibility: accessibility
+        )
         cache = CacheManager(policy: cachePolicy)
     }
 

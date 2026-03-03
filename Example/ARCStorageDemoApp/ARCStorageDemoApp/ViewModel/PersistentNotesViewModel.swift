@@ -17,8 +17,7 @@ import SwiftData
 /// Note: All operations are synchronous because `SwiftDataRepository`
 /// is `@MainActor` isolated. No `async/await` needed!
 @MainActor
-@Observable
-final class PersistentNotesViewModel {
+@Observable final class PersistentNotesViewModel {
     // MARK: Public Properties
 
     private(set) var notes: [PersistentNote] = []

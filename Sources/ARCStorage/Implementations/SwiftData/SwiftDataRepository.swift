@@ -118,8 +118,10 @@ import SwiftData
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(matching predicate: Predicate<T>,
-                      prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
+    public func fetch(
+        matching predicate: Predicate<T>,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
+    ) throws -> [T] {
         try storage.fetch(matching: predicate, prefetching: relationshipKeyPaths)
     }
 
@@ -148,16 +150,20 @@ import SwiftData
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(matching predicate: Predicate<T>? = nil,
-                      sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
-                      limit fetchLimit: Int? = nil,
-                      offset fetchOffset: Int? = nil,
-                      prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []) throws -> [T] {
-        try storage.fetch(matching: predicate,
-                          sortedBy: sortDescriptors,
-                          limit: fetchLimit,
-                          offset: fetchOffset,
-                          prefetching: relationshipKeyPaths)
+    public func fetch(
+        matching predicate: Predicate<T>? = nil,
+        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+        limit fetchLimit: Int? = nil,
+        offset fetchOffset: Int? = nil,
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
+    ) throws -> [T] {
+        try storage.fetch(
+            matching: predicate,
+            sortedBy: sortDescriptors,
+            limit: fetchLimit,
+            offset: fetchOffset,
+            prefetching: relationshipKeyPaths
+        )
     }
 
     /// Saves multiple entities in a batch.

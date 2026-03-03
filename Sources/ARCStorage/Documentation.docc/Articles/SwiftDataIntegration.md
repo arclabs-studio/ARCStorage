@@ -76,8 +76,7 @@ final class Review: SwiftDataEntity {
 
 ```swift
 let config = SwiftDataConfiguration(
-    schema: Schema([Restaurant.self]),
-    isCloudKitEnabled: false
+    schema: Schema([Restaurant.self])
 )
 let container = try config.makeContainer()
 ```
@@ -87,9 +86,9 @@ let container = try config.makeContainer()
 ```swift
 let config = SwiftDataConfiguration(
     schema: Schema([Restaurant.self]),
-    isCloudKitEnabled: true
+    cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 )
-let container = try config.makeContainer()
+let container = try await config.makeContainerWithFallback()
 ```
 
 See <doc:CloudKitIntegration> for detailed CloudKit setup instructions.

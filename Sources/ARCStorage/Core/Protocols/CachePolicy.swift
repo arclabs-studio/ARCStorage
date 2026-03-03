@@ -42,23 +42,17 @@ public struct CachePolicy: Sendable {
     }
 
     /// Default cache policy with 5-minute TTL and 100-item capacity.
-    public static let `default` = CachePolicy(ttl: 300,
-                                              maxSize: 100,
-                                              strategy: .lru)
+    public static let `default` = CachePolicy(ttl: 300, maxSize: 100, strategy: .lru)
 
     /// Aggressive cache policy with 1-hour TTL and 500-item capacity.
     ///
     /// Use this for data that changes infrequently.
-    public static let aggressive = CachePolicy(ttl: 3600,
-                                               maxSize: 500,
-                                               strategy: .lru)
+    public static let aggressive = CachePolicy(ttl: 3600, maxSize: 500, strategy: .lru)
 
     /// Disables caching completely.
     ///
     /// Use this when data must always be fresh from storage.
-    public static let noCache = CachePolicy(ttl: 0,
-                                            maxSize: 0,
-                                            strategy: .lru)
+    public static let noCache = CachePolicy(ttl: 0, maxSize: 0, strategy: .lru)
 }
 
 /// Strategy for evicting cache entries when capacity is reached.
