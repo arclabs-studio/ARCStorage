@@ -4,8 +4,10 @@ import Testing
 @testable import ARCStorage
 
 @Suite("SwiftDataConfiguration Tests")
-@MainActor struct SwiftDataConfigurationTests {
-    @Model final class ConfigTestModel: SwiftDataEntity {
+@MainActor
+struct SwiftDataConfigurationTests {
+    @Model
+    final class ConfigTestModel: SwiftDataEntity {
         var id = UUID()
         var name: String = ""
 
@@ -60,11 +62,9 @@ import Testing
 
     @Test("allowsSave can be set to false") func allowsSave_canBeSetToFalse() {
         // Given
-        let sut = SwiftDataConfiguration(
-            schema: Schema([ConfigTestModel.self]),
-            cloudKit: .disabled,
-            allowsSave: false
-        )
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         cloudKit: .disabled,
+                                         allowsSave: false)
 
         // Then
         #expect(sut.allowsSave == false)

@@ -12,7 +12,8 @@ import Foundation
 ///
 /// Demonstrates persistence with UserDefaults backend.
 @MainActor
-@Observable final class SettingsViewModel {
+@Observable
+final class SettingsViewModel {
     // MARK: Public Properties
 
     private(set) var settings: AppSettings = .default

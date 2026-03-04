@@ -76,12 +76,10 @@ struct AddNoteView: View {
 
 extension AddNoteView {
     private func addNote() async {
-        let note = Note(
-            title: title,
-            content: content,
-            isPinned: isPinned,
-            color: color
-        )
+        let note = Note(title: title,
+                        content: content,
+                        isPinned: isPinned,
+                        color: color)
 
         await onSave(note)
         dismiss()

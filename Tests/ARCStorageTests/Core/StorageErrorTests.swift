@@ -2,7 +2,8 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("StorageError Tests") struct StorageErrorTests {
+@Suite("StorageError Tests")
+struct StorageErrorTests {
     @Test("notFound error description contains ID") func notFoundError_containsId() {
         let error = StorageError.notFound(id: "test-id")
         #expect(error.errorDescription?.contains("test-id") == true)

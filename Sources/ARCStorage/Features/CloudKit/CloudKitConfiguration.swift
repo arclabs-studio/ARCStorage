@@ -33,10 +33,8 @@ public struct CloudKitConfiguration: Sendable {
     /// - Parameters:
     ///   - containerIdentifier: The CloudKit container identifier
     ///   - autoSync: Enable automatic sync (default: `true`)
-    public init(
-        containerIdentifier: String,
-        autoSync: Bool = true
-    ) {
+    public init(containerIdentifier: String,
+                autoSync: Bool = true) {
         self.containerIdentifier = containerIdentifier
         self.autoSync = autoSync
     }

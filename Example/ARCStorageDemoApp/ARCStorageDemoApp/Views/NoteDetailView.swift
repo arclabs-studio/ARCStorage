@@ -92,15 +92,13 @@ struct NoteDetailView: View {
 
 extension NoteDetailView {
     private func saveNote() async {
-        let updated = Note(
-            id: note.id,
-            title: title,
-            content: content,
-            createdAt: note.createdAt,
-            updatedAt: Date(),
-            isPinned: isPinned,
-            color: color
-        )
+        let updated = Note(id: note.id,
+                           title: title,
+                           content: content,
+                           createdAt: note.createdAt,
+                           updatedAt: Date(),
+                           isPinned: isPinned,
+                           color: color)
 
         await onSave(updated)
         dismiss()

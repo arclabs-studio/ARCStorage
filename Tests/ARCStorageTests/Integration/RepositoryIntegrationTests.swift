@@ -2,7 +2,8 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("Repository Integration Tests") struct RepositoryIntegrationTests {
+@Suite("Repository Integration Tests")
+struct RepositoryIntegrationTests {
     @Test("Full CRUD flow completes successfully") func fullCRUDFlow_completesSuccessfully() async throws {
         let repository = InMemoryRepository<TestModel>(cachePolicy: .default)
         let model = TestModel.fixture1

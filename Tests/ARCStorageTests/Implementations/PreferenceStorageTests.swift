@@ -45,7 +45,8 @@ private struct TestConfig: Codable, Sendable, Equatable {
 
 // MARK: - PreferenceStorage Tests
 
-@Suite("PreferenceStorage Tests") struct PreferenceStorageTests {
+@Suite("PreferenceStorage Tests")
+struct PreferenceStorageTests {
     // MARK: - Get Tests
 
     @Test("Get returns default value when not set") func get_returnsDefaultValue_whenNotSet() {
@@ -244,7 +245,8 @@ private struct TestConfig: Codable, Sendable, Equatable {
 
 // MARK: - MockPreferenceStorage Tests
 
-@Suite("MockPreferenceStorage Tests") struct MockPreferenceStorageTests {
+@Suite("MockPreferenceStorage Tests")
+struct MockPreferenceStorageTests {
     @Test("Tracks get calls") func tracksGetCalls() {
         // Given
         let sut = MockPreferenceStorage()

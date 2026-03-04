@@ -9,7 +9,8 @@ import ARCStorage
 import SwiftData
 import SwiftUI
 
-@main struct ARCStorageDemoApp: App {
+@main
+struct ARCStorageDemoApp: App {
     // MARK: Private Properties
 
     private let notesViewModel: NotesViewModel
@@ -42,24 +43,20 @@ import SwiftUI
             PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "ARCStorageDemoApp.Prefs"))
 
         // Auth: Keychain storage (secure, with high security level)
-        authViewModel = AuthViewModel(
-            securityLevel: .whenUnlockedThisDeviceOnly,
-            service: "com.arclabs.exampleapp.auth"
-        )
+        authViewModel = AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly,
+                                      service: "com.arclabs.exampleapp.auth")
     }
 
     // MARK: Body
 
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                notesViewModel: notesViewModel,
-                persistentNotesViewModel: persistentNotesViewModel,
-                settingsViewModel: settingsViewModel,
-                preferencesViewModel: preferencesViewModel,
-                authViewModel: authViewModel
-            )
-            .preferredColorScheme(preferencesViewModel.isDarkModeEnabled ? .dark : .light)
+            ContentView(notesViewModel: notesViewModel,
+                        persistentNotesViewModel: persistentNotesViewModel,
+                        settingsViewModel: settingsViewModel,
+                        preferencesViewModel: preferencesViewModel,
+                        authViewModel: authViewModel)
+                .preferredColorScheme(preferencesViewModel.isDarkModeEnabled ? .dark : .light)
         }
     }
 }

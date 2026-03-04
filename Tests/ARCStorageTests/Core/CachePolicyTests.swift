@@ -1,7 +1,8 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("CachePolicy Tests") struct CachePolicyTests {
+@Suite("CachePolicy Tests")
+struct CachePolicyTests {
     @Test("Default policy has correct values") func defaultPolicy_hasCorrectValues() {
         let policy = CachePolicy.default
 

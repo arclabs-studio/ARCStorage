@@ -98,11 +98,9 @@ struct AuthView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                ContentUnavailableView(
-                    "Not Authenticated",
-                    systemImage: "person.crop.circle.badge.questionmark",
-                    description: Text("Generate a demo token to test secure storage.")
-                )
+                ContentUnavailableView("Not Authenticated",
+                                       systemImage: "person.crop.circle.badge.questionmark",
+                                       description: Text("Generate a demo token to test secure storage."))
             }
         } header: {
             Text("Authentication Token")

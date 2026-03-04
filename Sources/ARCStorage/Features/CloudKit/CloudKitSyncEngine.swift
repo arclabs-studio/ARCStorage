@@ -86,11 +86,9 @@ import Foundation
     ///   - delegate: The actor that handles sync events and provides records
     ///   - stateKey: UserDefaults key for persisting sync state across launches
     ///     (default: `"com.arcstorage.cloudkit.syncState"`)
-    public init(
-        configuration: CloudKitConfiguration,
-        delegate: any CloudKitSyncEngineDelegate,
-        stateKey: String = "com.arcstorage.cloudkit.syncState"
-    ) {
+    public init(configuration: CloudKitConfiguration,
+                delegate: any CloudKitSyncEngineDelegate,
+                stateKey: String = "com.arcstorage.cloudkit.syncState") {
         self.configuration = configuration
         self.delegate = delegate
         self.stateKey = stateKey
@@ -117,11 +115,9 @@ import Foundation
         let database = container.privateCloudDatabase
         let stateSerialization = loadPersistedState()
         let engineDelegate = SyncEngineDelegate(manager: self)
-        var engineConfig = CKSyncEngine.Configuration(
-            database: database,
-            stateSerialization: stateSerialization,
-            delegate: engineDelegate
-        )
+        var engineConfig = CKSyncEngine.Configuration(database: database,
+                                                      stateSerialization: stateSerialization,
+                                                      delegate: engineDelegate)
         engineConfig.automaticallySync = configuration.autoSync
         syncEngine = CKSyncEngine(engineConfig)
     }
@@ -227,9 +223,8 @@ import Foundation
         }
     }
 
-    fileprivate func nextRecordZoneChangeBatch(
-        _ context: CKSyncEngine.SendChangesContext
-    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    fileprivate func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext) async -> CKSyncEngine
+    .RecordZoneChangeBatch? {
         await delegate?.syncEngine(nextRecordZoneChangeBatchFor: context)
     }
 }
@@ -250,10 +245,9 @@ private final class SyncEngineDelegate: CKSyncEngineDelegate, Sendable {
         }
     }
 
-    nonisolated func nextRecordZoneChangeBatch(
-        _ context: CKSyncEngine.SendChangesContext,
-        syncEngine _: CKSyncEngine
-    ) async -> CKSyncEngine.RecordZoneChangeBatch? {
+    nonisolated func nextRecordZoneChangeBatch(_ context: CKSyncEngine.SendChangesContext,
+                                               syncEngine _: CKSyncEngine) async -> CKSyncEngine
+    .RecordZoneChangeBatch? {
         await manager.nextRecordZoneChangeBatch(context)
     }
 }
@@ -332,9 +326,8 @@ public protocol CloudKitSyncEngineDelegate: Actor, AnyObject {
     /// from `context.options.scope.changes` and map each `CKSyncEngine.PendingRecordZoneChange`
     /// to its corresponding `CKRecord`. Return `nil` when there are no more records to send.
     /// This is one of the two methods you must implement.
-    func syncEngine(
-        nextRecordZoneChangeBatchFor context: CKSyncEngine.SendChangesContext
-    ) async -> CKSyncEngine.RecordZoneChangeBatch?
+    func syncEngine(nextRecordZoneChangeBatchFor context: CKSyncEngine.SendChangesContext) async -> CKSyncEngine
+        .RecordZoneChangeBatch?
 }
 
 // MARK: - Default Implementations

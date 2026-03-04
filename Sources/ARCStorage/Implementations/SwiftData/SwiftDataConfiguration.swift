@@ -97,11 +97,9 @@ public struct SwiftDataConfiguration: Sendable {
     ///   - schema: The schema containing model definitions
     ///   - cloudKit: CloudKit sync option (default: `.disabled`)
     ///   - allowsSave: Allow manual save operations (default: `true`)
-    public init(
-        schema: Schema,
-        cloudKit: CloudKitOption = .disabled,
-        allowsSave: Bool = true
-    ) {
+    public init(schema: Schema,
+                cloudKit: CloudKitOption = .disabled,
+                allowsSave: Bool = true) {
         self.schema = schema
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave

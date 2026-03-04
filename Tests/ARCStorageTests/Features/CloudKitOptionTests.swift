@@ -1,7 +1,8 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("CloudKitOption Tests") struct CloudKitOptionTests {
+@Suite("CloudKitOption Tests")
+struct CloudKitOptionTests {
     // MARK: - CloudKitOption Equality
 
     @Test("Disabled equals disabled") func disabled_equalsDisabled() {
@@ -41,7 +42,8 @@ import Testing
     }
 }
 
-@Suite("SyncState Tests") struct SyncStateTests {
+@Suite("SyncState Tests")
+struct SyncStateTests {
     // MARK: - SyncState Equality
 
     @Test("Available equals available") func available_equalsAvailable() {

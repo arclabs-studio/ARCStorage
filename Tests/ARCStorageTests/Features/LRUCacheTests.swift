@@ -1,7 +1,8 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("LRUCache Tests") struct LRUCacheTests {
+@Suite("LRUCache Tests")
+struct LRUCacheTests {
     @Test("Basic set and get works correctly") func basicSetAndGet_worksCorrectly() async {
         let cache = LRUCache<String, Int>(capacity: 3)
 

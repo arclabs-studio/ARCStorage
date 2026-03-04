@@ -11,10 +11,11 @@
 
 # Brace style
 --allman false
---wraparguments before-first
---wrapparameters before-first
---wrapcollections before-first
---closingparen balanced
+--wraparguments after-first
+--wrapparameters after-first
+--wrapcollections after-first
+--closingparen same-line
+--disable wrapMultilineStatementBraces
 
 # Imports
 --importgrouping testable-bottom
@@ -33,8 +34,8 @@
 # Wrapping
 --wrapternary before-operators
 
-# Attributes - Always on same line (ARC Labs style)
---type-attributes same-line
+# Attributes - Type attributes on previous line (ARC Labs style)
+--type-attributes prev-line
 --func-attributes same-line
 --stored-var-attributes same-line
 --computed-var-attributes same-line

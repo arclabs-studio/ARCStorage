@@ -20,13 +20,11 @@ struct ContentView: View {
 
     // MARK: Initialization
 
-    init(
-        notesViewModel: NotesViewModel,
-        persistentNotesViewModel: PersistentNotesViewModel,
-        settingsViewModel: SettingsViewModel,
-        preferencesViewModel: PreferencesViewModel,
-        authViewModel: AuthViewModel
-    ) {
+    init(notesViewModel: NotesViewModel,
+         persistentNotesViewModel: PersistentNotesViewModel,
+         settingsViewModel: SettingsViewModel,
+         preferencesViewModel: PreferencesViewModel,
+         authViewModel: AuthViewModel) {
         self.notesViewModel = notesViewModel
         self.persistentNotesViewModel = persistentNotesViewModel
         self.settingsViewModel = settingsViewModel
@@ -74,16 +72,12 @@ struct ContentView: View {
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
-    return ContentView(
-        notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
-        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
-        settingsViewModel: SettingsViewModel(
-            repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
-        ),
-        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
-        authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly)
-    )
-    .preferredColorScheme(.light)
+    return ContentView(notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
+                       persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
+                       settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
+                       preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+                       authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly))
+        .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
@@ -93,14 +87,10 @@ struct ContentView: View {
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
-    return ContentView(
-        notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
-        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
-        settingsViewModel: SettingsViewModel(
-            repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
-        ),
-        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
-        authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly)
-    )
-    .preferredColorScheme(.dark)
+    return ContentView(notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
+                       persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
+                       settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
+                       preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+                       authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly))
+        .preferredColorScheme(.dark)
 }

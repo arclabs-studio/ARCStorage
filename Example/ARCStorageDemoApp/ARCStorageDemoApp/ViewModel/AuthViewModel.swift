@@ -12,7 +12,8 @@ import Foundation
 ///
 /// Demonstrates secure storage with `KeychainAccessibility` levels.
 @MainActor
-@Observable final class AuthViewModel {
+@Observable
+final class AuthViewModel {
     // MARK: Public Properties
 
     /// Current authentication token, if any.
@@ -54,15 +55,11 @@ import Foundation
     /// - Parameters:
     ///   - securityLevel: The Keychain accessibility level to use
     ///   - service: The Keychain service identifier
-    init(
-        securityLevel: KeychainAccessibility = .whenUnlockedThisDeviceOnly,
-        service: String = "com.arclabs.exampleapp.auth"
-    ) {
+    init(securityLevel: KeychainAccessibility = .whenUnlockedThisDeviceOnly,
+         service: String = "com.arclabs.exampleapp.auth") {
         self.securityLevel = securityLevel
-        repository = KeychainRepository<AuthToken>(
-            service: service,
-            accessibility: securityLevel
-        )
+        repository = KeychainRepository<AuthToken>(service: service,
+                                                   accessibility: securityLevel)
     }
 
     // MARK: Public Methods

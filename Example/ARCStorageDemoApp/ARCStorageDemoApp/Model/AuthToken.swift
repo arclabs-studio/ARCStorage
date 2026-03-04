@@ -37,11 +37,9 @@ struct AuthToken: Codable, Identifiable, Sendable {
     }
 
     /// Default token for demo purposes.
-    static let demo = AuthToken(
-        id: "main",
-        token: "demo_token_\(UUID().uuidString.prefix(8))",
-        issuedAt: Date(),
-        expiresAt: Date().addingTimeInterval(3600), // 1 hour
-        userEmail: "demo@example.com"
-    )
+    static let demo = AuthToken(id: "main",
+                                token: "demo_token_\(UUID().uuidString.prefix(8))",
+                                issuedAt: Date(),
+                                expiresAt: Date().addingTimeInterval(3600), // 1 hour
+                                userEmail: "demo@example.com")
 }

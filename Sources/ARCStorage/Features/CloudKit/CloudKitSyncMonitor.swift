@@ -38,7 +38,8 @@ import Observation
 /// > CloudKit entitlements. In package unit tests, only initial-state tests are possible.
 /// > Full integration tests belong in a demo app with proper entitlements.
 @Observable
-@MainActor public final class CloudKitSyncMonitor {
+@MainActor
+public final class CloudKitSyncMonitor {
     /// The current sync state.
     public private(set) var state: SyncState = .available
 
@@ -99,11 +100,9 @@ import Observation
         if let token = notificationToken {
             NotificationCenter.default.removeObserver(token)
         }
-        notificationToken = NotificationCenter.default.addObserver(
-            forName: .CKAccountChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
+        notificationToken = NotificationCenter.default.addObserver(forName: .CKAccountChanged,
+                                                                   object: nil,
+                                                                   queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in
                 await self?.checkAccountStatus()
             }

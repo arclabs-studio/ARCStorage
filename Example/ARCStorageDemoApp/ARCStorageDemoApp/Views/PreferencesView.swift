@@ -72,11 +72,9 @@ extension PreferencesView {
 
     private var displaySection: some View {
         Section("Display") {
-            Stepper(
-                "Font Size: \(viewModel.fontSize)pt",
-                value: $viewModel.fontSize,
-                in: 10 ... 24
-            )
+            Stepper("Font Size: \(viewModel.fontSize)pt",
+                    value: $viewModel.fontSize,
+                    in: 10 ... 24)
 
             Toggle("Onboarding Completed", isOn: $viewModel.onboardingCompleted)
         }
@@ -118,12 +116,10 @@ extension PreferencesView {
         } header: {
             Text("Info")
         } footer: {
-            Text(
-                """
-                PreferenceStorage provides synchronous access to simple \
-                key-value preferences, ideal for use in initializers.
-                """
-            )
+            Text("""
+            PreferenceStorage provides synchronous access to simple \
+            key-value preferences, ideal for use in initializers.
+            """)
         }
     }
 }

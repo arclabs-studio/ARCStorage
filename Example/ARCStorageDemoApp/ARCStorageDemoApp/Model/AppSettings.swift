@@ -19,13 +19,11 @@ struct AppSettings: Codable, Sendable, Identifiable {
 
     // MARK: Initialization
 
-    init(
-        id: String = "main",
-        showPinnedFirst: Bool = true,
-        defaultNoteColor: NoteColor = .yellow,
-        notesPerPage: Int = 20,
-        lastSyncDate: Date? = nil
-    ) {
+    init(id: String = "main",
+         showPinnedFirst: Bool = true,
+         defaultNoteColor: NoteColor = .yellow,
+         notesPerPage: Int = 20,
+         lastSyncDate: Date? = nil) {
         self.id = id
         self.showPinnedFirst = showPinnedFirst
         self.defaultNoteColor = defaultNoteColor

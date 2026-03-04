@@ -86,10 +86,8 @@ public enum TestHelpers {
     }
 
     /// Waits for an async condition to be true.
-    public static func wait(
-        timeout: TimeInterval = 1.0,
-        condition: @escaping () async -> Bool
-    ) async throws {
+    public static func wait(timeout: TimeInterval = 1.0,
+                            condition: @escaping () async -> Bool) async throws {
         let deadline = Date().addingTimeInterval(timeout)
 
         while Date() < deadline {

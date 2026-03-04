@@ -20,7 +20,8 @@ import SwiftData
 /// - Uses `@Attribute(.unique)` on `id` for database indexing and O(1) lookups
 /// - All properties have default values for CloudKit compatibility
 /// - Follows SwiftData naming conventions
-@Model final class PersistentNote: SwiftDataEntity {
+@Model
+final class PersistentNote: SwiftDataEntity {
     // MARK: Properties
 
     /// Unique identifier with database index for fast lookups.
@@ -34,15 +35,13 @@ import SwiftData
 
     // MARK: Initialization
 
-    init(
-        id: UUID = UUID(),
-        title: String,
-        content: String = "",
-        createdAt: Date = Date(),
-        updatedAt: Date = Date(),
-        isPinned: Bool = false,
-        colorName: String = "yellow"
-    ) {
+    init(id: UUID = UUID(),
+         title: String,
+         content: String = "",
+         createdAt: Date = Date(),
+         updatedAt: Date = Date(),
+         isPinned: Bool = false,
+         colorName: String = "yellow") {
         self.id = id
         self.title = title
         self.content = content
@@ -66,23 +65,15 @@ extension PersistentNote {
 
 extension PersistentNote {
     static func createSamples() -> [PersistentNote] {
-        [
-            PersistentNote(
-                title: "SwiftData + ARCStorage",
-                content: "This note is persisted using SwiftData with Swift 6 strict concurrency.",
-                isPinned: true,
-                colorName: "yellow"
-            ),
-            PersistentNote(
-                title: "No Sendable Required",
-                content: "Unlike InMemory storage, SwiftData models don't need Sendable conformance.",
-                colorName: "blue"
-            ),
-            PersistentNote(
-                title: "MainActor Isolation",
-                content: "SwiftDataStorage and SwiftDataRepository are @MainActor isolated for safety.",
-                colorName: "green"
-            )
-        ]
+        [PersistentNote(title: "SwiftData + ARCStorage",
+                        content: "This note is persisted using SwiftData with Swift 6 strict concurrency.",
+                        isPinned: true,
+                        colorName: "yellow"),
+         PersistentNote(title: "No Sendable Required",
+                        content: "Unlike InMemory storage, SwiftData models don't need Sendable conformance.",
+                        colorName: "blue"),
+         PersistentNote(title: "MainActor Isolation",
+                        content: "SwiftDataStorage and SwiftDataRepository are @MainActor isolated for safety.",
+                        colorName: "green")]
     }
 }
