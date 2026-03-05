@@ -173,43 +173,44 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func fetchAll() async throws -> [T] {
-        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
-                                    kSecAttrService as String: service,
-                                    kSecReturnData as String: true,
-                                    kSecMatchLimit as String: kSecMatchLimitAll]
+        // Step 1: Retrieve all account identifiers for this service.
+        // Requesting only attributes (not data) avoids errSecParam (-50) on macOS
+        // when using kSecMatchLimitAll.
+        var attrsQuery: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                         kSecAttrService as String: service,
+                                         kSecReturnAttributes as String: true,
+                                         kSecMatchLimit as String: kSecMatchLimitAll]
 
         if let accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
+            attrsQuery[kSecAttrAccessGroup as String] = accessGroup
         }
 
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        var attrsResult: AnyObject?
+        let attrsStatus = SecItemCopyMatching(attrsQuery as CFDictionary, &attrsResult)
 
-        if status == errSecItemNotFound {
+        if attrsStatus == errSecItemNotFound {
             return []
         }
 
-        guard status == errSecSuccess else {
-            throw StorageError.fetchFailed(underlying: makeKeychainError(status))
+        guard attrsStatus == errSecSuccess else {
+            throw StorageError.fetchFailed(underlying: makeKeychainError(attrsStatus))
         }
 
-        guard let items = result as? [[String: Any]] else {
+        guard let items = attrsResult as? [[String: Any]] else {
             return []
         }
 
+        // Step 2: Fetch the data for each account individually.
         var entities: [T] = []
 
         for item in items {
-            guard let data = item[kSecValueData as String] as? Data else {
+            guard let account = item[kSecAttrAccount as String] as? String,
+                  let id = T.ID(account) else {
                 continue
             }
 
-            do {
-                let entity = try decoder.decode(T.self, from: data)
+            if let entity = try await fetch(id: id) {
                 entities.append(entity)
-            } catch {
-                // Skip invalid entries
-                continue
             }
         }
 
@@ -242,11 +243,14 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
                                     kSecAttrService as String: service]
 
-        let status = SecItemDelete(query as CFDictionary)
-
-        // It's okay if nothing was found
-        if status != errSecSuccess, status != errSecItemNotFound {
-            throw StorageError.deleteFailed(underlying: makeKeychainError(status))
+        // Loop until no items remain: on macOS, SecItemDelete may only remove
+        // one matching item per call even when multiple items exist.
+        while true {
+            let status = SecItemDelete(query as CFDictionary)
+            if status == errSecItemNotFound { break }
+            guard status == errSecSuccess else {
+                throw StorageError.deleteFailed(underlying: makeKeychainError(status))
+            }
         }
     }
 
