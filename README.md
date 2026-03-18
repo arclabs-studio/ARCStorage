@@ -64,6 +64,7 @@ class RestaurantsViewModel: ObservableObject {
 - ✅ **CloudKit Ready** - Optional iCloud synchronization with sync monitoring
 - ✅ **Relationship Prefetching** - Avoid N+1 queries with built-in prefetching
 - ✅ **Schema Migrations** - VersionedSchema support with custom migration stages
+- ✅ **Photo Attachments** - `ARCPhoto` model + `PhotoRepository` for binary image storage with auto-thumbnailing
 
 ---
 
@@ -477,9 +478,80 @@ Sources/ARCStorage/
 ├── Features/
 │   ├── Cache/          # LRUCache, CacheManager, MemoryPressureHandler
 │   ├── CloudKit/       # CloudKitSyncEngine, CloudKitSyncMonitor, CloudKitConfiguration
-│   └── Migration/      # MigrationPlan, MigrationHelper
+│   ├── Migration/      # MigrationPlan, MigrationHelper
+│   └── Photos/         # ARCPhoto, PhotoRepository, SwiftDataPhotoRepository, ThumbnailGenerator
 └── Testing/            # MockRepository, MockStorageProvider, TestHelpers
 ```
+
+### Photo Attachments
+
+ARCStorage includes a first-class photo attachment system — useful for attaching images to any SwiftData entity (visits, notes, profiles, etc.).
+
+#### 1. Register `ARCPhoto` in your schema
+
+```swift
+let schema = Schema([YourModel.self, ARCPhoto.self])
+let config = SwiftDataConfiguration(schema: schema, cloudKit: .enabled(containerIdentifier: "iCloud.com.example.app"))
+let container = try config.makeContainer()
+```
+
+#### 2. Add a cascade-delete photo relationship to your entity
+
+```swift
+@Model
+final class Visit: SwiftDataEntity {
+    var id: UUID = UUID()
+    var title: String = ""
+
+    // Photos auto-delete when the parent visit is deleted
+    @Relationship(deleteRule: .cascade)
+    var photos: [ARCPhoto]? = []
+}
+```
+
+#### 3. Create a `SwiftDataPhotoRepository` at the composition root
+
+```swift
+// Share the same ModelContainer as your other repositories
+let photoRepository = SwiftDataPhotoRepository(modelContainer: container)
+```
+
+#### 4. Add, fetch, and delete photos
+
+```swift
+// Add a photo (thumbnail generated automatically from imageData)
+let photo = try photoRepository.add(
+    imageData: jpegData,      // Full-size JPEG from PhotosPicker
+    caption: "Dinner night",
+    sortOrder: 0
+)
+
+// Fetch specific photos by persistent identifier
+let ids = visit.photos?.map(\.persistentModelID) ?? []
+let photos = try photoRepository.photos(withIDs: ids)
+
+// Delete a single photo
+try photoRepository.delete(id: photo.persistentModelID)
+
+// Delete all photos for a visit
+try photoRepository.deleteAll(visit.photos ?? [])
+```
+
+#### How thumbnails work
+
+`SwiftDataPhotoRepository.add()` automatically generates a compressed JPEG thumbnail (≤ 200×200 px, targeting < 50 KB) via `ThumbnailGenerator`:
+
+| Property | Storage | Purpose |
+|----------|---------|---------|
+| `thumbnailData` | Inline in SQLite | Fast list / carousel rendering |
+| `imageData` | `@Attribute(.externalStorage)` → CKAsset | Full-size viewer |
+
+#### CloudKit compatibility
+
+`ARCPhoto` is designed CloudKit-safe from the start:
+- All properties have defaults or are `Optional`
+- No `@Attribute(.unique)` (incompatible with CloudKit sync)
+- `imageData` maps to a CloudKit **CKAsset** when sync is enabled
 
 ---
 
