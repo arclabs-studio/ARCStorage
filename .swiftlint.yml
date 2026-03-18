@@ -22,6 +22,9 @@ disabled_rules:
   - todo                 # We allow TODOs
   - sorted_imports       # Conflicts with @testable imports preference (should be last)
   - attributes           # SwiftFormat handles this (always same line in ARC Labs)
+  - switch_case_alignment # False positive with Swift switch expressions (let x = switch foo { case: ... })
+                          # The rule expects `case` to align with the inline `switch` keyword, but the
+                          # correct style for switch expressions is to align `case` with the surrounding scope.
 
 # Opt-in rules (explicitly enabled per ARCKnowledge)
 opt_in_rules:

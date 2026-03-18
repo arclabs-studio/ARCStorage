@@ -4,13 +4,21 @@ import SwiftData
 
 /// SwiftData-backed implementation of `PhotoRepository`.
 ///
-/// Uses the app's existing `ModelContainer` to persist `ARCPhoto` entities.
-/// Must be created at the composition root alongside `SwiftDataRepository`.
+/// Photos must live in a **separate local-only container** from any CloudKit-synced
+/// models. CloudKit requires every relationship to have a declared inverse; because
+/// `ARCPhoto` has no inverse back to the visit model, including it in a CloudKit
+/// container triggers a schema validation crash at launch.
 ///
-/// ## Schema Registration
-/// Ensure `ARCPhoto.self` is included in the `Schema` passed to `SwiftDataConfiguration`:
+/// ## Setup
+/// Create a dedicated photo container using `SwiftDataConfiguration(storeName:)` so
+/// it writes to a different backing file than your CloudKit store:
 /// ```swift
-/// let schema = Schema([RestaurantModel.self, VisitModel.self, ARCPhoto.self])
+/// let photoConfig = SwiftDataConfiguration(
+///     schema: Schema([ARCPhoto.self]),
+///     storeName: "arc-photos"          // → arc-photos.store, not default.store
+/// )
+/// let photoContainer = try photoConfig.makeContainer()
+/// let photoRepository = SwiftDataPhotoRepository(modelContainer: photoContainer)
 /// ```
 @MainActor
 public final class SwiftDataPhotoRepository: PhotoRepository {
@@ -28,8 +36,10 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
 
     // MARK: - PhotoRepository
 
-    public func add(imageData: Data, caption: String?, sortOrder: Int) throws -> ARCPhoto {
-        let thumbnail = try thumbnailGenerator.generateSynchronously(from: imageData)
+    public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
+        // Hop to the ThumbnailGenerator actor (cooperative thread pool) for CPU-bound
+        // image work, then automatically resume on @MainActor for SwiftData operations.
+        let thumbnail = try await thumbnailGenerator.generate(from: imageData)
 
         let photo = ARCPhoto(thumbnailData: thumbnail,
                              imageData: imageData,
@@ -47,6 +57,10 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
         return photo
     }
 
+    /// - Note: Fetches all `ARCPhoto` records then filters in memory, because
+    ///   `PersistentIdentifier` cannot be used in a SwiftData `#Predicate`.
+    ///   Prefer the parent entity's relationship property (e.g. `visit.photos`)
+    ///   for large collections.
     public func photos(withIDs ids: [PersistentIdentifier]) throws -> [ARCPhoto] {
         guard !ids.isEmpty else { return [] }
         let idSet = Set(ids)

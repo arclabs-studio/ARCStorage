@@ -50,17 +50,22 @@ final class PhotoDemoViewModel {
     }
 
     /// Adds a synthetic coloured-block JPEG photo.
+    ///
+    /// `photoRepository.add` is `async` — thumbnail generation runs off the main thread
+    /// via actor-hop. A `Task` bridges the synchronous call site to the async API.
     func addSamplePhoto() {
         errorMessage = nil
         let sortOrder = photos.count
         let data = Self.solidColorJPEG(paletteColors[sortOrder % paletteColors.count])
-        do {
-            _ = try photoRepository.add(imageData: data,
-                                        caption: "Sample \(sortOrder + 1)",
-                                        sortOrder: sortOrder)
-            loadPhotos()
-        } catch {
-            errorMessage = error.localizedDescription
+        Task {
+            do {
+                _ = try await photoRepository.add(imageData: data,
+                                                  caption: "Sample \(sortOrder + 1)",
+                                                  sortOrder: sortOrder)
+                loadPhotos()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
     }
 

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **ARCPhoto — Photo attachment support**
+  - `ARCPhoto` SwiftData model with thumbnail (inline) + full image (`@Attribute(.externalStorage)`)
+  - `PhotoRepository` protocol and `SwiftDataPhotoRepository` implementation
+  - `ThumbnailGenerator` actor: thumbnail generation runs off the main thread via actor-hop
+  - `PhotoRepository.add` is `async throws` — CPU-bound resize never blocks `@MainActor`
+
+- **PreferenceStorage — Synchronous key-value preferences**
+  - `PreferenceKey` protocol for type-safe preference keys
+  - `PreferenceStorage` struct: synchronous, `Sendable`, safe in `init()` contexts
+  - `PreferenceStorageProtocol` for dependency injection and testing
+  - `MockPreferenceStorage` for unit tests
+
+- **CloudKit Integration**
+  - `CloudKitOption` enum (`.disabled` / `.enabled(containerIdentifier:)`)
+  - `SyncState` enum for UI observation (`.available`, `.syncing`, `.unavailable(reason:)`)
+  - `CloudKitSyncMonitor` — `@Observable @MainActor` class for iCloud account monitoring
+  - `SwiftDataConfiguration.makeContainerWithFallback()` — graceful fallback to local-only when iCloud unavailable
+  - `Docs/CLOUDKIT_INTEGRATION.md` — full setup guide
+
+- **Keychain**
+  - `KeychainStorage` and `KeychainRepository` comprehensive test coverage
+  - `Docs/KEYCHAIN_SECURITY.md` — security guide and macOS quirks documentation
+
+### Fixed
+
+- **SwiftDataConfiguration: `storeName` parameter** — when an app uses more than one
+  `ModelContainer`, both defaulted to `default.store`. Pass `storeName:` to get a named
+  backing file (e.g. `"arc-photos"` → `arc-photos.store`) and avoid schema conflicts.
+
+### Changed
+
+- `SwiftLint`: disabled `switch_case_alignment` — false positive with Swift switch expressions
+
 ## [1.3.0] - 2026-02-03
 
 ### Added

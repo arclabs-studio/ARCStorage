@@ -8,7 +8,11 @@ import AppKit
 
 /// Internal utility for generating compressed JPEG thumbnails.
 ///
-/// Target: ≤ 200×200px, < 50 KB, safe to call off the main thread.
+/// Declared as an `actor` so callers on `@MainActor` automatically hop to the
+/// cooperative thread pool when they `await generate(from:)`, keeping CPU-bound
+/// image work off the main thread without needing `Task.detached`.
+///
+/// Target: ≤ 200×200px, < 50 KB.
 actor ThumbnailGenerator {
     // MARK: - Constants
 
@@ -17,13 +21,9 @@ actor ThumbnailGenerator {
 
     // MARK: - API
 
-    /// Generates a thumbnail (actor-hop at call site from async contexts).
+    /// Generates a thumbnail. Suspends the caller's actor and runs on the
+    /// cooperative thread pool, keeping the main thread free.
     func generate(from data: Data) throws -> Data {
-        try _generate(from: data)
-    }
-
-    /// Convenience for synchronous call sites within the same actor context.
-    nonisolated func generateSynchronously(from data: Data) throws -> Data {
         try _generate(from: data)
     }
 }
