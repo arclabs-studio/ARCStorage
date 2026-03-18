@@ -85,4 +85,45 @@ struct SwiftDataConfigurationTests {
     // Note: makeContainerWithFallback with CloudKit enabled calls CKContainer.accountStatus()
     // which hangs in package test environments without CloudKit entitlements.
     // Full integration tests for CloudKit fallback belong in the demo app.
+
+    // MARK: - storeName
+
+    @Test("storeName omitted uses default name") func storeName_omitted_usesDefaultName() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]))
+
+        // Then
+        #expect(sut.modelConfiguration.name == "default")
+    }
+
+    @Test("storeName sets backing file name") func storeName_setsBackingFileName() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         storeName: "arc-photos")
+
+        // Then
+        #expect(sut.modelConfiguration.name == "arc-photos")
+    }
+
+    @Test("Two configs with different storeNames have distinct names") func twoConfigs_differentStoreNames_areDistinct() {
+        // Given
+        let primary = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]))
+        let secondary = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                               storeName: "secondary")
+
+        // Then
+        #expect(primary.modelConfiguration.name != secondary.modelConfiguration.name)
+    }
+
+    @Test("storeName config creates container successfully") func storeName_createsContainerSuccessfully() throws {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         storeName: "test-store")
+
+        // When
+        let container = try sut.makeContainer()
+
+        // Then
+        #expect(container.schema.entities.isEmpty == false)
+    }
 }
