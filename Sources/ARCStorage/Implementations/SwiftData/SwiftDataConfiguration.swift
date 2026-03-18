@@ -7,6 +7,26 @@ import Foundation
 /// This configuration sets up SwiftData with optional CloudKit sync,
 /// autosave, and custom model configurations.
 ///
+/// ## Multiple Containers
+///
+/// When an app uses more than one `ModelContainer` (e.g. a CloudKit container plus a
+/// local-only photo container), each must write to a **distinct store file**.
+/// Pass a unique `storeName` to avoid both containers defaulting to `default.store`:
+///
+/// ```swift
+/// // CloudKit-enabled restaurant store  →  default.store
+/// let restaurantConfig = SwiftDataConfiguration(
+///     schema: Schema([RestaurantModel.self]),
+///     cloudKit: .enabled(containerIdentifier: "iCloud.com.example.app")
+/// )
+///
+/// // Local-only photo store  →  arc-photos.store
+/// let photoConfig = SwiftDataConfiguration(
+///     schema: Schema([ARCPhoto.self]),
+///     storeName: "arc-photos"
+/// )
+/// ```
+///
 /// ## CloudKit Requirements
 ///
 /// When `cloudKit` is set to ``CloudKitOption/enabled(containerIdentifier:)``,
@@ -56,7 +76,7 @@ import Foundation
 ///
 /// ## Topics
 /// ### Creating Configuration
-/// - ``init(schema:cloudKit:allowsSave:)``
+/// - ``init(schema:storeName:cloudKit:allowsSave:)``
 /// - ``makeContainer()``
 /// - ``makeContainerWithFallback()``
 ///
@@ -95,9 +115,14 @@ public struct SwiftDataConfiguration: Sendable {
     ///
     /// - Parameters:
     ///   - schema: The schema containing model definitions
+    ///   - storeName: Optional store file name (e.g. `"arc-photos"` → `arc-photos.store`).
+    ///     When omitted the system default (`default.store`) is used. Provide a unique name
+    ///     when you create more than one `ModelContainer` in the same app to prevent both
+    ///     containers from opening the same backing file with different schemas.
     ///   - cloudKit: CloudKit sync option (default: `.disabled`)
     ///   - allowsSave: Allow manual save operations (default: `true`)
     public init(schema: Schema,
+                storeName: String? = nil,
                 cloudKit: CloudKitOption = .disabled,
                 allowsSave: Bool = true) {
         self.schema = schema
@@ -109,7 +134,15 @@ public struct SwiftDataConfiguration: Sendable {
             cloudKitDatabase = .private(containerIdentifier)
         }
 
-        modelConfiguration = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: cloudKitDatabase)
+        if let storeName {
+            modelConfiguration = ModelConfiguration(storeName,
+                                                    schema: schema,
+                                                    allowsSave: allowsSave,
+                                                    cloudKitDatabase: cloudKitDatabase)
+        } else {
+            modelConfiguration = ModelConfiguration(allowsSave: allowsSave,
+                                                    cloudKitDatabase: cloudKitDatabase)
+        }
     }
 
     /// Creates a model container from this configuration.

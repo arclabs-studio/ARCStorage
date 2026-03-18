@@ -4,13 +4,21 @@ import SwiftData
 
 /// SwiftData-backed implementation of `PhotoRepository`.
 ///
-/// Uses the app's existing `ModelContainer` to persist `ARCPhoto` entities.
-/// Must be created at the composition root alongside `SwiftDataRepository`.
+/// Photos must live in a **separate local-only container** from any CloudKit-synced
+/// models. CloudKit requires every relationship to have a declared inverse; because
+/// `ARCPhoto` has no inverse back to the visit model, including it in a CloudKit
+/// container triggers a schema validation crash at launch.
 ///
-/// ## Schema Registration
-/// Ensure `ARCPhoto.self` is included in the `Schema` passed to `SwiftDataConfiguration`:
+/// ## Setup
+/// Create a dedicated photo container using `SwiftDataConfiguration(storeName:)` so
+/// it writes to a different backing file than your CloudKit store:
 /// ```swift
-/// let schema = Schema([RestaurantModel.self, VisitModel.self, ARCPhoto.self])
+/// let photoConfig = SwiftDataConfiguration(
+///     schema: Schema([ARCPhoto.self]),
+///     storeName: "arc-photos"          // → arc-photos.store, not default.store
+/// )
+/// let photoContainer = try photoConfig.makeContainer()
+/// let photoRepository = SwiftDataPhotoRepository(modelContainer: photoContainer)
 /// ```
 @MainActor
 public final class SwiftDataPhotoRepository: PhotoRepository {
