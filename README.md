@@ -3,9 +3,9 @@
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![Platforms](https://img.shields.io/badge/Platforms-iOS%2017%20%7C%20macOS%2014%20%7C%20watchOS%2010%20%7C%20tvOS%2017-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Version](https://img.shields.io/badge/Version-1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.4.0-blue.svg)
 
-**Protocol-based storage abstraction for iOS apps supporting SwiftData, UserDefaults, Keychain, and testing.**
+**Protocol-based storage abstraction for iOS apps supporting SwiftData, UserDefaults, Keychain, Preferences, Photos, CloudKit, and testing.**
 
 Clean Architecture • Repository Pattern • Thread-Safe • Fully Testable
 
@@ -59,12 +59,14 @@ class RestaurantsViewModel: ObservableObject {
 - ✅ **Swift 6 Compatible** - Full strict concurrency support for `@Model` classes
 - ✅ **Fully Testable** - Mocks and in-memory storage for unit tests
 - ✅ **Secure Storage** - Keychain integration for sensitive data
+- ✅ **Preferences** - Synchronous key-value storage for simple app configuration
 - ✅ **Built-in Caching** - LRU cache with configurable TTL
 - ✅ **Thread-Safe** - Swift 6 concurrency (actors, Sendable, MainActor)
-- ✅ **CloudKit Ready** - Optional iCloud synchronization with sync monitoring
+- ✅ **CloudKit Ready** - Optional iCloud synchronization with sync monitoring and graceful fallback
 - ✅ **Relationship Prefetching** - Avoid N+1 queries with built-in prefetching
 - ✅ **Schema Migrations** - VersionedSchema support with custom migration stages
-- ✅ **Photo Attachments** - `ARCPhoto` model + `PhotoRepository` for binary image storage with auto-thumbnailing
+- ✅ **Photo Attachments** - `ARCPhoto` model + `PhotoRepository` for binary image storage with off-thread auto-thumbnailing
+- ✅ **Multiple Containers** - `storeName` parameter prevents `default.store` conflicts when using several `ModelContainer`s
 
 ---
 
@@ -212,7 +214,7 @@ struct MyApp: App {
     init() {
         let config = SwiftDataConfiguration(
             schema: Schema([Restaurant.self]),
-            isCloudKitEnabled: true
+            cloudKit: .enabled(containerIdentifier: "iCloud.com.example.myapp")
         )
         container = try! config.makeContainer()
     }
@@ -344,6 +346,53 @@ let repository = KeychainRepository<AuthToken>(
 - `.afterFirstUnlock` - For background operations
 - `.whenPasscodeSetThisDeviceOnly` - Most secure, requires passcode
 
+#### Preferences (Synchronous Key-Value)
+
+`PreferenceStorage` provides synchronous access to simple app configuration — ideal
+for use in `init()` and non-async contexts where `UserDefaultsRepository` (which is
+async) would require wrapping:
+
+```swift
+// Define type-safe preference keys
+enum AppPreferences {
+    struct DarkModeEnabled: PreferenceKey {
+        static let key = "app.darkMode"
+        static let defaultValue = false
+    }
+
+    struct FontSize: PreferenceKey {
+        static let key = "app.fontSize"
+        static let defaultValue = 16
+    }
+}
+
+// Use PreferenceStorage — no async required
+let preferences = PreferenceStorage()  // defaults: .standard UserDefaults, "ARCPrefs" prefix
+let isDark = preferences.get(AppPreferences.DarkModeEnabled.self)       // → false
+preferences.set(true, for: AppPreferences.DarkModeEnabled.self)
+
+// Inject via protocol for testability
+final class AppCoordinator {
+    private let preferences: PreferenceStorageProtocol
+
+    init(preferences: PreferenceStorageProtocol = PreferenceStorage()) {
+        self.preferences = preferences
+        if !preferences.get(AppPreferences.OnboardingCompleted.self) {
+            showOnboarding()
+        }
+    }
+}
+
+// In tests — use MockPreferenceStorage
+let mock = MockPreferenceStorage()
+mock.setMockValue(true, for: AppPreferences.DarkModeEnabled.self)
+let coordinator = AppCoordinator(preferences: mock)
+```
+
+> **PreferenceStorage vs UserDefaultsStorage:** Use `PreferenceStorage` for simple
+> flags and scalar values that need synchronous access. Use `UserDefaultsRepository`
+> when you have entity-based models or need the async/await `Repository` interface.
+
 ### Advanced Features
 
 #### Caching
@@ -405,24 +454,59 @@ let restaurants = try repository.fetch(
 #### CloudKit Sync
 
 ```swift
+// Enable CloudKit in SwiftDataConfiguration
 let config = SwiftDataConfiguration(
     schema: Schema([Restaurant.self]),
-    isCloudKitEnabled: true
+    cloudKit: .enabled(containerIdentifier: "iCloud.com.example.myapp")
 )
 
-// Monitor sync status (uses @Observable for SwiftUI)
-let monitor = CloudKitSyncMonitor(configuration: cloudKitConfig)
+// Graceful fallback: falls back to local-only if iCloud is unavailable
+let container = try await config.makeContainerWithFallback()
+
+// Monitor sync status in SwiftUI (@Observable, @MainActor)
+let monitor = CloudKitSyncMonitor(containerIdentifier: "iCloud.com.example.myapp")
 await monitor.startMonitoring()
 
-// In SwiftUI
+// In SwiftUI — observe SyncState for UI feedback
 struct SyncStatusView: View {
-    @State private var monitor = CloudKitSyncMonitor()
+    @State private var monitor = CloudKitSyncMonitor(containerIdentifier: "iCloud.com.example.myapp")
 
     var body: some View {
-        Text(monitor.status.description)
+        switch monitor.syncState {
+        case .available:    Label("Synced", systemImage: "checkmark.icloud")
+        case .syncing:      Label("Syncing…", systemImage: "arrow.clockwise.icloud")
+        case .unavailable:  Label("iCloud unavailable", systemImage: "xmark.icloud")
+        }
     }
 }
 ```
+
+#### Multiple Containers (`storeName`)
+
+When an app uses more than one `ModelContainer` (e.g. a CloudKit-synced store plus a
+local-only photo store), both containers default to `default.store`. Pass a unique
+`storeName` to prevent schema conflicts:
+
+```swift
+// Primary CloudKit store → default.store
+let restaurantConfig = SwiftDataConfiguration(
+    schema: Schema([Restaurant.self]),
+    cloudKit: .enabled(containerIdentifier: "iCloud.com.example.myapp")
+)
+let restaurantContainer = try restaurantConfig.makeContainer()
+
+// Local-only photo store → arc-photos.store
+let photoConfig = SwiftDataConfiguration(
+    schema: Schema([ARCPhoto.self]),
+    storeName: "arc-photos"
+)
+let photoContainer = try photoConfig.makeContainer()
+let photoRepository = SwiftDataPhotoRepository(modelContainer: photoContainer)
+```
+
+> **Why separate containers?** CloudKit requires every relationship to have a declared
+> inverse. `ARCPhoto` has no inverse back to the parent entity, so including it in a
+> CloudKit container triggers a schema validation crash at launch.
 
 #### Advanced CloudKit with CKSyncEngine
 
@@ -471,28 +555,42 @@ Sources/ARCStorage/
 │   ├── Models/         # StorageError, QueryDescriptor, SortDescriptor
 │   └── Extensions/     # Identifiable, Predicate helpers
 ├── Implementations/
-│   ├── SwiftData/      # SwiftDataEntity, SwiftDataStorage, SwiftDataRepository
+│   ├── SwiftData/      # SwiftDataEntity, SwiftDataStorage, SwiftDataRepository, SwiftDataConfiguration
 │   ├── InMemory/       # InMemoryStorage, InMemoryRepository
 │   ├── UserDefaults/   # UserDefaultsStorage, UserDefaultsRepository
-│   └── Keychain/       # KeychainStorage, KeychainRepository, KeychainAccessibility
+│   ├── Keychain/       # KeychainStorage, KeychainRepository, KeychainAccessibility
+│   └── Preferences/    # PreferenceKey, PreferenceStorage, PreferenceStorageProtocol
 ├── Features/
 │   ├── Cache/          # LRUCache, CacheManager, MemoryPressureHandler
 │   ├── CloudKit/       # CloudKitSyncEngine, CloudKitSyncMonitor, CloudKitConfiguration
 │   ├── Migration/      # MigrationPlan, MigrationHelper
 │   └── Photos/         # ARCPhoto, PhotoRepository, SwiftDataPhotoRepository, ThumbnailGenerator
-└── Testing/            # MockRepository, MockStorageProvider, TestHelpers
+└── Testing/            # MockRepository, MockStorageProvider, MockPreferenceStorage, TestHelpers
 ```
 
 ### Photo Attachments
 
 ARCStorage includes a first-class photo attachment system — useful for attaching images to any SwiftData entity (visits, notes, profiles, etc.).
 
-#### 1. Register `ARCPhoto` in your schema
+#### 1. Set up a dedicated photo container
+
+`ARCPhoto` must live in a **separate local-only container** from any CloudKit-synced
+models (CloudKit requires inverse relationships; `ARCPhoto` has none):
 
 ```swift
-let schema = Schema([YourModel.self, ARCPhoto.self])
-let config = SwiftDataConfiguration(schema: schema, cloudKit: .enabled(containerIdentifier: "iCloud.com.example.app"))
-let container = try config.makeContainer()
+// CloudKit store → default.store
+let mainConfig = SwiftDataConfiguration(
+    schema: Schema([Visit.self]),
+    cloudKit: .enabled(containerIdentifier: "iCloud.com.example.app")
+)
+let mainContainer = try mainConfig.makeContainer()
+
+// Photo store (local-only) → arc-photos.store
+let photoConfig = SwiftDataConfiguration(
+    schema: Schema([ARCPhoto.self]),
+    storeName: "arc-photos"
+)
+let photoContainer = try photoConfig.makeContainer()
 ```
 
 #### 2. Add a cascade-delete photo relationship to your entity
@@ -512,15 +610,14 @@ final class Visit: SwiftDataEntity {
 #### 3. Create a `SwiftDataPhotoRepository` at the composition root
 
 ```swift
-// Share the same ModelContainer as your other repositories
-let photoRepository = SwiftDataPhotoRepository(modelContainer: container)
+let photoRepository = SwiftDataPhotoRepository(modelContainer: photoContainer)
 ```
 
 #### 4. Add, fetch, and delete photos
 
 ```swift
-// Add a photo (thumbnail generated automatically from imageData)
-let photo = try photoRepository.add(
+// add is async — thumbnail generation runs off the main thread
+let photo = try await photoRepository.add(
     imageData: jpegData,      // Full-size JPEG from PhotosPicker
     caption: "Dinner night",
     sortOrder: 0
