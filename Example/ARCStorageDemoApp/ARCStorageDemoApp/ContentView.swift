@@ -17,6 +17,7 @@ struct ContentView: View {
     private let settingsViewModel: SettingsViewModel
     private let preferencesViewModel: PreferencesViewModel
     private let authViewModel: AuthViewModel
+    private let photoDemoViewModel: PhotoDemoViewModel
 
     // MARK: Initialization
 
@@ -24,12 +25,14 @@ struct ContentView: View {
          persistentNotesViewModel: PersistentNotesViewModel,
          settingsViewModel: SettingsViewModel,
          preferencesViewModel: PreferencesViewModel,
-         authViewModel: AuthViewModel) {
+         authViewModel: AuthViewModel,
+         photoDemoViewModel: PhotoDemoViewModel) {
         self.notesViewModel = notesViewModel
         self.persistentNotesViewModel = persistentNotesViewModel
         self.settingsViewModel = settingsViewModel
         self.preferencesViewModel = preferencesViewModel
         self.authViewModel = authViewModel
+        self.photoDemoViewModel = photoDemoViewModel
     }
 
     // MARK: Body
@@ -42,6 +45,10 @@ struct ContentView: View {
 
             Tab("SwiftData", systemImage: "externaldrive.fill") {
                 PersistentNoteListView(viewModel: persistentNotesViewModel)
+            }
+
+            Tab("Photos", systemImage: "photo.on.rectangle") {
+                PhotoDemoView(viewModel: photoDemoViewModel)
             }
 
             Tab("CloudKit", systemImage: "icloud") {
@@ -68,7 +75,7 @@ struct ContentView: View {
 #Preview("Light Mode") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
@@ -76,14 +83,15 @@ struct ContentView: View {
                        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
                        settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
                        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
-                       authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly))
+                       authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly),
+                       photoDemoViewModel: PhotoDemoViewModel(modelContainer: container))
         .preferredColorScheme(.light)
 }
 
 #Preview("Dark Mode") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
 
@@ -91,6 +99,7 @@ struct ContentView: View {
                        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
                        settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
                        preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
-                       authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly))
+                       authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly),
+                       photoDemoViewModel: PhotoDemoViewModel(modelContainer: container))
         .preferredColorScheme(.dark)
 }
