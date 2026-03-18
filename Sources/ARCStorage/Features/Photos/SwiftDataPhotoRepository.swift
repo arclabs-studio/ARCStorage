@@ -36,8 +36,10 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
 
     // MARK: - PhotoRepository
 
-    public func add(imageData: Data, caption: String?, sortOrder: Int) throws -> ARCPhoto {
-        let thumbnail = try thumbnailGenerator.generateSynchronously(from: imageData)
+    public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
+        // Hop to the ThumbnailGenerator actor (cooperative thread pool) for CPU-bound
+        // image work, then automatically resume on @MainActor for SwiftData operations.
+        let thumbnail = try await thumbnailGenerator.generate(from: imageData)
 
         let photo = ARCPhoto(thumbnailData: thumbnail,
                              imageData: imageData,
@@ -55,6 +57,10 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
         return photo
     }
 
+    /// - Note: Fetches all `ARCPhoto` records then filters in memory, because
+    ///   `PersistentIdentifier` cannot be used in a SwiftData `#Predicate`.
+    ///   Prefer the parent entity's relationship property (e.g. `visit.photos`)
+    ///   for large collections.
     public func photos(withIDs ids: [PersistentIdentifier]) throws -> [ARCPhoto] {
         guard !ids.isEmpty else { return [] }
         let idSet = Set(ids)

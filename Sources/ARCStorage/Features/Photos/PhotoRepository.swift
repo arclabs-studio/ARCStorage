@@ -14,13 +14,16 @@ import SwiftData
 /// let photoRepo = SwiftDataPhotoRepository(modelContainer: container)
 ///
 /// // In @MainActor ViewModel
-/// let photo = try photoRepo.add(imageData: jpeg, caption: "Dinner", sortOrder: 0)
+/// let photo = try await photoRepo.add(imageData: jpeg, caption: "Dinner", sortOrder: 0)
 /// let photos = try photoRepo.photos(withIDs: [visit.persistentModelID])
 /// ```
 @MainActor
 public protocol PhotoRepository: AnyObject {
-    /// Generates a thumbnail, stores the photo, and returns the persisted `ARCPhoto`.
-    func add(imageData: Data, caption: String?, sortOrder: Int) throws -> ARCPhoto
+    /// Generates a thumbnail off the main thread, stores the photo, and returns the persisted `ARCPhoto`.
+    ///
+    /// Thumbnail generation is CPU-bound and runs on a background executor to avoid
+    /// blocking the main thread. SwiftData operations resume on `@MainActor` after the await.
+    func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto
 
     /// Fetches all photos whose `persistentModelID` is in the provided set.
     /// Use the parent entity's relationship directly in most cases; this is
