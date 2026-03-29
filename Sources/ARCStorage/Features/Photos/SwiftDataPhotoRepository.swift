@@ -25,7 +25,6 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
     // MARK: - Properties
 
     private let modelContext: ModelContext
-    private let thumbnailGenerator = ThumbnailGenerator()
     private let logger = ARCLogger(subsystem: "com.arclabs.ARCStorage", category: "PhotoRepository")
 
     // MARK: - Initialization
@@ -37,9 +36,13 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
     // MARK: - PhotoRepository
 
     public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
-        // Hop to the ThumbnailGenerator actor (cooperative thread pool) for CPU-bound
-        // image work, then automatically resume on @MainActor for SwiftData operations.
-        let thumbnail = try await thumbnailGenerator.generate(from: imageData)
+        // Run CPU-bound thumbnail generation off the main thread.
+        // Task.detached guarantees @MainActor resumption after `.value` in Swift 6,
+        // whereas awaiting an actor method does not reliably restore the caller's
+        // actor context (EXC_BREAKPOINT on modelContext.save() in iOS 18+).
+        let thumbnail = try await Task.detached(priority: .userInitiated) {
+            try ThumbnailGenerator.generate(from: imageData)
+        }.value
 
         let photo = ARCPhoto(thumbnailData: thumbnail,
                              imageData: imageData,
