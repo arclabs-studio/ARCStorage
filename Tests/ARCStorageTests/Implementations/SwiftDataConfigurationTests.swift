@@ -3,7 +3,6 @@ import SwiftData
 import Testing
 @testable import ARCStorage
 
-@Suite("SwiftDataConfiguration Tests")
 @MainActor
 struct SwiftDataConfigurationTests {
     @Model

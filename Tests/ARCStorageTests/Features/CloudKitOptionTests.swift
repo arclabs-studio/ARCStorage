@@ -1,7 +1,6 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("CloudKitOption Tests")
 struct CloudKitOptionTests {
     // MARK: - CloudKitOption Equality
 
@@ -42,7 +41,6 @@ struct CloudKitOptionTests {
     }
 }
 
-@Suite("SyncState Tests")
 struct SyncStateTests {
     // MARK: - SyncState Equality
 

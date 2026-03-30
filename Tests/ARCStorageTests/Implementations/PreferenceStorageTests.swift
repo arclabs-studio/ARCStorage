@@ -31,13 +31,13 @@ private enum TestPreferences {
     }
 }
 
-private enum TestEnvironment: String, Codable, Sendable {
+private enum TestEnvironment: String, Codable {
     case production
     case staging
     case development
 }
 
-private struct TestConfig: Codable, Sendable, Equatable {
+private struct TestConfig: Codable, Equatable {
     let name: String
     let enabled: Bool
     let count: Int
@@ -45,7 +45,6 @@ private struct TestConfig: Codable, Sendable, Equatable {
 
 // MARK: - PreferenceStorage Tests
 
-@Suite("PreferenceStorage Tests")
 struct PreferenceStorageTests {
     // MARK: - Get Tests
 
@@ -245,7 +244,6 @@ struct PreferenceStorageTests {
 
 // MARK: - MockPreferenceStorage Tests
 
-@Suite("MockPreferenceStorage Tests")
 struct MockPreferenceStorageTests {
     @Test("Tracks get calls") func tracksGetCalls() {
         // Given

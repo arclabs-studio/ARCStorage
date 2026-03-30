@@ -5,7 +5,6 @@ import Testing
 
 // MARK: - ARCPhoto Model Tests
 
-@Suite("ARCPhoto Model Tests")
 @MainActor
 struct ARCPhotoModelTests {
     private func makeTestContainer() throws -> ModelContainer {
@@ -98,13 +97,11 @@ struct ARCPhotoModelTests {
 
 // MARK: - ThumbnailGenerator Tests
 
-@Suite("ThumbnailGenerator Tests")
 struct ThumbnailGeneratorTests {
-    @Test("Invalid data throws StorageError.invalidData") func invalidDataThrows() async {
-        let generator = ThumbnailGenerator()
+    @Test("Invalid data throws StorageError.invalidData") func invalidDataThrows() {
         let badData = Data([0x00, 0x01, 0x02])
-        await #expect(throws: StorageError.self) {
-            try await generator.generate(from: badData)
+        #expect(throws: StorageError.self) {
+            try ThumbnailGenerator.generate(from: badData)
         }
     }
 }
