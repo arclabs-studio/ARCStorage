@@ -1,7 +1,6 @@
 import Testing
 @testable import ARCStorage
 
-@Suite("CloudKitSyncMonitor Tests")
 @MainActor
 struct CloudKitSyncMonitorTests {
     private func makeSUT() -> CloudKitSyncMonitor {

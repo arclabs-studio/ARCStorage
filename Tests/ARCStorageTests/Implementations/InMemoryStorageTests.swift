@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("InMemoryStorage Tests")
 struct InMemoryStorageTests {
     @Test("Save and fetch works correctly") func saveAndFetch_worksCorrectly() async throws {
         let storage = InMemoryStorage<TestModel>()

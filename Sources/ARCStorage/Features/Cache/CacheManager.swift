@@ -249,7 +249,7 @@ final class MemoryPressureHandler: @unchecked Sendable {
 // MARK: - Cache Entry
 
 /// Internal cache entry storing value and metadata.
-struct CacheEntry<Value: Sendable>: Sendable {
+struct CacheEntry<Value: Sendable> {
     let value: Value
     let timestamp: Date
 }

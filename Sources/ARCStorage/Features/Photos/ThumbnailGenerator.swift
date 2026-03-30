@@ -8,12 +8,13 @@ import AppKit
 
 /// Internal utility for generating compressed JPEG thumbnails.
 ///
-/// Declared as an `actor` so callers on `@MainActor` automatically hop to the
-/// cooperative thread pool when they `await generate(from:)`, keeping CPU-bound
-/// image work off the main thread without needing `Task.detached`.
+/// Declared as a `enum` (namespace) because it has no stored instance state.
+/// Callers use `Task.detached` to run generation off the main thread and
+/// get a guaranteed `@MainActor` resumption after `.value`, which is the
+/// Swift 6 / iOS 18+ correct pattern for CPU-bound work called from `@MainActor`.
 ///
 /// Target: ≤ 200×200px, < 50 KB.
-actor ThumbnailGenerator {
+enum ThumbnailGenerator {
     // MARK: - Constants
 
     static let maxDimension: CGFloat = 200
@@ -21,9 +22,9 @@ actor ThumbnailGenerator {
 
     // MARK: - API
 
-    /// Generates a thumbnail. Suspends the caller's actor and runs on the
-    /// cooperative thread pool, keeping the main thread free.
-    func generate(from data: Data) throws -> Data {
+    /// Generates a thumbnail synchronously. Call from a `Task.detached` block to
+    /// keep CPU-bound image work off the main thread.
+    static func generate(from data: Data) throws -> Data {
         try _generate(from: data)
     }
 }
@@ -31,7 +32,7 @@ actor ThumbnailGenerator {
 // MARK: - Platform Implementation
 
 extension ThumbnailGenerator {
-    private nonisolated func _generate(from data: Data) throws -> Data {
+    private static func _generate(from data: Data) throws -> Data {
         #if canImport(UIKit)
         return try generateUIKit(from: data)
         #elseif canImport(AppKit)
@@ -42,7 +43,7 @@ extension ThumbnailGenerator {
     }
 
     #if canImport(UIKit)
-    private nonisolated func generateUIKit(from data: Data) throws -> Data {
+    private static func generateUIKit(from data: Data) throws -> Data {
         guard let source = UIImage(data: data) else {
             throw StorageError.invalidData
         }
@@ -59,7 +60,7 @@ extension ThumbnailGenerator {
     #endif
 
     #if canImport(AppKit)
-    private nonisolated func generateAppKit(from data: Data) throws -> Data {
+    private static func generateAppKit(from data: Data) throws -> Data {
         guard let source = NSImage(data: data) else {
             throw StorageError.invalidData
         }
@@ -82,7 +83,7 @@ extension ThumbnailGenerator {
     }
     #endif
 
-    private nonisolated func thumbnailSize(for original: CGSize) -> CGSize {
+    private static func thumbnailSize(for original: CGSize) -> CGSize {
         let max = ThumbnailGenerator.maxDimension
         guard original.width > max || original.height > max else { return original }
         let ratio = min(max / original.width, max / original.height)

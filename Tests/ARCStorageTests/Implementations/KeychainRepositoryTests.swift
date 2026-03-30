@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("KeychainRepository Tests")
 struct KeychainRepositoryTests {
     // MARK: - Save & Fetch
 

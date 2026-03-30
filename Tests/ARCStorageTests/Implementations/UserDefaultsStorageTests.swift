@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
-@Suite("UserDefaultsStorage Tests")
 struct UserDefaultsStorageTests {
     @Test("Save and fetch works correctly") func saveAndFetch_worksCorrectly() async throws {
         let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: .standard,

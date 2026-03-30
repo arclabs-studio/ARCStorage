@@ -19,7 +19,6 @@ final class TestSwiftDataModel: SwiftDataEntity {
     }
 }
 
-@Suite("SwiftData Storage Tests")
 @MainActor
 struct SwiftDataStorageTests {
     /// Creates a new in-memory model container for testing.
@@ -126,7 +125,6 @@ struct SwiftDataStorageTests {
     }
 }
 
-@Suite("SwiftData Repository Tests")
 @MainActor
 struct SwiftDataRepositoryTests {
     /// Creates a new in-memory model container for testing.
@@ -197,7 +195,6 @@ struct SwiftDataRepositoryTests {
 
 // MARK: - Fetch by ID Tests
 
-@Suite("SwiftData Storage Fetch by ID Tests")
 @MainActor
 struct SwiftDataStorageFetchByIDTests {
     /// Creates a new in-memory model container for testing.
@@ -287,7 +284,6 @@ struct SwiftDataStorageFetchByIDTests {
 
 // MARK: - Prefetching Tests
 
-@Suite("SwiftData Storage Prefetching Tests")
 @MainActor
 struct SwiftDataStoragePrefetchingTests {
     /// Creates a new in-memory model container for testing.
@@ -384,7 +380,6 @@ struct SwiftDataStoragePrefetchingTests {
 
 // MARK: - Repository Prefetching Tests
 
-@Suite("SwiftData Repository Prefetching Tests")
 @MainActor
 struct SwiftDataRepositoryPrefetchingTests {
     /// Creates a new in-memory model container for testing.
