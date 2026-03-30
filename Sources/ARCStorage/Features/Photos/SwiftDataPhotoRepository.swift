@@ -36,13 +36,21 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
     // MARK: - PhotoRepository
 
     public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
-        // Run CPU-bound thumbnail generation off the main thread.
-        // Task.detached guarantees @MainActor resumption after `.value` in Swift 6,
-        // whereas awaiting an actor method does not reliably restore the caller's
-        // actor context (EXC_BREAKPOINT on modelContext.save() in iOS 18+).
-        let thumbnail = try await Task.detached(priority: .userInitiated) {
-            try ThumbnailGenerator.generate(from: imageData)
-        }.value
+        // Generate thumbnail on the cooperative thread pool using structured concurrency.
+        // withThrowingTaskGroup's body closure inherits and maintains the calling actor's
+        // isolation (@MainActor here), so after group.next() we are guaranteed to be back
+        // on @MainActor for the SwiftData insert/save.
+        //
+        // Task.detached { }.value was insufficient: in practice the Swift runtime does not
+        // reliably restore @MainActor context on physical devices after an unstructured
+        // task completes, causing EXC_BREAKPOINT at modelContext.insert().
+        let thumbnail = try await withThrowingTaskGroup(of: Data.self) { group in
+            group.addTask(priority: .userInitiated) {
+                try ThumbnailGenerator.generate(from: imageData)
+            }
+            guard let data = try await group.next() else { throw StorageError.invalidData }
+            return data
+        }
 
         let photo = ARCPhoto(thumbnailData: thumbnail,
                              imageData: imageData,
