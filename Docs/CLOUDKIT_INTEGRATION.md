@@ -155,6 +155,31 @@ let container = try config.makeContainer()
 
 CloudKit integration tests require entitlements and should live in a demo app, not package tests. The `CloudKitSyncMonitor.startMonitoring()` method calls `CKContainer.accountStatus()` which requires CloudKit entitlements.
 
+## Deploying Schema to Production
+
+**Important:** Before releasing your app to the App Store or TestFlight, you must deploy your CloudKit schema from the Development environment to Production via the CloudKit Console. This is a manual step that cannot be automated by any Swift package.
+
+### Steps
+
+1. Open [CloudKit Console](https://icloud.developer.apple.com/)
+2. Select your app's container
+3. Navigate to **Schema** > **Deploy Schema Changes**
+4. Review the diff and click **Deploy**
+
+### Why This Matters
+
+- The **Development** environment auto-creates schema on the fly when your app saves records
+- The **Production** environment requires an explicit schema deployment — without it, all CloudKit sync operations will fail silently for App Store users
+- Schema promotion is **additive only** — you cannot delete or rename record types or fields once promoted
+
+### When to Deploy
+
+- Before every App Store or TestFlight release that introduces new or modified SwiftData models
+- After verifying sync works correctly in the Development environment
+- Test with TestFlight before the full App Store release to confirm the production schema is correct
+
+For more details, see Apple's documentation: [Deploying an iCloud Container's Schema](https://developer.apple.com/documentation/cloudkit/deploying-an-icloud-container-s-schema).
+
 ## Limitations
 
 - **No manual sync trigger** — SwiftData handles sync timing automatically
