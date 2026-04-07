@@ -46,7 +46,11 @@ import SwiftData
 /// ```
 @MainActor
 public final class SwiftDataStorage<T: SwiftDataEntity> {
-    private let modelContainer: ModelContainer
+    /// The underlying model container.
+    ///
+    /// Expose this when you need to pass the container to other ARCStorage utilities,
+    /// such as ``SwiftDataChangeMonitor``.
+    public let modelContainer: ModelContainer
     private let modelContext: ModelContext
 
     /// Tracks registered objects for faster lookups.

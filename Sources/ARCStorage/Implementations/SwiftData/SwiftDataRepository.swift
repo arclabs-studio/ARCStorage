@@ -33,6 +33,19 @@ import SwiftData
 public final class SwiftDataRepository<T: SwiftDataEntity> {
     private let storage: SwiftDataStorage<T>
 
+    /// The underlying model container.
+    ///
+    /// Use this to create a ``SwiftDataChangeMonitor`` that observes the same
+    /// container as this repository.
+    ///
+    /// ```swift
+    /// let repo = SwiftDataRepository(storage: storage)
+    /// let monitor = SwiftDataChangeMonitor(modelContainer: repo.modelContainer)
+    /// ```
+    public var modelContainer: ModelContainer {
+        storage.modelContainer
+    }
+
     /// Creates a new repository.
     ///
     /// - Parameters:

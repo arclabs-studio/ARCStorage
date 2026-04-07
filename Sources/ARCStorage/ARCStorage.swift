@@ -36,6 +36,7 @@ import SwiftData
 // - ``SwiftDataStorage``
 // - ``SwiftDataRepository``
 // - ``SwiftDataConfiguration``
+// - ``SwiftDataChangeMonitor``
 //
 // ### Alternative Storage
 // - ``InMemoryStorage``
@@ -201,7 +202,7 @@ import SwiftData
 
 public enum ARCStorage {
     /// Current version of ARCStorage.
-    public static let version = "1.3.0"
+    public static let version = "1.4.0"
 
     /// Framework identifier.
     public static let identifier = "com.arclabs.arcstorage"
