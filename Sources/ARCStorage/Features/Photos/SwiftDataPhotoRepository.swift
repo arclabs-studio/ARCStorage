@@ -35,7 +35,7 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
 
     // MARK: - PhotoRepository
 
-    public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
+    public func add(imageData: Data, caption: String?, sortOrder: Int) throws -> ARCPhoto {
         // Generate thumbnail synchronously on @MainActor. A 200×200 JPEG resize from
         // in-memory data is < 10 ms — moving it to a background thread via
         // withThrowingTaskGroup or Task.detached caused EXC_BREAKPOINT crashes on

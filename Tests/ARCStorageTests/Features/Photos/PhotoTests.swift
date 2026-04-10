@@ -22,22 +22,22 @@ struct ARCPhotoModelTests {
         #expect(photo.createdAt != nil)
     }
 
-    @Test("ARCPhoto saves and fetches via SwiftDataPhotoRepository") func saveAndFetch() async throws {
+    @Test("ARCPhoto saves and fetches via SwiftDataPhotoRepository") func saveAndFetch() throws {
         let container = try makeTestContainer()
         let repo = SwiftDataPhotoRepository(modelContainer: container)
 
-        let photo = try await repo.add(imageData: makeMinimalJPEGData(), caption: "Test", sortOrder: 0)
+        let photo = try repo.add(imageData: makeMinimalJPEGData(), caption: "Test", sortOrder: 0)
 
         #expect(photo.caption == "Test")
         #expect(photo.thumbnailData != nil)
         #expect(photo.sortOrder == 0)
     }
 
-    @Test("ARCPhoto delete removes from context") func deletePhoto() async throws {
+    @Test("ARCPhoto delete removes from context") func deletePhoto() throws {
         let container = try makeTestContainer()
         let repo = SwiftDataPhotoRepository(modelContainer: container)
 
-        let photo = try await repo.add(imageData: makeMinimalJPEGData(), caption: nil, sortOrder: 0)
+        let photo = try repo.add(imageData: makeMinimalJPEGData(), caption: nil, sortOrder: 0)
         let photoID = photo.persistentModelID
 
         try repo.delete(id: photoID)
@@ -46,13 +46,13 @@ struct ARCPhotoModelTests {
         #expect(fetched.isEmpty)
     }
 
-    @Test("ARCPhoto deleteAll removes multiple photos") func deleteAll() async throws {
+    @Test("ARCPhoto deleteAll removes multiple photos") func deleteAll() throws {
         let container = try makeTestContainer()
         let repo = SwiftDataPhotoRepository(modelContainer: container)
 
         let data = makeMinimalJPEGData()
-        let p1 = try await repo.add(imageData: data, caption: "One", sortOrder: 0)
-        let p2 = try await repo.add(imageData: data, caption: "Two", sortOrder: 1)
+        let p1 = try repo.add(imageData: data, caption: "One", sortOrder: 0)
+        let p2 = try repo.add(imageData: data, caption: "Two", sortOrder: 1)
 
         try repo.deleteAll([p1, p2])
 
