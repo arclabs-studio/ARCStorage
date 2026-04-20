@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import ARCStorage
 
@@ -95,5 +96,52 @@ struct LRUCacheTests {
         #expect(value1 == nil)
         #expect(value2 == nil)
         #expect(count == .zero)
+    }
+
+    // MARK: - Byte-Size Eviction Tests
+
+    @Test("Byte-size eviction removes LRU items when limit exceeded") func byteSizeEviction_removesLRUItems() async {
+        // Given — 100 byte limit
+        let cache = LRUCache<String, Data>(capacity: 100, maxByteSize: 100)
+
+        // When — add 60 bytes, then 60 more
+        let data60 = Data(repeating: 0xAA, count: 60)
+        await cache.set(data60, for: "a")
+        await cache.set(data60, for: "b") // should evict "a"
+
+        // Then
+        let valueA = await cache.get("a")
+        let valueB = await cache.get("b")
+        let bytes = await cache.currentByteSizeUsed
+
+        #expect(valueA == nil)
+        #expect(valueB != nil)
+        #expect(bytes == 60)
+    }
+
+    @Test("Byte-size tracking reports correct size") func byteSizeTracking_reportsCorrectSize() async {
+        // Given
+        let cache = LRUCache<String, Data>(capacity: 100, maxByteSize: 10000)
+
+        // When
+        await cache.set(Data(repeating: 0x01, count: 100), for: "a")
+        await cache.set(Data(repeating: 0x02, count: 200), for: "b")
+
+        // Then
+        let bytes = await cache.currentByteSizeUsed
+        #expect(bytes == 300)
+    }
+
+    @Test("Byte-size updates on value replacement") func byteSizeUpdate_onReplacement() async {
+        // Given
+        let cache = LRUCache<String, Data>(capacity: 100, maxByteSize: 10000)
+
+        // When — set 100 bytes, then replace with 50
+        await cache.set(Data(repeating: 0x01, count: 100), for: "a")
+        await cache.set(Data(repeating: 0x02, count: 50), for: "a")
+
+        // Then
+        let bytes = await cache.currentByteSizeUsed
+        #expect(bytes == 50)
     }
 }
