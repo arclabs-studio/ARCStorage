@@ -180,6 +180,32 @@ CloudKit integration tests require entitlements and should live in a demo app, n
 
 For more details, see Apple's documentation: [Deploying an iCloud Container's Schema](https://developer.apple.com/documentation/cloudkit/deploying-an-icloud-container-s-schema).
 
+## Data Size Limits
+
+CloudKit imposes size limits on synced data:
+
+| Storage Type | Limit | Notes |
+|---|---|---|
+| Inline record fields | **1 MB total** per CKRecord | All non-asset fields combined |
+| `@Attribute(.externalStorage)` | **250 MB** per CKAsset | Stored as a separate file, not inline |
+| CloudKit database | **10 GB** per user (private) | Shared across all apps |
+
+### Recommendations for Binary Data
+
+- **Thumbnails** (`thumbnailData`): Stored inline in the record. Keep under **50 KB** to leave room for other fields. `ThumbnailGenerator` targets ≤ 200×200px at 0.4 JPEG quality.
+- **Full images** (`imageData`): Use `@Attribute(.externalStorage)` so SwiftData maps them to CKAsset files. No practical per-field limit.
+- **Never store large binary data inline** — exceeding 1 MB per record causes silent sync failures.
+
+### ARCPhoto Example
+
+```swift
+@Model
+final class ARCPhoto: SwiftDataEntity {
+    var thumbnailData: Data?                            // Inline (< 50 KB)
+    @Attribute(.externalStorage) var imageData: Data?   // CKAsset (up to 250 MB)
+}
+```
+
 ## Limitations
 
 - **No manual sync trigger** — SwiftData handles sync timing automatically

@@ -62,6 +62,9 @@ The library supports multiple storage backends:
 - ``CacheManager``
 - ``CachePolicy``
 - ``LRUCache``
+- ``ByteSizable``
+- ``CacheEvictionEvent``
+- ``EvictionReason``
 
 ### CloudKit Integration
 
@@ -78,6 +81,7 @@ The library supports multiple storage backends:
 ### Models
 
 - ``StorageError``
+- ``FetchResult``
 - ``QueryDescriptor``
 - ``SortDescriptor``
 

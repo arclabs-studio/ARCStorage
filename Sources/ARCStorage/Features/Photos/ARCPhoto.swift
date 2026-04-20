@@ -27,6 +27,10 @@ public final class ARCPhoto: SwiftDataEntity {
     public var id = UUID()
 
     /// Compressed JPEG thumbnail (≤ 200×200px, targeting < 50 KB).
+    ///
+    /// - Important: Stored inline in the CloudKit record when sync is enabled.
+    ///   CloudKit has a 1 MB total per-record limit for inline fields.
+    ///   Keep thumbnails under 50 KB to leave room for other fields.
     public var thumbnailData: Data?
 
     /// Full-size image stored as an external binary file.
