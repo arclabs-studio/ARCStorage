@@ -1,3 +1,4 @@
+import ARCLogger
 import CloudKit
 import Foundation
 
@@ -78,6 +79,8 @@ import Foundation
 
     /// The container for CloudKit operations.
     private let container: CKContainer
+
+    private let logger = ARCLogger(subsystem: "com.arclabs.ARCStorage", category: "CloudKitSyncEngine")
 
     /// Creates a new CloudKit sync engine manager.
     ///
@@ -184,12 +187,22 @@ import Foundation
 
     private func loadPersistedState() -> CKSyncEngine.State.Serialization? {
         guard let data = UserDefaults.standard.data(forKey: stateKey) else { return nil }
-        return try? CKSyncEngine.State.Serialization(from: data)
+        do {
+            return try CKSyncEngine.State.Serialization(from: data)
+        } catch {
+            logger.error("Failed to deserialize sync state, starting fresh: \(error.localizedDescription)")
+            UserDefaults.standard.removeObject(forKey: stateKey)
+            return nil
+        }
     }
 
     private func persistState(_ serialization: CKSyncEngine.State.Serialization) {
-        guard let data = try? serialization.data() else { return }
-        UserDefaults.standard.set(data, forKey: stateKey)
+        do {
+            let data = try serialization.data()
+            UserDefaults.standard.set(data, forKey: stateKey)
+        } catch {
+            logger.error("Failed to serialize sync state: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Event Handling

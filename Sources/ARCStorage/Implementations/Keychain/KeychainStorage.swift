@@ -1,3 +1,4 @@
+import ARCLogger
 import Foundation
 import Security
 
@@ -97,6 +98,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     private let accessibility: KeychainAccessibility
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let logger = ARCLogger(subsystem: "com.arclabs.ARCStorage", category: "KeychainStorage")
 
     /// Creates a new keychain storage.
     ///
@@ -173,6 +175,17 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func fetchAll() async throws -> [T] {
+        let result = try await fetchAllWithDiagnostics()
+        return result.entities
+    }
+
+    /// Fetches all entities with diagnostic information about corrupted entries.
+    ///
+    /// Unlike ``fetchAll()``, this method reports how many entries failed to decode.
+    /// Use this when you need visibility into data integrity issues.
+    ///
+    /// - Returns: A ``FetchResult`` containing valid entities and a corruption count
+    public func fetchAllWithDiagnostics() async throws -> FetchResult<T> {
         // Step 1: Retrieve all account identifiers for this service.
         // Requesting only attributes (not data) avoids errSecParam (-50) on macOS
         // when using kSecMatchLimitAll.
@@ -189,7 +202,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         let attrsStatus = SecItemCopyMatching(attrsQuery as CFDictionary, &attrsResult)
 
         if attrsStatus == errSecItemNotFound {
-            return []
+            return FetchResult(entities: [], corruptedCount: 0)
         }
 
         guard attrsStatus == errSecSuccess else {
@@ -197,15 +210,18 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         }
 
         guard let items = attrsResult as? [[String: Any]] else {
-            return []
+            return FetchResult(entities: [], corruptedCount: 0)
         }
 
         // Step 2: Fetch the data for each account individually.
         var entities: [T] = []
+        var skippedCount = 0
 
         for item in items {
             guard let account = item[kSecAttrAccount as String] as? String,
                   let id = T.ID(account) else {
+                skippedCount += 1
+                logger.warning("Skipping keychain item: could not parse account as \(T.ID.self)")
                 continue
             }
 
@@ -214,7 +230,11 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
             }
         }
 
-        return entities
+        if skippedCount > 0 {
+            logger.error("fetchAll completed with \(skippedCount) unparseable keychain entries skipped")
+        }
+
+        return FetchResult(entities: entities, corruptedCount: skippedCount)
     }
 
     public func fetch(matching predicate: Predicate<T>) async throws -> [T] {
