@@ -104,18 +104,23 @@ struct CacheManagerTests {
         let policy = CachePolicy(ttl: 3600, maxSize: 2, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: policy, registerForMemoryWarnings: false)
 
-        // When — collect first event
+        // Subscribe BEFORE triggering eviction to avoid race
+        let collectTask = Task {
+            var collected: [CacheEvictionEvent<String>] = []
+            for await event in cache.evictionEvents {
+                collected.append(event)
+                break
+            }
+            return collected
+        }
+
+        // When — trigger eviction
         await cache.set(1, for: "key1")
         await cache.set(2, for: "key2")
         await cache.set(3, for: "key3") // triggers eviction of key1
 
-        // Then — verify via stream
-        var events: [CacheEvictionEvent<String>] = []
-        for await event in cache.evictionEvents {
-            events.append(event)
-            break // take first event only
-        }
-
+        // Then
+        let events = await collectTask.value
         #expect(events.count == 1)
         #expect(events.first?.evictedKeys == ["key1"])
         #expect(events.first?.remainingCount == 1) // key2 remains; key3 inserted after eviction
@@ -129,6 +134,16 @@ struct CacheManagerTests {
         let policy = CachePolicy(ttl: 3600, maxSize: 100, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: policy, registerForMemoryWarnings: false)
 
+        // Subscribe BEFORE triggering eviction to avoid race
+        let collectTask = Task {
+            var collected: [CacheEvictionEvent<String>] = []
+            for await event in cache.evictionEvents {
+                collected.append(event)
+                break
+            }
+            return collected
+        }
+
         await cache.set(1, for: "key1")
         await cache.set(2, for: "key2")
 
@@ -136,12 +151,7 @@ struct CacheManagerTests {
         await cache.handleMemoryPressure(level: .warning)
 
         // Then
-        var events: [CacheEvictionEvent<String>] = []
-        for await event in cache.evictionEvents {
-            events.append(event)
-            break
-        }
-
+        let events = await collectTask.value
         #expect(events.count == 1)
         if case .memoryPressure(.warning) = events.first?.reason {} else {
             Issue.record("Expected memoryPressure(.warning) reason")
@@ -189,6 +199,16 @@ struct CacheManagerTests {
         let policy = CachePolicy(ttl: 3600, maxSize: 100, strategy: .lru)
         let cache = CacheManager<String, Int>(policy: policy, registerForMemoryWarnings: false)
 
+        // Subscribe BEFORE triggering eviction to avoid race
+        let collectTask = Task {
+            var collected: [CacheEvictionEvent<String>] = []
+            for await event in cache.evictionEvents {
+                collected.append(event)
+                break
+            }
+            return collected
+        }
+
         await cache.set(1, for: "key1")
         await cache.set(2, for: "key2")
 
@@ -196,12 +216,7 @@ struct CacheManagerTests {
         await cache.invalidate()
 
         // Then
-        var events: [CacheEvictionEvent<String>] = []
-        for await event in cache.evictionEvents {
-            events.append(event)
-            break
-        }
-
+        let events = await collectTask.value
         #expect(events.count == 1)
         if case .manual = events.first?.reason {} else {
             Issue.record("Expected manual reason")
