@@ -192,19 +192,26 @@ CloudKit imposes size limits on synced data:
 
 ### Recommendations for Binary Data
 
-- **Thumbnails** (`thumbnailData`): Stored inline in the record. Keep under **50 KB** to leave room for other fields. `ThumbnailGenerator` targets ≤ 200×200px at 0.4 JPEG quality.
-- **Full images** (`imageData`): Use `@Attribute(.externalStorage)` so SwiftData maps them to CKAsset files. No practical per-field limit.
-- **Never store large binary data inline** — exceeding 1 MB per record causes silent sync failures.
+- **Thumbnails** (`thumbnailData`): Stored inline. Keep under **50 KB**. `ThumbnailGenerator` targets ≤ 200×200px at 0.4 JPEG quality.
+- **Full images** (`imageData`): For CloudKit-synced models, use `@Attribute(.externalStorage)` to map to CKAsset. For local-only models, inline storage with pre-compression is simpler and avoids `.externalStorage` crashes on separate containers.
+- **Never store large uncompressed binary data inline** — exceeding 1 MB per record causes silent sync failures.
 
-### ARCPhoto Example
+### ARCPhoto (Local-Only)
+
+`ARCPhoto` stores images **inline** because it lives in a separate local-only container
+(no CloudKit sync). `ImageCompressor` pre-compresses to ≤ 1200px max dimension at
+JPEG 0.8 quality (~200–500 KB), keeping the SQLite store lean.
 
 ```swift
 @Model
 final class ARCPhoto: SwiftDataEntity {
-    var thumbnailData: Data?                            // Inline (< 50 KB)
-    @Attribute(.externalStorage) var imageData: Data?   // CKAsset (up to 250 MB)
+    var thumbnailData: Data?   // Inline (< 50 KB)
+    var imageData: Data?       // Inline (pre-compressed, ~200-500 KB)
 }
 ```
+
+> **Note:** If your custom models sync via CloudKit and contain large binary data,
+> use `@Attribute(.externalStorage)` on those fields to map to CKAsset.
 
 ## Limitations
 

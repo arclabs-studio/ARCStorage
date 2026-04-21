@@ -640,15 +640,17 @@ try photoRepository.deleteAll(visit.photos ?? [])
 
 | Property | Storage | Purpose |
 |----------|---------|---------|
-| `thumbnailData` | Inline in SQLite | Fast list / carousel rendering |
-| `imageData` | `@Attribute(.externalStorage)` → CKAsset | Full-size viewer |
+| `thumbnailData` | Inline in SQLite (< 50 KB) | Fast list / carousel rendering |
+| `imageData` | Inline in SQLite (pre-compressed) | Full-size viewer |
 
-#### CloudKit compatibility
+`ImageCompressor` automatically resizes to ≤ 1200px and JPEG 0.8 quality (~200–500 KB) before persisting.
 
-`ARCPhoto` is designed CloudKit-safe from the start:
+#### Container setup
+
+`ARCPhoto` lives in a **separate local-only container** (not CloudKit-synced) because it has no inverse relationship:
 - All properties have defaults or are `Optional`
 - No `@Attribute(.unique)` (incompatible with CloudKit sync)
-- `imageData` maps to a CloudKit **CKAsset** when sync is enabled
+- No `@Attribute(.externalStorage)` (crashes on separate local-only containers)
 
 ---
 
