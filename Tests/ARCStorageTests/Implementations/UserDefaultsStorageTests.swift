@@ -74,4 +74,57 @@ struct UserDefaultsStorageTests {
         // Cleanup
         try await storage.deleteAll()
     }
+
+    @Test("fetchAll skips corrupted entries and returns valid ones")
+    func fetchAll_skipsCorruptedEntries() async throws {
+        // Given — use a dedicated suite to avoid sending risks with .standard
+        let prefix = "test.\(UUID().uuidString)"
+        let suiteName = "ARCStorage.test.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+
+        // Inject garbage data before handing defaults to actor
+        defaults.set(Data([0x00, 0x01, 0x02]), forKey: "\(prefix).corrupted-key")
+
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: defaults, keyPrefix: prefix)
+        try await storage.save(SimpleTestModel.fixture1)
+
+        // When
+        let fetched = try await storage.fetchAll()
+
+        // Then — valid entity returned, corrupted one skipped
+        #expect(fetched.count == 1)
+        #expect(fetched.first?.id == SimpleTestModel.fixture1.id)
+
+        // Cleanup
+        try await storage.deleteAll()
+        UserDefaults.standard.removePersistentDomain(forName: suiteName)
+    }
+
+    @Test("fetchAllWithDiagnostics reports corruption count")
+    func fetchAllWithDiagnostics_reportsCorruption() async throws {
+        // Given — use a dedicated suite to avoid sending risks with .standard
+        let prefix = "test.\(UUID().uuidString)"
+        let suiteName = "ARCStorage.test.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+
+        // Inject corrupted entries before handing defaults to actor
+        defaults.set(Data([0xFF]), forKey: "\(prefix).bad1")
+        defaults.set(Data([0xFE]), forKey: "\(prefix).bad2")
+
+        let storage = UserDefaultsStorage<SimpleTestModel>(userDefaults: defaults, keyPrefix: prefix)
+        try await storage.save(SimpleTestModel.fixture1)
+        try await storage.save(SimpleTestModel.fixture2)
+
+        // When
+        let result = try await storage.fetchAllWithDiagnostics()
+
+        // Then
+        #expect(result.entities.count == 2)
+        #expect(result.corruptedCount == 2)
+        #expect(result.hasCorruption == true)
+
+        // Cleanup
+        try await storage.deleteAll()
+        UserDefaults.standard.removePersistentDomain(forName: suiteName)
+    }
 }

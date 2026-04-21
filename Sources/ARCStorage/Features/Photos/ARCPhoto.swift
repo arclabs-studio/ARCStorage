@@ -9,8 +9,8 @@ import SwiftData
 ///
 /// ## Storage
 /// - `thumbnailData`: Inline in SQLite (< 50 KB target). Fast list rendering.
-/// - `imageData`: Stored externally via `@Attribute(.externalStorage)`. Maps to
-///   CKAsset when CloudKit sync is enabled. **Verify CKAsset mapping before shipping.**
+/// - `imageData`: Stored inline in SQLite. Consumer apps should pre-compress images
+///   (e.g. JPEG ≤ 1200px max dimension) before persisting to keep the store lean.
 ///
 /// ## Relationship Setup (Consumer App)
 /// Register `ARCPhoto.self` in your app's `Schema` alongside your entity:
@@ -27,11 +27,16 @@ public final class ARCPhoto: SwiftDataEntity {
     public var id = UUID()
 
     /// Compressed JPEG thumbnail (≤ 200×200px, targeting < 50 KB).
+    ///
+    /// - Important: Stored inline in the CloudKit record when sync is enabled.
+    ///   CloudKit has a 1 MB total per-record limit for inline fields.
+    ///   Keep thumbnails under 50 KB to leave room for other fields.
     public var thumbnailData: Data?
 
-    /// Full-size image stored as an external binary file.
-    /// Maps to CKAsset in CloudKit when sync is enabled.
-    @Attribute(.externalStorage) public var imageData: Data?
+    /// Full-size image data (pre-compressed JPEG recommended).
+    /// Stored inline — no `@Attribute(.externalStorage)` to avoid SwiftData
+    /// crashes on separate local-only containers.
+    public var imageData: Data?
 
     /// Optional user-provided caption.
     public var caption: String?

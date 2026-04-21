@@ -135,7 +135,7 @@ extension PhotoDemoView {
             Text("""
             Each photo is stored as an `ARCPhoto` SwiftData entity:
             • **thumbnailData** — inline JPEG ≤ 200×200 px (fast list rendering)
-            • **imageData** — full-size via `@Attribute(.externalStorage)` (CKAsset-ready)
+            • **imageData** — full-size inline (pre-compressed via `ImageCompressor` ≤ 1200px)
 
             `SwiftDataPhotoRepository.add()` generates the thumbnail automatically \
             using `ThumbnailGenerator`.

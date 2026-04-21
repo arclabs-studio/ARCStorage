@@ -36,24 +36,21 @@ public final class SwiftDataPhotoRepository: PhotoRepository {
     // MARK: - PhotoRepository
 
     public func add(imageData: Data, caption: String?, sortOrder: Int) async throws -> ARCPhoto {
-        // Generate thumbnail on the cooperative thread pool using structured concurrency.
-        // withThrowingTaskGroup's body closure inherits and maintains the calling actor's
-        // isolation (@MainActor here), so after group.next() we are guaranteed to be back
-        // on @MainActor for the SwiftData insert/save.
-        //
-        // Task.detached { }.value was insufficient: in practice the Swift runtime does not
-        // reliably restore @MainActor context on physical devices after an unstructured
-        // task completes, causing EXC_BREAKPOINT at modelContext.insert().
-        let thumbnail = try await withThrowingTaskGroup(of: Data.self) { group in
+        // Generate thumbnail AND compressed full-size image off the main thread.
+        // Both are CPU-bound; structured concurrency guarantees @MainActor resumption
+        // after the group completes, keeping SwiftData insert/save on the main actor.
+        let (thumbnail, compressed) = try await withThrowingTaskGroup(of: (Data, Data).self) { group in
             group.addTask(priority: .userInitiated) {
-                try ThumbnailGenerator.generate(from: imageData)
+                let thumb = try ThumbnailGenerator.generate(from: imageData)
+                let full = ImageCompressor.compress(imageData, maxDimension: 1200, quality: 0.8)
+                return (thumb, full)
             }
-            guard let data = try await group.next() else { throw StorageError.invalidData }
-            return data
+            guard let result = try await group.next() else { throw StorageError.invalidData }
+            return result
         }
 
         let photo = ARCPhoto(thumbnailData: thumbnail,
-                             imageData: imageData,
+                             imageData: compressed,
                              caption: caption,
                              sortOrder: sortOrder)
         modelContext.insert(photo)

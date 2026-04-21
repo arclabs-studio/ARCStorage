@@ -56,6 +56,10 @@ import SwiftData
 // - ``LRUCache``
 // - ``CacheStrategy``
 // - ``MemoryPressureLevel``
+// - ``ByteSizable``
+// - ``CacheEvictionEvent``
+// - ``EvictionReason``
+// - ``FetchResult``
 //
 // ### Testing
 // - ``MockRepository``

@@ -3,11 +3,11 @@ import Foundation
 /// Specialized LRU (Least Recently Used) cache implementation.
 ///
 /// This cache automatically evicts the least recently accessed items
-/// when capacity is reached.
+/// when capacity or byte-size limits are reached.
 ///
 /// ## Example
 /// ```swift
-/// let cache = LRUCache<String, Data>(capacity: 50)
+/// let cache = LRUCache<String, Data>(capacity: 50, maxByteSize: 10_000_000)
 /// await cache.set(data, for: "key")
 /// let value = await cache.get("key")
 /// ```
@@ -16,13 +16,19 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     private var head: Node<Key, Value>?
     private var tail: Node<Key, Value>?
     private let capacity: Int
+    private let maxByteSize: Int?
     private var currentSize: Int = 0
+    private var currentBytes: Int = 0
 
     /// Creates a new LRU cache.
     ///
-    /// - Parameter capacity: Maximum number of items to cache
-    public init(capacity: Int) {
+    /// - Parameters:
+    ///   - capacity: Maximum number of items to cache
+    ///   - maxByteSize: Maximum total byte size, or `nil` for no byte limit.
+    ///     Only effective when values conform to ``ByteSizable``.
+    public init(capacity: Int, maxByteSize: Int? = nil) {
         self.capacity = capacity
+        self.maxByteSize = maxByteSize
     }
 
     /// Retrieves a value and marks it as recently used.
@@ -40,22 +46,35 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 
     /// Stores a value in the cache.
     ///
-    /// If capacity is reached, removes the least recently used item.
+    /// If capacity or byte-size limit is reached, removes the least recently used items.
     ///
     /// - Parameters:
     ///   - value: The value to cache
     ///   - key: The key to associate with the value
     public func set(_ value: Value, for key: Key) {
+        let byteSize = (value as? ByteSizable)?.byteSize ?? 0
+
         if let existingNode = cache[key] {
+            currentBytes -= existingNode.byteSize
             existingNode.value = value
+            existingNode.byteSize = byteSize
+            currentBytes += byteSize
             moveToHead(existingNode)
         } else {
-            let newNode = Node(key: key, value: value)
+            let newNode = Node(key: key, value: value, byteSize: byteSize)
             cache[key] = newNode
             addToHead(newNode)
             currentSize += 1
+            currentBytes += byteSize
 
             if currentSize > capacity {
+                removeTail()
+            }
+        }
+
+        // Evict by byte size if needed
+        if let maxBytes = maxByteSize, maxBytes > 0 {
+            while currentBytes > maxBytes, currentSize > 1 {
                 removeTail()
             }
         }
@@ -66,6 +85,7 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
     /// - Parameter key: The key to remove
     public func remove(_ key: Key) {
         guard let node = cache[key] else { return }
+        currentBytes -= node.byteSize
         removeNode(node)
         cache.removeValue(forKey: key)
         currentSize -= 1
@@ -77,11 +97,19 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
         head = nil
         tail = nil
         currentSize = 0
+        currentBytes = 0
     }
 
     /// Current number of cached items.
     public var count: Int {
         currentSize
+    }
+
+    /// Current total byte size of cached items.
+    ///
+    /// Only meaningful when values conform to ``ByteSizable``.
+    public var currentByteSizeUsed: Int {
+        currentBytes
     }
 
     // MARK: - Private Methods
@@ -122,6 +150,7 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 
     private func removeTail() {
         guard let tail else { return }
+        currentBytes -= tail.byteSize
         cache.removeValue(forKey: tail.key)
         removeNode(tail)
         currentSize -= 1
@@ -132,11 +161,13 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 private class Node<Key: Hashable & Sendable, Value: Sendable>: @unchecked Sendable {
     let key: Key
     var value: Value
+    var byteSize: Int
     var prev: Node?
     var next: Node?
 
-    init(key: Key, value: Value) {
+    init(key: Key, value: Value, byteSize: Int) {
         self.key = key
         self.value = value
+        self.byteSize = byteSize
     }
 }

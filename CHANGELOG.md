@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **ARCPhoto — Photo attachment support**
-  - `ARCPhoto` SwiftData model with thumbnail (inline) + full image (`@Attribute(.externalStorage)`)
+  - `ARCPhoto` SwiftData model with thumbnail (inline) + full image (inline, pre-compressed via `ImageCompressor`)
   - `PhotoRepository` protocol and `SwiftDataPhotoRepository` implementation
   - `ThumbnailGenerator` actor: thumbnail generation runs off the main thread via actor-hop
   - `PhotoRepository.add` is `async throws` — CPU-bound resize never blocks `@MainActor`
