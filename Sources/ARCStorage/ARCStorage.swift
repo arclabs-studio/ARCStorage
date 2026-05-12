@@ -51,6 +51,9 @@ import SwiftData
 // - ``PreferenceStorage``
 // - ``PreferenceStorageProtocol``
 //
+// ### Configuration
+// - ``ConfigurationValue``
+//
 // ### Caching
 // - ``CacheManager``
 // - ``LRUCache``

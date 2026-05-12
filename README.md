@@ -393,6 +393,31 @@ let coordinator = AppCoordinator(preferences: mock)
 > flags and scalar values that need synchronous access. Use `UserDefaultsRepository`
 > when you have entity-based models or need the async/await `Repository` interface.
 
+#### Configuration Values (Build-Time Config)
+
+`ConfigurationValue` reads **client-public** configuration injected into
+`Info.plist` at build time (typically from an `.xcconfig` file) — for example
+the Firebase or RevenueCat SDK keys. These are not secrets: they ship in the app
+binary by design and are protected provider-side (Firebase Security Rules + App
+Check, RevenueCat server-side receipt validation).
+
+```swift
+// Build setting RC_API_KEY → Info.plist → read at runtime.
+let apiKey = ConfigurationValue.string("RC_API_KEY") ?? ""
+```
+
+Optional light obfuscation (a speed-bump against casual binary scraping — **not**
+a secret store; never use for server-side secrets):
+
+```swift
+// Bytes produced by ARCDevTools/scripts/key-obfuscator.swift, committed in the app:
+let key = ConfigurationValue.deobfuscated(Obf.rcAPIKey) ?? ""
+```
+
+> **Real secrets** (third-party API keys for server-to-server calls, signing
+> keys, `.p8` files) must never reach the device. Proxy them through a backend
+> (Cloud Function + Secret Manager).
+
 ### Advanced Features
 
 #### Caching

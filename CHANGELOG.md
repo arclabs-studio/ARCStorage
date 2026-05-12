@@ -38,6 +38,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ModelContainer`, both defaulted to `default.store`. Pass `storeName:` to get a named
   backing file (e.g. `"arc-photos"` → `arc-photos.store`) and avoid schema conflicts.
 
+- **Configuration values (`ConfigurationValue`)** — [FVRS-242]
+  - `ConfigurationValue.string(_:bundle:)` — reads build-time configuration
+    injected into `Info.plist` (typically from an `.xcconfig` file), returning
+    `nil` and logging a warning when the key is missing or empty.
+  - `ConfigurationValue.deobfuscated(_:)` — reconstructs a string from an
+    obfuscated `[UInt8]` literal produced by the `key-obfuscator.swift` codegen
+    tool in ARCDevTools. Documented as light obfuscation (defense-in-depth) only,
+    never a secret store.
+
 ### Changed
 
 - `SwiftLint`: disabled `switch_case_alignment` — false positive with Swift switch expressions
