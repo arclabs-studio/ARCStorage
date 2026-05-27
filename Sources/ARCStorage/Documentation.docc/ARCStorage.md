@@ -72,7 +72,9 @@ The library supports multiple storage backends:
 
 - ``StorageError``
 - ``QueryDescriptor``
+- ``SwiftDataQuery``
 - ``SortDescriptor``
+- ``PagedResult``
 
 ### Testing
 

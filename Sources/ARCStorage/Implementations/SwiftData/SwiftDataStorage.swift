@@ -219,23 +219,99 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
         offset fetchOffset: Int? = nil,
         prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
     ) throws -> [T] {
-        var descriptor = if let predicate {
-            FetchDescriptor<T>(predicate: predicate, sortBy: sortDescriptors)
+        try fetch(SwiftDataQuery(
+            predicate: predicate,
+            sortBy: sortDescriptors,
+            limit: fetchLimit,
+            offset: fetchOffset,
+            prefetching: relationshipKeyPaths
+        ))
+    }
+
+    /// Fetches entities matching a ``SwiftDataQuery``.
+    ///
+    /// This is the canonical fetch entry point — all other configurable fetch
+    /// overloads delegate to this method.
+    ///
+    /// - Parameter query: The query describing predicate, sort, pagination, and prefetching
+    /// - Returns: Array of entities matching the query
+    /// - Throws: ``StorageError`` if the fetch operation fails
+    ///
+    /// ## Example
+    /// ```swift
+    /// let query = SwiftDataQuery<Restaurant>(
+    ///     predicate: #Predicate { $0.isOpen },
+    ///     sortBy: [Foundation.SortDescriptor(\.rating, order: .reverse)],
+    ///     limit: 20,
+    ///     prefetching: [\.reviews]
+    /// )
+    /// let restaurants = try storage.fetch(query)
+    /// ```
+    public func fetch(_ query: SwiftDataQuery<T>) throws -> [T] {
+        try modelContext.fetch(makeFetchDescriptor(from: query))
+    }
+
+    /// Fetches a single page of entities.
+    ///
+    /// Performs two SwiftData calls: `fetchCount` for the total (which does not
+    /// materialize objects) and a regular `fetch` with `fetchLimit` / `fetchOffset`
+    /// for the page contents.
+    ///
+    /// - Parameters:
+    ///   - page: Zero-based page index
+    ///   - pageSize: Maximum items per page (must be > 0)
+    ///   - predicate: Optional predicate to filter entities
+    ///   - sortDescriptors: Sort descriptors for ordering
+    ///   - relationshipKeyPaths: Relationships to prefetch (avoids N+1 faults)
+    /// - Returns: A ``PagedResult`` containing items and pagination metadata
+    /// - Throws: ``StorageError/invalidQuery(reason:)`` if `page` is negative or
+    ///   `pageSize` is non-positive; ``StorageError`` if the fetch fails.
+    ///
+    /// ## Example
+    /// ```swift
+    /// let result = try storage.fetchPage(
+    ///     0,
+    ///     pageSize: 50,
+    ///     sortedBy: [Foundation.SortDescriptor(\.name)]
+    /// )
+    /// print(result.items.count, result.hasMore, result.totalCount)
+    /// ```
+    public func fetchPage(
+        _ page: Int,
+        pageSize: Int,
+        matching predicate: Predicate<T>? = nil,
+        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
+    ) throws -> PagedResult<T> {
+        guard page >= 0 else {
+            throw StorageError.invalidQuery(reason: "page must be >= 0, got \(page)")
+        }
+        guard pageSize > 0 else {
+            throw StorageError.invalidQuery(reason: "pageSize must be > 0, got \(pageSize)")
+        }
+
+        let countDescriptor = if let predicate {
+            FetchDescriptor<T>(predicate: predicate)
         } else {
-            FetchDescriptor<T>(sortBy: sortDescriptors)
+            FetchDescriptor<T>()
         }
+        let totalCount = try modelContext.fetchCount(countDescriptor)
 
-        if let fetchLimit {
-            descriptor.fetchLimit = fetchLimit
-        }
-        if let fetchOffset {
-            descriptor.fetchOffset = fetchOffset
-        }
-        if !relationshipKeyPaths.isEmpty {
-            descriptor.relationshipKeyPathsForPrefetching = relationshipKeyPaths
-        }
+        let pageQuery = SwiftDataQuery<T>(
+            predicate: predicate,
+            sortBy: sortDescriptors,
+            limit: pageSize,
+            offset: page * pageSize,
+            prefetching: relationshipKeyPaths
+        )
+        let items = try fetch(pageQuery)
 
-        return try modelContext.fetch(descriptor)
+        return PagedResult(
+            items: items,
+            page: page,
+            pageSize: pageSize,
+            totalCount: totalCount
+        )
     }
 
     public func delete(id: T.ID) throws {
@@ -264,5 +340,23 @@ public final class SwiftDataStorage<T: SwiftDataEntity> {
         } catch {
             throw StorageError.saveFailed(underlying: error)
         }
+    }
+
+    private func makeFetchDescriptor(from query: SwiftDataQuery<T>) -> FetchDescriptor<T> {
+        var descriptor = if let predicate = query.predicate {
+            FetchDescriptor<T>(predicate: predicate, sortBy: query.sortBy)
+        } else {
+            FetchDescriptor<T>(sortBy: query.sortBy)
+        }
+        if let limit = query.limit {
+            descriptor.fetchLimit = limit
+        }
+        if let offset = query.offset {
+            descriptor.fetchOffset = offset
+        }
+        if !query.prefetching.isEmpty {
+            descriptor.relationshipKeyPathsForPrefetching = query.prefetching
+        }
+        return descriptor
     }
 }

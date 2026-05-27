@@ -12,6 +12,7 @@ import Foundation
 /// - ``fetchFailed(underlying:)``
 /// - ``deleteFailed(underlying:)``
 /// - ``invalidData``
+/// - ``invalidQuery(reason:)``
 /// - ``transactionFailed(underlying:)``
 public enum StorageError: Error, @unchecked Sendable {
     /// Entity with the specified ID was not found.
@@ -28,6 +29,9 @@ public enum StorageError: Error, @unchecked Sendable {
 
     /// Data is invalid or corrupted.
     case invalidData
+
+    /// Query parameters are invalid (e.g. negative page or non-positive page size).
+    case invalidQuery(reason: String)
 
     /// Transaction failed and was rolled back.
     case transactionFailed(underlying: Error)
@@ -55,6 +59,8 @@ extension StorageError: LocalizedError {
             "Failed to delete entity: \(error.localizedDescription)"
         case .invalidData:
             "Data is invalid or corrupted"
+        case let .invalidQuery(reason):
+            "Invalid query: \(reason)"
         case let .transactionFailed(error):
             "Transaction failed: \(error.localizedDescription)"
         }

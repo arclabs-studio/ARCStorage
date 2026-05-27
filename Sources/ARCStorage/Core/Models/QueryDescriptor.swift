@@ -5,6 +5,13 @@ import Foundation
 /// Query descriptors encapsulate filtering, sorting, and pagination
 /// parameters for data retrieval.
 ///
+/// ## SwiftData
+///
+/// `QueryDescriptor` constrains `T` to `Sendable`, which is incompatible with
+/// SwiftData `@Model` classes under Swift 6 strict concurrency. For SwiftData
+/// backends, use ``SwiftDataQuery`` instead — it is the main-actor-safe
+/// equivalent that maps directly to `FetchDescriptor`.
+///
 /// ## Example
 /// ```swift
 /// let query = QueryDescriptor<Restaurant>(

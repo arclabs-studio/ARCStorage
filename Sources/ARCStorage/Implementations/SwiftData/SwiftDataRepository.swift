@@ -169,6 +169,57 @@ public final class SwiftDataRepository<T: SwiftDataEntity> {
         )
     }
 
+    /// Fetches entities matching a ``SwiftDataQuery``.
+    ///
+    /// - Parameter query: The query describing predicate, sort, pagination, and prefetching
+    /// - Returns: Array of entities matching the query
+    /// - Throws: ``StorageError`` if the fetch operation fails
+    public func fetch(_ query: SwiftDataQuery<T>) throws -> [T] {
+        try storage.fetch(query)
+    }
+
+    /// Fetches a single page of entities.
+    ///
+    /// Use this for paginated UIs (infinite scroll, page-based lists) over
+    /// large datasets — for example, lists of tens of thousands of entities
+    /// where loading everything at once is impractical.
+    ///
+    /// - Parameters:
+    ///   - page: Zero-based page index
+    ///   - pageSize: Maximum items per page (must be > 0)
+    ///   - predicate: Optional predicate to filter entities
+    ///   - sortDescriptors: Sort descriptors for ordering
+    ///   - relationshipKeyPaths: Relationships to prefetch (avoids N+1 faults)
+    /// - Returns: A ``PagedResult`` containing items and pagination metadata
+    /// - Throws: ``StorageError/invalidQuery(reason:)`` if `page` is negative or
+    ///   `pageSize` is non-positive; ``StorageError`` if the fetch fails.
+    ///
+    /// ## Example
+    /// ```swift
+    /// let result = try repository.fetchPage(
+    ///     0,
+    ///     pageSize: 50,
+    ///     sortedBy: [Foundation.SortDescriptor(\.name)]
+    /// )
+    /// items.append(contentsOf: result.items)
+    /// if result.hasMore { loadNextPage() }
+    /// ```
+    public func fetchPage(
+        _ page: Int,
+        pageSize: Int,
+        matching predicate: Predicate<T>? = nil,
+        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
+    ) throws -> PagedResult<T> {
+        try storage.fetchPage(
+            page,
+            pageSize: pageSize,
+            matching: predicate,
+            sortedBy: sortDescriptors,
+            prefetching: relationshipKeyPaths
+        )
+    }
+
     /// Saves multiple entities in a batch.
     ///
     /// - Parameter entities: Entities to save

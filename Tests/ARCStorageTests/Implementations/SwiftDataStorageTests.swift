@@ -498,3 +498,251 @@ struct SwiftDataRepositoryPrefetchingTests {
         #expect(results[1].value == 40)
     }
 }
+
+// MARK: - SwiftDataQuery Tests
+
+@Suite("SwiftData Query Tests")
+@MainActor
+struct SwiftDataQueryTests {
+    private func makeTestContainer() throws -> ModelContainer {
+        let schema = Schema([TestSwiftDataModel.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try ModelContainer(for: schema, configurations: [config])
+    }
+
+    @Test("fetch(_:SwiftDataQuery) matches parameter-based fetch")
+    func queryParityWithParameters() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+
+        let models = (1 ... 10).map { TestSwiftDataModel(name: "Item \($0)", value: $0) }
+        try storage.saveAll(models)
+
+        let predicate = #Predicate<TestSwiftDataModel> { $0.value > 3 }
+        let sortDescriptors: [Foundation.SortDescriptor<TestSwiftDataModel>] = [
+            Foundation.SortDescriptor(\.value)
+        ]
+
+        let viaParameters = try storage.fetch(
+            matching: predicate,
+            sortedBy: sortDescriptors,
+            limit: 3,
+            offset: 2
+        )
+        let viaQuery = try storage.fetch(SwiftDataQuery(
+            predicate: predicate,
+            sortBy: sortDescriptors,
+            limit: 3,
+            offset: 2
+        ))
+
+        #expect(viaParameters.map(\.value) == viaQuery.map(\.value))
+        #expect(viaQuery.map(\.value) == [6, 7, 8])
+    }
+
+    @Test("fetch(_:SwiftDataQuery) with no parameters returns all")
+    func queryWithDefaults() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+
+        let models = (1 ... 5).map { TestSwiftDataModel(name: "Item \($0)", value: $0) }
+        try storage.saveAll(models)
+
+        let results = try storage.fetch(SwiftDataQuery<TestSwiftDataModel>())
+
+        #expect(results.count == 5)
+    }
+
+    @Test("Repository forwards fetch(_:SwiftDataQuery) to storage")
+    func repositoryForwardsQuery() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        let repository = SwiftDataRepository(storage: storage)
+
+        let models = (1 ... 5).map { TestSwiftDataModel(name: "Item \($0)", value: $0 * 10) }
+        try repository.saveAll(models)
+
+        let query = SwiftDataQuery<TestSwiftDataModel>(
+            sortBy: [Foundation.SortDescriptor(\.value, order: .reverse)],
+            limit: 2
+        )
+        let results = try repository.fetch(query)
+
+        #expect(results.count == 2)
+        #expect(results[0].value == 50)
+        #expect(results[1].value == 40)
+    }
+}
+
+// MARK: - PagedResult Tests
+
+@Suite("PagedResult Tests")
+struct PagedResultTests {
+    @Test("hasMore is true when more pages remain")
+    func hasMoreIntermediatePage() {
+        let result = PagedResult(items: [1, 2, 3], page: 0, pageSize: 3, totalCount: 10)
+        #expect(result.hasMore == true)
+    }
+
+    @Test("hasMore is false on last page")
+    func hasMoreLastPage() {
+        // 10 total / 3 per page → pages 0,1,2,3; page 3 has 1 item
+        let result = PagedResult(items: [10], page: 3, pageSize: 3, totalCount: 10)
+        #expect(result.hasMore == false)
+    }
+
+    @Test("hasMore is false when totalCount is exactly filled")
+    func hasMoreExactBoundary() {
+        let result = PagedResult(items: [7, 8, 9], page: 2, pageSize: 3, totalCount: 9)
+        #expect(result.hasMore == false)
+    }
+
+    @Test("pageCount uses ceiling division")
+    func pageCountCeiling() {
+        #expect(PagedResult<Int>(items: [], page: 0, pageSize: 3, totalCount: 10).pageCount == 4)
+        #expect(PagedResult<Int>(items: [], page: 0, pageSize: 3, totalCount: 9).pageCount == 3)
+        #expect(PagedResult<Int>(items: [], page: 0, pageSize: 3, totalCount: 0).pageCount == 0)
+    }
+}
+
+// MARK: - fetchPage Tests
+
+@Suite("SwiftData fetchPage Tests")
+@MainActor
+struct SwiftDataFetchPageTests {
+    private func makeTestContainer() throws -> ModelContainer {
+        let schema = Schema([TestSwiftDataModel.self])
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try ModelContainer(for: schema, configurations: [config])
+    }
+
+    private func seed(_ storage: SwiftDataStorage<TestSwiftDataModel>, count: Int) throws {
+        let models = (1 ... count).map { TestSwiftDataModel(name: "Item \($0)", value: $0) }
+        try storage.saveAll(models)
+    }
+
+    @Test("First page returns first pageSize items in sort order")
+    func firstPage() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        try seed(storage, count: 10)
+
+        let result = try storage.fetchPage(
+            0,
+            pageSize: 3,
+            sortedBy: [Foundation.SortDescriptor(\.value)]
+        )
+
+        #expect(result.items.map(\.value) == [1, 2, 3])
+        #expect(result.page == 0)
+        #expect(result.pageSize == 3)
+        #expect(result.totalCount == 10)
+        #expect(result.hasMore == true)
+        #expect(result.pageCount == 4)
+    }
+
+    @Test("Middle page applies correct offset")
+    func middlePage() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        try seed(storage, count: 10)
+
+        let result = try storage.fetchPage(
+            1,
+            pageSize: 3,
+            sortedBy: [Foundation.SortDescriptor(\.value)]
+        )
+
+        #expect(result.items.map(\.value) == [4, 5, 6])
+        #expect(result.hasMore == true)
+    }
+
+    @Test("Last partial page sets hasMore to false")
+    func lastPartialPage() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        try seed(storage, count: 10)
+
+        let result = try storage.fetchPage(
+            3,
+            pageSize: 3,
+            sortedBy: [Foundation.SortDescriptor(\.value)]
+        )
+
+        #expect(result.items.map(\.value) == [10])
+        #expect(result.hasMore == false)
+        #expect(result.totalCount == 10)
+    }
+
+    @Test("Page beyond range returns empty items and hasMore false")
+    func pageOutOfRange() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        try seed(storage, count: 5)
+
+        let result = try storage.fetchPage(10, pageSize: 3)
+
+        #expect(result.items.isEmpty)
+        #expect(result.hasMore == false)
+        #expect(result.totalCount == 5)
+    }
+
+    @Test("totalCount reflects predicate, not pageSize")
+    func totalCountWithPredicate() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        try seed(storage, count: 10)
+
+        let result = try storage.fetchPage(
+            0,
+            pageSize: 2,
+            matching: #Predicate<TestSwiftDataModel> { $0.value > 6 },
+            sortedBy: [Foundation.SortDescriptor(\.value)]
+        )
+
+        #expect(result.items.map(\.value) == [7, 8])
+        #expect(result.totalCount == 4) // values 7,8,9,10
+        #expect(result.hasMore == true)
+    }
+
+    @Test("Negative page throws invalidQuery")
+    func negativePageThrows() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+
+        #expect(throws: StorageError.self) {
+            try storage.fetchPage(-1, pageSize: 10)
+        }
+    }
+
+    @Test("Non-positive pageSize throws invalidQuery")
+    func zeroPageSizeThrows() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+
+        #expect(throws: StorageError.self) {
+            try storage.fetchPage(0, pageSize: 0)
+        }
+        #expect(throws: StorageError.self) {
+            try storage.fetchPage(0, pageSize: -5)
+        }
+    }
+
+    @Test("Repository forwards fetchPage to storage")
+    func repositoryForwardsFetchPage() throws {
+        let container = try makeTestContainer()
+        let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
+        let repository = SwiftDataRepository(storage: storage)
+        try seed(storage, count: 7)
+
+        let result = try repository.fetchPage(
+            1,
+            pageSize: 3,
+            sortedBy: [Foundation.SortDescriptor(\.value)]
+        )
+
+        #expect(result.items.map(\.value) == [4, 5, 6])
+        #expect(result.totalCount == 7)
+        #expect(result.hasMore == true)
+    }
+}
