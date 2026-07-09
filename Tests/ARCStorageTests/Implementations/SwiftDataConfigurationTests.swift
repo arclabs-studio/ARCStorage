@@ -125,4 +125,66 @@ struct SwiftDataConfigurationTests {
         // Then
         #expect(container.schema.entities.isEmpty == false)
     }
+
+    // MARK: - migrationPlan
+
+    enum ConfigTestSchemaV1: VersionedSchema {
+        static var versionIdentifier: Schema.Version {
+            Schema.Version(1, 0, 0)
+        }
+
+        static var models: [any PersistentModel.Type] {
+            [ConfigTestModel.self]
+        }
+    }
+
+    enum ConfigTestMigrationPlan: SchemaMigrationPlan {
+        static var schemas: [any VersionedSchema.Type] {
+            [ConfigTestSchemaV1.self]
+        }
+
+        static var stages: [MigrationStage] {
+            []
+        }
+    }
+
+    @Test("migrationPlan defaults to nil") func migrationPlan_defaultsToNil() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]))
+
+        // Then
+        #expect(sut.migrationPlan == nil)
+    }
+
+    @Test("Config with a migration plan builds a container via makeContainer")
+    func migrationPlan_buildsContainerViaMakeContainer() throws {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema(versionedSchema: ConfigTestSchemaV1.self),
+                                         migrationPlan: ConfigTestMigrationPlan.self)
+
+        // When
+        let container = try sut.makeContainer()
+
+        // Then
+        #expect(sut.migrationPlan != nil)
+        #expect(container.schema.entities.isEmpty == false)
+    }
+
+    @Test("makeContainerWithFallback with disabled + migration plan builds a container")
+    func makeContainerWithFallback_disabledWithMigrationPlan_buildsContainer() async throws {
+        // Given — exercises the delegation path (fallback → makeContainer with a plan)
+        let sut = SwiftDataConfiguration(schema: Schema(versionedSchema: ConfigTestSchemaV1.self),
+                                         cloudKit: .disabled,
+                                         migrationPlan: ConfigTestMigrationPlan.self)
+
+        // When
+        let container = try await sut.makeContainerWithFallback()
+
+        // Then
+        #expect(container.schema.entities.isEmpty == false)
+    }
+
+    // Note: the CloudKit-enabled + migrationPlan branch of makeLocalOnlyContainer() can't be
+    // exercised in-package for the same reason as the CloudKit fallback above —
+    // CKContainer.accountStatus() hangs without CloudKit entitlements. Covered in the demo app.
 }
