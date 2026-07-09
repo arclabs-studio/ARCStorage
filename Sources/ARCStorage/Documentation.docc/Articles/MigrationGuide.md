@@ -104,11 +104,10 @@ Use the migration plan when creating your container:
 
 ```swift
 let config = SwiftDataConfiguration(
-    schema: Schema(versionedSchema: RestaurantSchemaV2.self)
-)
-let container = try config.makeContainer(
+    schema: Schema(versionedSchema: RestaurantSchemaV2.self),
     migrationPlan: RestaurantMigrationPlan.self
 )
+let container = try config.makeContainer()
 ```
 
 Or use the convenience function:
