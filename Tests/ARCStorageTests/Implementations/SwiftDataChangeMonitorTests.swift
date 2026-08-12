@@ -25,7 +25,9 @@ struct SwiftDataChangeMonitorTests {
         let observerTask = Task { @MainActor in
             for await _ in monitor.changes() {
                 yieldCount += 1
-                if yieldCount >= 1 { break }
+                if yieldCount >= 1 {
+                    break
+                }
             }
         }
 
@@ -53,7 +55,9 @@ struct SwiftDataChangeMonitorTests {
         let observerTask = Task { @MainActor in
             for await _ in monitor.changes() {
                 yieldCount += 1
-                if yieldCount >= 3 { break }
+                if yieldCount >= 3 {
+                    break
+                }
             }
         }
 
@@ -81,14 +85,18 @@ struct SwiftDataChangeMonitorTests {
         let task1 = Task { @MainActor in
             for await _ in monitor.changes() {
                 count1 += 1
-                if count1 >= 1 { break }
+                if count1 >= 1 {
+                    break
+                }
             }
         }
 
         let task2 = Task { @MainActor in
             for await _ in monitor.changes() {
                 count2 += 1
-                if count2 >= 1 { break }
+                if count2 >= 1 {
+                    break
+                }
             }
         }
 
@@ -139,7 +147,9 @@ struct SwiftDataChangeMonitorTests {
         let observerTask = Task { @MainActor in
             for await _ in monitor.changes() {
                 yieldCount += 1
-                if yieldCount >= 1 { break }
+                if yieldCount >= 1 {
+                    break
+                }
             }
         }
 
