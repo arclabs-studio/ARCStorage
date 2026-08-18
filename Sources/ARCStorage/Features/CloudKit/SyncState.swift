@@ -1,3 +1,4 @@
+import CloudKit
 import Foundation
 
 /// The current state of CloudKit synchronization.
@@ -46,4 +47,29 @@ public enum UnavailableReason: Sendable, Equatable {
     ///
     /// - Parameter message: A human-readable description of the error.
     case error(String)
+}
+
+// MARK: - CKAccountStatus Mapping
+
+extension SyncState {
+    /// Maps a CloudKit account status to a sync state.
+    ///
+    /// - Parameter status: The account status reported by `CKContainer.accountStatus()`.
+    /// - Returns: `.available` when the account is usable, otherwise `.unavailable(reason:)`.
+    static func from(_ status: CKAccountStatus) -> SyncState {
+        switch status {
+        case .available:
+            .available
+        case .noAccount:
+            .unavailable(reason: .noAccount)
+        case .restricted:
+            .unavailable(reason: .restricted)
+        case .couldNotDetermine:
+            .unavailable(reason: .couldNotDetermine)
+        case .temporarilyUnavailable:
+            .unavailable(reason: .temporarilyUnavailable)
+        @unknown default:
+            .unavailable(reason: .couldNotDetermine)
+        }
+    }
 }

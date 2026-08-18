@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `SyncState` enum for UI observation (`.available`, `.syncing`, `.unavailable(reason:)`)
   - `CloudKitSyncMonitor` — `@Observable @MainActor` class for iCloud account monitoring
   - `SwiftDataConfiguration.makeContainerWithFallback()` — graceful fallback to local-only when iCloud unavailable
+  - `SwiftDataConfiguration.makeContainerReportingMode()` — returns a `ContainerResult` (container + `ContainerMode`)
+    so apps can detect `.localFallback(reason:)` and warn users that iCloud sync is not active
+  - `ContainerMode` (`.cloudKit` / `.localOnly` / `.localFallback(reason:)`) and `ContainerResult`
+  - `SwiftDataConfiguration.storeName` — the configured store name is now exposed as a public property
   - `Docs/CLOUDKIT_INTEGRATION.md` — full setup guide
 
 - **Keychain**
@@ -37,6 +41,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SwiftDataConfiguration: `storeName` parameter** — when an app uses more than one
   `ModelContainer`, both defaulted to `default.store`. Pass `storeName:` to get a named
   backing file (e.g. `"arc-photos"` → `arc-photos.store`) and avoid schema conflicts.
+
+- **SwiftDataConfiguration: CloudKit fallback dropped `storeName`** (launch blocker) —
+  `makeContainerWithFallback()` rebuilt a bare `ModelConfiguration` when iCloud was unavailable,
+  so a named store silently became `default.store`. Users not signed in to iCloud lost sight of
+  their data, and apps with a second container on `default.store` crashed at launch. The fallback
+  container now reuses the exact store URL of the CloudKit configuration.
+
+- **Migration paths dropped `storeName`** — `SwiftDataConfiguration.init(schema:migrationPlan:…)`
+  and `makeVersionedContainer(schema:migrationPlan:…)` now accept and forward `storeName:`.
 
 ### Changed
 

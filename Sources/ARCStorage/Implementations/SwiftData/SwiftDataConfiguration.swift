@@ -79,6 +79,7 @@ import Foundation
 /// - ``init(schema:storeName:cloudKit:allowsSave:)``
 /// - ``makeContainer()``
 /// - ``makeContainerWithFallback()``
+/// - ``makeContainerReportingMode()``
 ///
 /// ## Example
 ///
@@ -101,6 +102,11 @@ import Foundation
 public struct SwiftDataConfiguration: Sendable {
     /// The schema defining the models to persist.
     public let schema: Schema
+
+    /// The optional store file name (e.g. `"arc-photos"` → `arc-photos.store`).
+    ///
+    /// `nil` means the system default (`default.store`) is used.
+    public let storeName: String?
 
     /// The CloudKit sync option.
     public let cloudKit: CloudKitOption
@@ -126,6 +132,7 @@ public struct SwiftDataConfiguration: Sendable {
                 cloudKit: CloudKitOption = .disabled,
                 allowsSave: Bool = true) {
         self.schema = schema
+        self.storeName = storeName
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave
 
@@ -166,9 +173,32 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
     @MainActor public func makeContainerWithFallback() async throws -> ModelContainer {
+        try await makeContainerReportingMode().container
+    }
+
+    /// Creates a model container with automatic CloudKit fallback, reporting which mode was used.
+    ///
+    /// Behaves exactly like ``makeContainerWithFallback()`` but also returns a ``ContainerMode``
+    /// so the app can tell whether CloudKit sync is actually active. Use it to surface a
+    /// "not signed in to iCloud" banner instead of silently running local-only.
+    ///
+    /// The fallback container uses the **same backing store file** as the CloudKit configuration,
+    /// so a named ``storeName`` is preserved and no data becomes invisible.
+    ///
+    /// - Returns: The container plus the mode it was created in
+    /// - Throws: Error if container creation fails
+    ///
+    /// ## Example
+    /// ```swift
+    /// let result = try await config.makeContainerReportingMode()
+    /// if case let .localFallback(reason) = result.mode {
+    ///     showSyncWarning(reason)
+    /// }
+    /// ```
+    @MainActor public func makeContainerReportingMode() async throws -> ContainerResult {
         switch cloudKit {
         case .disabled:
-            return try makeContainer()
+            return try ContainerResult(container: makeContainer(), mode: .localOnly)
 
         case let .enabled(containerIdentifier):
             let container = CKContainer(identifier: containerIdentifier)
@@ -176,22 +206,36 @@ public struct SwiftDataConfiguration: Sendable {
             do {
                 accountStatus = try await container.accountStatus()
             } catch {
-                return try makeLocalOnlyContainer()
+                return try makeFallbackResult(reason: .error(error.localizedDescription))
             }
 
-            switch accountStatus {
-            case .available:
-                return try makeContainer()
-            default:
-                return try makeLocalOnlyContainer()
+            switch SyncState.from(accountStatus) {
+            case .available, .syncing:
+                return try ContainerResult(container: makeContainer(), mode: .cloudKit)
+            case let .unavailable(reason):
+                return try makeFallbackResult(reason: reason)
             }
         }
     }
 
+    // MARK: - Internal
+
+    /// The local-only equivalent of ``modelConfiguration`` — same backing store file, no CloudKit.
+    func localOnlyConfiguration() -> ModelConfiguration {
+        ModelConfiguration(storeName,
+                           schema: schema,
+                           url: modelConfiguration.url,
+                           allowsSave: allowsSave,
+                           cloudKitDatabase: .none)
+    }
+
     // MARK: - Private
 
+    @MainActor private func makeFallbackResult(reason: UnavailableReason) throws -> ContainerResult {
+        try ContainerResult(container: makeLocalOnlyContainer(), mode: .localFallback(reason: reason))
+    }
+
     @MainActor private func makeLocalOnlyContainer() throws -> ModelContainer {
-        let localConfig = ModelConfiguration(allowsSave: allowsSave, cloudKitDatabase: .none)
-        return try ModelContainer(for: schema, configurations: [localConfig])
+        try ModelContainer(for: schema, configurations: [localOnlyConfiguration()])
     }
 }
