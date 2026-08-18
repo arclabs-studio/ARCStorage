@@ -126,6 +126,98 @@ struct SwiftDataConfigurationTests {
         #expect(container.schema.entities.isEmpty == false)
     }
 
+    @Test("storeName is exposed on the configuration") func storeName_isExposed() {
+        // Given
+        let named = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]), storeName: "arc-photos")
+        let unnamed = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]))
+
+        // Then
+        #expect(named.storeName == "arc-photos")
+        #expect(unnamed.storeName == nil)
+    }
+
+    // MARK: - Local-only fallback configuration
+
+    @Test("Local-only fallback keeps the named store URL") func localOnlyConfiguration_withStoreName_preservesURL() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         storeName: "arc-photos",
+                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"))
+
+        // When
+        let localConfig = sut.localOnlyConfiguration()
+
+        // Then
+        #expect(localConfig.url == sut.modelConfiguration.url)
+        #expect(localConfig.name == "arc-photos")
+    }
+
+    @Test("Local-only fallback keeps the default store URL")
+    func localOnlyConfiguration_withoutStoreName_preservesDefaultURL() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"))
+
+        // When
+        let localConfig = sut.localOnlyConfiguration()
+
+        // Then
+        #expect(localConfig.url == sut.modelConfiguration.url)
+    }
+
+    @Test("Local-only fallback disables CloudKit") func localOnlyConfiguration_disablesCloudKit() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         storeName: "arc-photos",
+                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"))
+
+        // When
+        let localConfig = sut.localOnlyConfiguration()
+
+        // Then
+        #expect(localConfig.cloudKitContainerIdentifier == nil)
+        #expect(sut.modelConfiguration.cloudKitContainerIdentifier == "iCloud.com.arclabs.test")
+    }
+
+    @Test("Local-only fallback keeps allowsSave") func localOnlyConfiguration_keepsAllowsSave() {
+        // Given
+        let sut = SwiftDataConfiguration(schema: Schema([ConfigTestModel.self]),
+                                         storeName: "arc-photos",
+                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"),
+                                         allowsSave: false)
+
+        // Then
+        #expect(sut.localOnlyConfiguration().allowsSave == false)
+    }
+
+    // MARK: - makeContainerReportingMode
+
+    @Test("makeContainerReportingMode with disabled reports localOnly")
+    func makeContainerReportingMode_disabled_reportsLocalOnly() async throws {
+        // Given
+        let sut = makeSUT(cloudKit: .disabled)
+
+        // When
+        let result = try await sut.makeContainerReportingMode()
+
+        // Then
+        #expect(result.mode == .localOnly)
+        #expect(result.container.schema.entities.isEmpty == false)
+    }
+
+    @Test("ContainerResult round-trips container and mode") func containerResult_roundTrips() throws {
+        // Given
+        let sut = makeSUT(cloudKit: .disabled)
+        let container = try sut.makeContainer()
+
+        // When
+        let result = ContainerResult(container: container, mode: .localFallback(reason: .noAccount))
+
+        // Then
+        #expect(result.container === container)
+        #expect(result.mode == .localFallback(reason: .noAccount))
+    }
+
     // MARK: - migrationPlan
 
     enum ConfigTestSchemaV1: VersionedSchema {

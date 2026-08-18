@@ -89,6 +89,27 @@ let container = try await config.makeContainerWithFallback()
 
 Use `makeContainerWithFallback()` in production apps. Use `makeContainer()` in tests or when you want explicit control.
 
+### `makeContainerReportingMode()`
+
+Same behavior as `makeContainerWithFallback()`, but also reports **which mode** the container ended up in, so the app can tell the user that sync is not active instead of silently running local-only:
+
+```swift
+let result = try await config.makeContainerReportingMode()
+
+switch result.mode {
+case .cloudKit:
+    break                                   // sync active
+case .localOnly:
+    break                                   // CloudKit never requested
+case let .localFallback(reason):
+    showBanner("iCloud sync unavailable: \(reason)")
+}
+
+let container = result.container
+```
+
+`ContainerMode.localFallback` carries the same `UnavailableReason` values used by `SyncState` (`.noAccount`, `.restricted`, `.couldNotDetermine`, `.temporarilyUnavailable`, `.error(_)`).
+
 ## Monitoring Sync Status
 
 Use `CloudKitSyncMonitor` to show sync status in your UI:
@@ -133,9 +154,11 @@ struct SyncStatusView: View {
 When iCloud is unavailable (user not signed in, restricted, etc.):
 
 - `makeContainerWithFallback()` creates a **local-only** container
+- The fallback container uses the **same backing store file** as the CloudKit configuration. A configuration created with `storeName: "arc-favres"` keeps writing to `arc-favres.store` while offline — it does not silently switch to `default.store`, so no data becomes invisible and a second container that owns `default.store` still opens
 - Data is stored on-device only
-- If the user later signs in to iCloud, the next app launch with `makeContainerWithFallback()` will create a CloudKit-enabled container
+- If the user later signs in to iCloud, the next app launch with `makeContainerWithFallback()` will create a CloudKit-enabled container, backed by that same file
 - Previously local-only data will **not** automatically migrate to CloudKit — this is a SwiftData limitation
+- Use `makeContainerReportingMode()` when you need to know that a fallback happened (e.g. to warn a premium user who is not signed in to iCloud)
 
 ## Testing
 

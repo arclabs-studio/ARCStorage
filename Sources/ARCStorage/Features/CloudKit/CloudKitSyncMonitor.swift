@@ -110,19 +110,6 @@ public final class CloudKitSyncMonitor {
     }
 
     private func mapAccountStatus(_ status: CKAccountStatus) -> SyncState {
-        switch status {
-        case .available:
-            .available
-        case .noAccount:
-            .unavailable(reason: .noAccount)
-        case .restricted:
-            .unavailable(reason: .restricted)
-        case .couldNotDetermine:
-            .unavailable(reason: .couldNotDetermine)
-        case .temporarilyUnavailable:
-            .unavailable(reason: .temporarilyUnavailable)
-        @unknown default:
-            .unavailable(reason: .couldNotDetermine)
-        }
+        SyncState.from(status)
     }
 }

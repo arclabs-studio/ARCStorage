@@ -160,6 +160,8 @@ public typealias SwiftDataMigrationStage = MigrationStage
 /// - Parameters:
 ///   - schema: The versioned schema type (must be the latest version)
 ///   - migrationPlan: The migration plan type that handles version upgrades
+///   - storeName: Optional store file name (e.g. `"arc-photos"` → `arc-photos.store`).
+///     When omitted the system default (`default.store`) is used.
 ///   - cloudKit: CloudKit sync option (default: `.disabled`)
 /// - Returns: A configured ModelContainer ready for use
 /// - Throws: Error if container creation fails
@@ -174,6 +176,7 @@ public typealias SwiftDataMigrationStage = MigrationStage
 /// ```
 @MainActor public func makeVersionedContainer<S: VersionedSchema>(schema _: S.Type,
                                                                   migrationPlan: (some SchemaMigrationPlan).Type,
+                                                                  storeName: String? = nil,
                                                                   cloudKit: CloudKitOption = .disabled) throws
 -> ModelContainer {
     let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
@@ -183,9 +186,14 @@ public typealias SwiftDataMigrationStage = MigrationStage
         .private(containerIdentifier)
     }
 
-    let modelConfiguration = ModelConfiguration(cloudKitDatabase: cloudKitDatabase)
+    let schema = Schema(versionedSchema: S.self)
+    let modelConfiguration = if let storeName {
+        ModelConfiguration(storeName, schema: schema, cloudKitDatabase: cloudKitDatabase)
+    } else {
+        ModelConfiguration(cloudKitDatabase: cloudKitDatabase)
+    }
 
-    return try ModelContainer(for: Schema(versionedSchema: S.self),
+    return try ModelContainer(for: schema,
                               migrationPlan: migrationPlan,
                               configurations: [modelConfiguration])
 }
