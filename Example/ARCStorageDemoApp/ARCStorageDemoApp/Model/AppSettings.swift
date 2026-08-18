@@ -8,7 +8,7 @@
 import Foundation
 
 /// App settings model persisted via UserDefaultsRepository.
-struct AppSettings: Codable, Identifiable {
+struct AppSettings: Codable, Sendable, Identifiable {
     // MARK: Properties
 
     let id: String

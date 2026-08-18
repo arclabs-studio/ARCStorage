@@ -40,20 +40,22 @@ struct SwiftDataMigrationConfigTests {
         Schema(versionedSchema: MigrationTestSchemaV1.self)
     }
 
-    // MARK: - storeName forwarding
+    // MARK: - storeName with a migration plan
 
-    @Test("Migration init forwards storeName") func migrationInit_forwardsStoreName() {
+    @Test("Migration plan config keeps storeName") func migrationPlanConfig_keepsStoreName() {
         // Given
         let sut = SwiftDataConfiguration(schema: makeSchema(),
-                                         migrationPlan: MigrationTestPlan.self,
-                                         storeName: "arc-migrated")
+                                         storeName: "arc-migrated",
+                                         migrationPlan: MigrationTestPlan.self)
 
         // Then
         #expect(sut.storeName == "arc-migrated")
         #expect(sut.modelConfiguration.name == "arc-migrated")
+        #expect(sut.migrationPlan != nil)
     }
 
-    @Test("Migration init without storeName uses default name") func migrationInit_omittedStoreName_usesDefault() {
+    @Test("Migration plan config without storeName uses default name")
+    func migrationPlanConfig_omittedStoreName_usesDefault() {
         // Given
         let sut = SwiftDataConfiguration(schema: makeSchema(),
                                          migrationPlan: MigrationTestPlan.self)
@@ -63,27 +65,13 @@ struct SwiftDataMigrationConfigTests {
         #expect(sut.modelConfiguration.name == "default")
     }
 
-    @Test("Migration init keeps cloudKit and allowsSave") func migrationInit_keepsOtherParameters() {
-        // Given
-        let option = CloudKitOption.enabled(containerIdentifier: "iCloud.com.arclabs.test")
-        let sut = SwiftDataConfiguration(schema: makeSchema(),
-                                         migrationPlan: MigrationTestPlan.self,
-                                         storeName: "arc-migrated",
-                                         cloudKit: option,
-                                         allowsSave: false)
-
-        // Then
-        #expect(sut.cloudKit == option)
-        #expect(sut.allowsSave == false)
-    }
-
-    @Test("Migration config local-only fallback preserves store URL")
-    func migrationConfig_localOnlyFallback_preservesURL() {
+    @Test("Migration plan config local-only fallback preserves store URL")
+    func migrationPlanConfig_localOnlyFallback_preservesURL() {
         // Given
         let sut = SwiftDataConfiguration(schema: makeSchema(),
-                                         migrationPlan: MigrationTestPlan.self,
                                          storeName: "arc-migrated",
-                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"))
+                                         cloudKit: .enabled(containerIdentifier: "iCloud.com.arclabs.test"),
+                                         migrationPlan: MigrationTestPlan.self)
 
         // When
         let localConfig = sut.localOnlyConfiguration()

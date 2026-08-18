@@ -76,7 +76,7 @@ import Foundation
 ///
 /// ## Topics
 /// ### Creating Configuration
-/// - ``init(schema:storeName:cloudKit:allowsSave:)``
+/// - ``init(schema:storeName:cloudKit:allowsSave:migrationPlan:)``
 /// - ``makeContainer()``
 /// - ``makeContainerWithFallback()``
 /// - ``makeContainerReportingMode()``
@@ -114,6 +114,13 @@ public struct SwiftDataConfiguration: Sendable {
     /// Whether manual saves are allowed.
     public let allowsSave: Bool
 
+    /// The schema migration plan applied when the container is created.
+    ///
+    /// When non-`nil`, ``makeContainer()`` (and the local-only fallback used by
+    /// ``makeContainerWithFallback()``) builds the container with
+    /// `ModelContainer(for:migrationPlan:configurations:)`. `nil` means no migration.
+    public let migrationPlan: (any SchemaMigrationPlan.Type)?
+
     /// The model configuration for SwiftData.
     public let modelConfiguration: ModelConfiguration
 
@@ -127,14 +134,18 @@ public struct SwiftDataConfiguration: Sendable {
     ///     containers from opening the same backing file with different schemas.
     ///   - cloudKit: CloudKit sync option (default: `.disabled`)
     ///   - allowsSave: Allow manual save operations (default: `true`)
+    ///   - migrationPlan: Optional schema migration plan applied at container creation
+    ///     (default: `nil`). Pass a `SchemaMigrationPlan` type to version the store.
     public init(schema: Schema,
                 storeName: String? = nil,
                 cloudKit: CloudKitOption = .disabled,
-                allowsSave: Bool = true) {
+                allowsSave: Bool = true,
+                migrationPlan: (any SchemaMigrationPlan.Type)? = nil) {
         self.schema = schema
         self.storeName = storeName
         self.cloudKit = cloudKit
         self.allowsSave = allowsSave
+        self.migrationPlan = migrationPlan
 
         var cloudKitDatabase: ModelConfiguration.CloudKitDatabase = .none
         if case let .enabled(containerIdentifier) = cloudKit {
@@ -157,7 +168,12 @@ public struct SwiftDataConfiguration: Sendable {
     /// - Returns: A configured model container
     /// - Throws: Error if container creation fails
     @MainActor public func makeContainer() throws -> ModelContainer {
-        try ModelContainer(for: schema, configurations: [modelConfiguration])
+        if let migrationPlan {
+            return try ModelContainer(for: schema,
+                                      migrationPlan: migrationPlan,
+                                      configurations: [modelConfiguration])
+        }
+        return try ModelContainer(for: schema, configurations: [modelConfiguration])
     }
 
     /// Creates a model container with automatic fallback for CloudKit.
@@ -236,6 +252,12 @@ public struct SwiftDataConfiguration: Sendable {
     }
 
     @MainActor private func makeLocalOnlyContainer() throws -> ModelContainer {
-        try ModelContainer(for: schema, configurations: [localOnlyConfiguration()])
+        let localConfig = localOnlyConfiguration()
+        if let migrationPlan {
+            return try ModelContainer(for: schema,
+                                      migrationPlan: migrationPlan,
+                                      configurations: [localConfig])
+        }
+        return try ModelContainer(for: schema, configurations: [localConfig])
     }
 }

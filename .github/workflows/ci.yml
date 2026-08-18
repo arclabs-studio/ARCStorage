@@ -36,11 +36,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install SwiftLint
-        run: brew install swiftlint
+      - name: Cache pinned tools
+        uses: actions/cache@v4
+        with:
+          path: .arc-tools
+          key: arc-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.arc-tool-versions', 'ARCDevTools/configs/tool-versions') }}
+
+      - name: Install pinned SwiftLint
+        run: ./ARCDevTools/scripts/install-tools.sh swiftlint
 
       - name: Run SwiftLint
-        run: swiftlint lint --config .swiftlint.yml --strict
+        run: .arc-tools/bin/swiftlint lint --config .swiftlint.yml --strict
 
   swiftformat:
     name: SwiftFormat
@@ -52,8 +58,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install SwiftFormat
-        run: brew install swiftformat
+      - name: Cache pinned tools
+        uses: actions/cache@v4
+        with:
+          path: .arc-tools
+          key: arc-tools-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.arc-tool-versions', 'ARCDevTools/configs/tool-versions') }}
+
+      - name: Install pinned SwiftFormat
+        run: ./ARCDevTools/scripts/install-tools.sh swiftformat
 
       - name: Check formatting
-        run: swiftformat --config .swiftformat --lint Sources/ Tests/
+        run: .arc-tools/bin/swiftformat --config .swiftformat --lint Sources/ Tests/

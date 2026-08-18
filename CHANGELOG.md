@@ -48,8 +48,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   their data, and apps with a second container on `default.store` crashed at launch. The fallback
   container now reuses the exact store URL of the CloudKit configuration.
 
-- **Migration paths dropped `storeName`** — `SwiftDataConfiguration.init(schema:migrationPlan:…)`
-  and `makeVersionedContainer(schema:migrationPlan:…)` now accept and forward `storeName:`.
+- **`makeVersionedContainer` dropped `storeName`** — it now accepts and forwards `storeName:`,
+  so a versioned container can use a named backing file.
+
+- **Configuration values (`ConfigurationValue`)** — [FVRS-242]
+  - `ConfigurationValue.string(_:bundle:)` — reads build-time configuration
+    injected into `Info.plist` (typically from an `.xcconfig` file), returning
+    `nil` and logging a warning when the key is missing or empty.
+  - `ConfigurationValue.deobfuscated(_:)` — reconstructs a string from an
+    obfuscated `[UInt8]` literal produced by the `key-obfuscator.swift` codegen
+    tool in ARCDevTools. Documented as light obfuscation (defense-in-depth) only,
+    never a secret store.
 
 ### Changed
 

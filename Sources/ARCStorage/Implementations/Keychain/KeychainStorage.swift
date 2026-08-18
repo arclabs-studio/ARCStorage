@@ -267,7 +267,9 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         // one matching item per call even when multiple items exist.
         while true {
             let status = SecItemDelete(query as CFDictionary)
-            if status == errSecItemNotFound { break }
+            if status == errSecItemNotFound {
+                break
+            }
             guard status == errSecSuccess else {
                 throw StorageError.deleteFailed(underlying: makeKeychainError(status))
             }

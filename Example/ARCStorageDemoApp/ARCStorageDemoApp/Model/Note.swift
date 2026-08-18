@@ -8,7 +8,7 @@
 import Foundation
 
 /// A simple note model for demonstrating ARCStorage capabilities.
-struct Note: Codable, Identifiable, Hashable {
+struct Note: Codable, Sendable, Identifiable, Hashable {
     // MARK: Properties
 
     let id: UUID
@@ -40,7 +40,7 @@ struct Note: Codable, Identifiable, Hashable {
 
 // MARK: - NoteColor
 
-enum NoteColor: String, Codable, CaseIterable {
+enum NoteColor: String, Codable, Sendable, CaseIterable {
     case yellow
     case blue
     case green

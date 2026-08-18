@@ -52,7 +52,7 @@ enum AppPreferences {
 // MARK: - Supporting Types
 
 /// Available accent colors for the app.
-enum AppAccentColor: String, Codable, CaseIterable {
+enum AppAccentColor: String, Codable, Sendable, CaseIterable {
     case blue
     case purple
     case orange
