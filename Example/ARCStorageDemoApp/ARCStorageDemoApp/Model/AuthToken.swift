@@ -10,7 +10,7 @@ import Foundation
 /// Represents an authentication token stored securely in the Keychain.
 ///
 /// Demonstrates `KeychainStorage` with `KeychainAccessibility` security levels.
-struct AuthToken: Codable, Identifiable, Sendable {
+struct AuthToken: Codable, Identifiable {
     /// Unique identifier for the token.
     let id: String
 
