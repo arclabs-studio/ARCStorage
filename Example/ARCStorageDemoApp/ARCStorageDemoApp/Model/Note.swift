@@ -21,15 +21,13 @@ struct Note: Codable, Sendable, Identifiable, Hashable {
 
     // MARK: Initialization
 
-    init(
-        id: UUID = UUID(),
-        title: String,
-        content: String = "",
-        createdAt: Date = Date(),
-        updatedAt: Date = Date(),
-        isPinned: Bool = false,
-        color: NoteColor = .yellow
-    ) {
+    init(id: UUID = UUID(),
+         title: String,
+         content: String = "",
+         createdAt: Date = Date(),
+         updatedAt: Date = Date(),
+         isPinned: Bool = false,
+         color: NoteColor = .yellow) {
         self.id = id
         self.title = title
         self.content = content
@@ -57,22 +55,14 @@ enum NoteColor: String, Codable, Sendable, CaseIterable {
 // MARK: - Sample Data
 
 extension Note {
-    static let samples: [Note] = [
-        Note(
-            title: "Welcome to ARCStorage",
-            content: "This is a demo app showing the capabilities of ARCStorage package.",
-            isPinned: true,
-            color: .yellow
-        ),
-        Note(
-            title: "Repository Pattern",
-            content: "ARCStorage uses the Repository pattern to abstract persistence.",
-            color: .blue
-        ),
-        Note(
-            title: "Multiple Backends",
-            content: "Supports InMemory, UserDefaults, Keychain, and SwiftData storage.",
-            color: .green
-        )
-    ]
+    static let samples: [Note] = [Note(title: "Welcome to ARCStorage",
+                                       content: "This is a demo app showing the capabilities of ARCStorage package.",
+                                       isPinned: true,
+                                       color: .yellow),
+                                  Note(title: "Repository Pattern",
+                                       content: "ARCStorage uses the Repository pattern to abstract persistence.",
+                                       color: .blue),
+                                  Note(title: "Multiple Backends",
+                                       content: "Supports InMemory, UserDefaults, Keychain, and SwiftData storage.",
+                                       color: .green)]
 }

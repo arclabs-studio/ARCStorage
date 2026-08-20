@@ -77,10 +77,8 @@ extension NoteListView {
                                 await viewModel.togglePin(note)
                             }
                         } label: {
-                            Label(
-                                note.isPinned ? "Unpin" : "Pin",
-                                systemImage: note.isPinned ? "pin.slash" : "pin"
-                            )
+                            Label(note.isPinned ? "Unpin" : "Pin",
+                                  systemImage: note.isPinned ? "pin.slash" : "pin")
                         }
                         .tint(.orange)
                     }

@@ -98,11 +98,9 @@ struct AuthView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                ContentUnavailableView(
-                    "Not Authenticated",
-                    systemImage: "person.crop.circle.badge.questionmark",
-                    description: Text("Generate a demo token to test secure storage.")
-                )
+                ContentUnavailableView("Not Authenticated",
+                                       systemImage: "person.crop.circle.badge.questionmark",
+                                       description: Text("Generate a demo token to test secure storage."))
             }
         } header: {
             Text("Authentication Token")
@@ -156,13 +154,9 @@ struct AuthView: View {
 // MARK: - Preview
 
 #Preview("With Token") {
-    AuthView(
-        viewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly)
-    )
+    AuthView(viewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly))
 }
 
 #Preview("No Token") {
-    AuthView(
-        viewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly)
-    )
+    AuthView(viewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly))
 }

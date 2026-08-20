@@ -105,11 +105,9 @@ Use the migration plan when creating your container:
 ```swift
 let config = SwiftDataConfiguration(
     schema: Schema(versionedSchema: RestaurantSchemaV2.self),
-    isCloudKitEnabled: false
-)
-let container = try config.makeContainer(
     migrationPlan: RestaurantMigrationPlan.self
 )
+let container = try config.makeContainer()
 ```
 
 Or use the convenience function:
@@ -117,8 +115,7 @@ Or use the convenience function:
 ```swift
 let container = try makeVersionedContainer(
     schema: RestaurantSchemaV2.self,
-    migrationPlan: RestaurantMigrationPlan.self,
-    isCloudKitEnabled: false
+    migrationPlan: RestaurantMigrationPlan.self
 )
 ```
 
@@ -246,7 +243,7 @@ When using CloudKit with migrations:
 
 ### Configuration
 - ``SwiftDataConfiguration``
-- ``makeVersionedContainer(schema:migrationPlan:isCloudKitEnabled:)``
+- ``makeVersionedContainer(schema:migrationPlan:cloudKit:)``
 
 ### Migration Types
 - ``SwiftDataMigrationStage``

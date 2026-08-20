@@ -3,11 +3,46 @@ import Foundation
 import UIKit
 #endif
 
+// MARK: - Eviction Events
+
+/// Describes a cache eviction that occurred.
+///
+/// Subscribe to ``CacheManager/evictionEvents`` to observe when entries
+/// are removed from the cache, e.g. to update UI or trigger re-fetches.
+public struct CacheEvictionEvent<Key: Hashable & Sendable>: Sendable {
+    /// The keys that were evicted.
+    public let evictedKeys: [Key]
+
+    /// Why the eviction occurred.
+    public let reason: EvictionReason
+
+    /// Number of entries remaining in the cache after eviction.
+    public let remainingCount: Int
+}
+
+/// Why a cache eviction occurred.
+public enum EvictionReason: Sendable {
+    /// Cache item count exceeded ``CachePolicy/maxSize``.
+    case capacityLimit
+
+    /// Cache byte size exceeded ``CachePolicy/maxByteSize``.
+    case byteSizeLimit
+
+    /// System reported memory pressure.
+    case memoryPressure(MemoryPressureLevel)
+
+    /// Caller explicitly invalidated entries.
+    case manual
+}
+
+// MARK: - CacheManager
+
 /// Thread-safe cache manager for repository layer.
 ///
 /// `CacheManager` provides an LRU (Least Recently Used) cache implementation
-/// with configurable TTL and capacity limits. It automatically responds to
-/// system memory pressure by evicting entries.
+/// with configurable TTL, count, and byte-size limits. It automatically
+/// responds to system memory pressure by evicting entries and publishes
+/// eviction events via ``evictionEvents``.
 ///
 /// ## Topics
 /// ### Cache Operations
@@ -20,6 +55,15 @@ import UIKit
 /// - ``handleMemoryPressure(level:)``
 /// - ``MemoryPressureLevel``
 ///
+/// ### Eviction Observation
+/// - ``evictionEvents``
+/// - ``CacheEvictionEvent``
+/// - ``EvictionReason``
+///
+/// ### Diagnostics
+/// - ``count``
+/// - ``currentByteSizeUsed``
+///
 /// ## Example
 /// ```swift
 /// let cache = CacheManager<UUID, Restaurant>(policy: .default)
@@ -30,6 +74,11 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     private var cache: [Key: CacheEntry<Value>] = [:]
     private var accessOrder: [Key] = []
     private let policy: CachePolicy
+    private var currentByteSize: Int = 0
+
+    /// Stream of eviction events. Subscribe to observe when entries are removed.
+    public nonisolated let evictionEvents: AsyncStream<CacheEvictionEvent<Key>>
+    private let evictionContinuation: AsyncStream<CacheEvictionEvent<Key>>.Continuation
 
     /// The memory pressure handler for this cache.
     private var memoryPressureHandler: MemoryPressureHandler?
@@ -43,11 +92,19 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     public init(policy: CachePolicy, registerForMemoryWarnings: Bool = true) {
         self.policy = policy
 
+        let (stream, continuation) = AsyncStream<CacheEvictionEvent<Key>>.makeStream()
+        evictionEvents = stream
+        evictionContinuation = continuation
+
         if registerForMemoryWarnings {
             Task { [weak self] in
                 await self?.setupMemoryPressureHandling()
             }
         }
+    }
+
+    deinit {
+        evictionContinuation.finish()
     }
 
     /// Retrieves a value from the cache.
@@ -66,6 +123,7 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         if policy.ttl > 0 {
             let age = Date().timeIntervalSince(entry.timestamp)
             if age > policy.ttl {
+                currentByteSize -= entry.byteSize
                 cache.removeValue(forKey: key)
                 accessOrder.removeAll { $0 == key }
                 return nil
@@ -80,7 +138,8 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
 
     /// Stores a value in the cache.
     ///
-    /// If the cache is full, evicts entries according to the cache policy.
+    /// If the cache is full (by count or byte size), evicts entries according
+    /// to the cache policy.
     ///
     /// - Parameters:
     ///   - value: The value to cache
@@ -89,13 +148,41 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         // Don't cache if policy doesn't allow it
         guard policy.maxSize > 0 else { return }
 
-        // Evict if needed
-        if cache.count >= policy.maxSize, cache[key] == nil {
-            evictEntries(count: 1)
+        let entryByteSize = (value as? ByteSizable)?.byteSize ?? 0
+
+        // Remove existing entry's byte size if updating
+        if let existing = cache[key] {
+            currentByteSize -= existing.byteSize
         }
 
-        let entry = CacheEntry(value: value, timestamp: Date())
+        // Evict by count if needed
+        if cache.count >= policy.maxSize, cache[key] == nil {
+            evictEntries(count: 1, reason: .capacityLimit)
+        }
+
+        // Evict by byte size if needed
+        if let maxBytes = policy.maxByteSize, maxBytes > 0 {
+            var evictedKeys: [Key] = []
+            while currentByteSize + entryByteSize > maxBytes, !accessOrder.isEmpty {
+                let lruKey = accessOrder[0]
+                if let evicted = cache[lruKey] {
+                    currentByteSize -= evicted.byteSize
+                }
+                cache.removeValue(forKey: lruKey)
+                accessOrder.removeFirst()
+                evictedKeys.append(lruKey)
+            }
+            if !evictedKeys.isEmpty {
+                let event = CacheEvictionEvent(evictedKeys: evictedKeys,
+                                               reason: .byteSizeLimit,
+                                               remainingCount: cache.count)
+                evictionContinuation.yield(event)
+            }
+        }
+
+        let entry = CacheEntry(value: value, timestamp: Date(), byteSize: entryByteSize)
         cache[key] = entry
+        currentByteSize += entryByteSize
         updateAccessOrder(for: key)
     }
 
@@ -103,19 +190,39 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
     ///
     /// - Parameter key: The key to invalidate
     public func invalidate(_ key: Key) {
+        if let entry = cache[key] {
+            currentByteSize -= entry.byteSize
+        }
         cache.removeValue(forKey: key)
         accessOrder.removeAll { $0 == key }
     }
 
     /// Clears all entries from the cache.
     public func invalidate() {
+        let keys = Array(cache.keys)
         cache.removeAll()
         accessOrder.removeAll()
+        currentByteSize = 0
+
+        if !keys.isEmpty {
+            let event = CacheEvictionEvent(evictedKeys: keys,
+                                           reason: .manual,
+                                           remainingCount: 0)
+            evictionContinuation.yield(event)
+        }
     }
 
     /// Returns the current number of cached entries.
     public var count: Int {
         cache.count
+    }
+
+    /// Returns the current total byte size of cached entries.
+    ///
+    /// Only meaningful when cached values conform to ``ByteSizable``.
+    /// Returns 0 for non-`ByteSizable` values.
+    public var currentByteSizeUsed: Int {
+        currentByteSize
     }
 
     // MARK: - Memory Pressure Handling
@@ -128,11 +235,21 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         case .warning:
             // Evict 50% of entries on warning
             let toEvict = max(1, cache.count / 2)
-            evictEntries(count: toEvict)
+            evictEntries(count: toEvict, reason: .memoryPressure(.warning))
 
         case .critical:
             // Clear everything on critical pressure
-            invalidate()
+            let keys = Array(cache.keys)
+            cache.removeAll()
+            accessOrder.removeAll()
+            currentByteSize = 0
+
+            if !keys.isEmpty {
+                let event = CacheEvictionEvent(evictedKeys: keys,
+                                               reason: .memoryPressure(.critical),
+                                               remainingCount: 0)
+                evictionContinuation.yield(event)
+            }
         }
     }
 
@@ -152,19 +269,27 @@ public actor CacheManager<Key: Hashable & Sendable, Value: Sendable> {
         accessOrder.append(key)
     }
 
-    private func evictEntries(count: Int) {
-        // swiftlint:disable switch_case_alignment
+    private func evictEntries(count: Int, reason: EvictionReason) {
         let keysToEvict: [Key] = switch policy.strategy {
         case .lru:
             Array(accessOrder.prefix(count))
         case .fifo:
             Array(cache.keys.prefix(count))
         }
-        // swiftlint:enable switch_case_alignment
 
         for key in keysToEvict {
+            if let entry = cache[key] {
+                currentByteSize -= entry.byteSize
+            }
             cache.removeValue(forKey: key)
             accessOrder.removeAll { $0 == key }
+        }
+
+        if !keysToEvict.isEmpty {
+            let event = CacheEvictionEvent(evictedKeys: keysToEvict,
+                                           reason: reason,
+                                           remainingCount: cache.count)
+            evictionContinuation.yield(event)
         }
     }
 }
@@ -202,18 +327,14 @@ final class MemoryPressureHandler: @unchecked Sendable {
     private func setupNotifications() {
         #if canImport(UIKit) && !os(watchOS)
         // iOS, tvOS, visionOS
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleMemoryWarning),
-            name: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil
-        )
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleMemoryWarning),
+                                               name: UIApplication.didReceiveMemoryWarningNotification,
+                                               object: nil)
         #elseif os(macOS)
         // macOS uses dispatch source for memory pressure
-        dispatchSource = DispatchSource.makeMemoryPressureSource(
-            eventMask: [.warning, .critical],
-            queue: .main
-        )
+        dispatchSource = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical],
+                                                                 queue: .main)
         dispatchSource?.setEventHandler { [weak self] in
             guard let source = self?.dispatchSource else { return }
             let event = source.data
@@ -226,22 +347,18 @@ final class MemoryPressureHandler: @unchecked Sendable {
         dispatchSource?.resume()
         #elseif os(watchOS)
         // watchOS - use ProcessInfo for memory warnings
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleMemoryWarning),
-            name: .init("NSProcessInfoPowerStateDidChangeNotification"),
-            object: nil
-        )
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleMemoryWarning),
+                                               name: .init("NSProcessInfoPowerStateDidChangeNotification"),
+                                               object: nil)
         #endif
     }
 
     private func teardownNotifications() {
         #if canImport(UIKit) && !os(watchOS)
-        NotificationCenter.default.removeObserver(
-            self,
-            name: UIApplication.didReceiveMemoryWarningNotification,
-            object: nil
-        )
+        NotificationCenter.default.removeObserver(self,
+                                                  name: UIApplication.didReceiveMemoryWarningNotification,
+                                                  object: nil)
         #elseif os(macOS)
         dispatchSource?.cancel()
         dispatchSource = nil
@@ -251,8 +368,7 @@ final class MemoryPressureHandler: @unchecked Sendable {
         #endif
     }
 
-    @objc
-    private func handleMemoryWarning() {
+    @objc private func handleMemoryWarning() {
         callback(.warning)
     }
 }
@@ -260,7 +376,8 @@ final class MemoryPressureHandler: @unchecked Sendable {
 // MARK: - Cache Entry
 
 /// Internal cache entry storing value and metadata.
-struct CacheEntry<Value: Sendable>: Sendable {
+struct CacheEntry<Value: Sendable> {
     let value: Value
     let timestamp: Date
+    let byteSize: Int
 }

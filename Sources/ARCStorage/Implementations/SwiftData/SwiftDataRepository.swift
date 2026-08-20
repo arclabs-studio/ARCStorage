@@ -33,6 +33,19 @@ import SwiftData
 public final class SwiftDataRepository<T: SwiftDataEntity> {
     private let storage: SwiftDataStorage<T>
 
+    /// The underlying model container.
+    ///
+    /// Use this to create a ``SwiftDataChangeMonitor`` that observes the same
+    /// container as this repository.
+    ///
+    /// ```swift
+    /// let repo = SwiftDataRepository(storage: storage)
+    /// let monitor = SwiftDataChangeMonitor(modelContainer: repo.modelContainer)
+    /// ```
+    public var modelContainer: ModelContainer {
+        storage.modelContainer
+    }
+
     /// Creates a new repository.
     ///
     /// - Parameters:
@@ -99,9 +112,7 @@ public final class SwiftDataRepository<T: SwiftDataEntity> {
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetchAll(
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
-    ) throws -> [T] {
+    public func fetchAll(prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
         try storage.fetchAll(prefetching: relationshipKeyPaths)
     }
 
@@ -121,10 +132,8 @@ public final class SwiftDataRepository<T: SwiftDataEntity> {
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(
-        matching predicate: Predicate<T>,
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>]
-    ) throws -> [T] {
+    public func fetch(matching predicate: Predicate<T>,
+                      prefetching relationshipKeyPaths: [PartialKeyPath<T>]) throws -> [T] {
         try storage.fetch(matching: predicate, prefetching: relationshipKeyPaths)
     }
 
@@ -153,20 +162,16 @@ public final class SwiftDataRepository<T: SwiftDataEntity> {
     ///     prefetching: [\Restaurant.reviews]
     /// )
     /// ```
-    public func fetch(
-        matching predicate: Predicate<T>? = nil,
-        sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
-        limit fetchLimit: Int? = nil,
-        offset fetchOffset: Int? = nil,
-        prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []
-    ) throws -> [T] {
-        try storage.fetch(
-            matching: predicate,
-            sortedBy: sortDescriptors,
-            limit: fetchLimit,
-            offset: fetchOffset,
-            prefetching: relationshipKeyPaths
-        )
+    public func fetch(matching predicate: Predicate<T>? = nil,
+                      sortedBy sortDescriptors: [Foundation.SortDescriptor<T>] = [],
+                      limit fetchLimit: Int? = nil,
+                      offset fetchOffset: Int? = nil,
+                      prefetching relationshipKeyPaths: [PartialKeyPath<T>] = []) throws -> [T] {
+        try storage.fetch(matching: predicate,
+                          sortedBy: sortDescriptors,
+                          limit: fetchLimit,
+                          offset: fetchOffset,
+                          prefetching: relationshipKeyPaths)
     }
 
     /// Saves multiple entities in a batch.

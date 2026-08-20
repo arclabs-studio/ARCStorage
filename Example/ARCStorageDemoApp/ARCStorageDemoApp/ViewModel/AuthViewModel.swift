@@ -55,15 +55,11 @@ final class AuthViewModel {
     /// - Parameters:
     ///   - securityLevel: The Keychain accessibility level to use
     ///   - service: The Keychain service identifier
-    init(
-        securityLevel: KeychainAccessibility = .whenUnlockedThisDeviceOnly,
-        service: String = "com.arclabs.exampleapp.auth"
-    ) {
+    init(securityLevel: KeychainAccessibility = .whenUnlockedThisDeviceOnly,
+         service: String = "com.arclabs.exampleapp.auth") {
         self.securityLevel = securityLevel
-        repository = KeychainRepository<AuthToken>(
-            service: service,
-            accessibility: securityLevel
-        )
+        repository = KeychainRepository<AuthToken>(service: service,
+                                                   accessibility: securityLevel)
     }
 
     // MARK: Public Methods

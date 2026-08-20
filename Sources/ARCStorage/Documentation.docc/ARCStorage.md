@@ -18,6 +18,7 @@ The library supports multiple storage backends:
 
 - <doc:GettingStarted>
 - <doc:RepositoryPattern>
+- <doc:Preferences>
 
 ### SwiftData
 
@@ -45,6 +46,12 @@ The library supports multiple storage backends:
 - ``KeychainRepository``
 - ``SwiftDataRepository``
 
+### Preferences
+
+- ``PreferenceKey``
+- ``PreferenceStorage``
+- ``PreferenceStorageProtocol``
+
 ### Configuration
 
 - ``SwiftDataConfiguration``
@@ -55,6 +62,9 @@ The library supports multiple storage backends:
 - ``CacheManager``
 - ``CachePolicy``
 - ``LRUCache``
+- ``ByteSizable``
+- ``CacheEvictionEvent``
+- ``EvictionReason``
 
 ### CloudKit Integration
 
@@ -71,6 +81,7 @@ The library supports multiple storage backends:
 ### Models
 
 - ``StorageError``
+- ``FetchResult``
 - ``QueryDescriptor``
 - ``SortDescriptor``
 
@@ -79,3 +90,4 @@ The library supports multiple storage backends:
 - <doc:Testing>
 - ``MockRepository``
 - ``MockStorageProvider``
+- ``MockPreferenceStorage``

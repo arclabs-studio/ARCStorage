@@ -1,3 +1,4 @@
+import ARCLogger
 import Foundation
 
 /// Storage implementation using UserDefaults.
@@ -28,16 +29,14 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     private let keyPrefix: String
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let logger = ARCLogger(subsystem: "com.arclabs.ARCStorage", category: "UserDefaultsStorage")
 
     /// Creates a new UserDefaults storage.
     ///
     /// - Parameters:
     ///   - userDefaults: The UserDefaults instance to use
     ///   - keyPrefix: Prefix for all keys to avoid conflicts
-    public init(
-        userDefaults: UserDefaults = .standard,
-        keyPrefix: String = "ARCStorage"
-    ) {
+    public init(userDefaults: UserDefaults = .standard, keyPrefix: String = "ARCStorage") {
         self.userDefaults = userDefaults
         self.keyPrefix = keyPrefix
     }
@@ -74,10 +73,22 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func fetchAll() async throws -> [T] {
+        let result = try await fetchAllWithDiagnostics()
+        return result.entities
+    }
+
+    /// Fetches all entities with diagnostic information about corrupted entries.
+    ///
+    /// Unlike ``fetchAll()``, this method reports how many entries failed to decode.
+    /// Use this when you need visibility into data integrity issues.
+    ///
+    /// - Returns: A ``FetchResult`` containing valid entities and a corruption count
+    public func fetchAllWithDiagnostics() async throws -> FetchResult<T> {
         let allKeys = userDefaults.dictionaryRepresentation().keys
         let prefixedKeys = allKeys.filter { $0.hasPrefix(keyPrefix) }
 
         var entities: [T] = []
+        var corruptedCount = 0
 
         for key in prefixedKeys {
             guard let data = userDefaults.data(forKey: key) else { continue }
@@ -86,12 +97,17 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
                 let entity = try decoder.decode(T.self, from: data)
                 entities.append(entity)
             } catch {
-                // Skip invalid entries
+                corruptedCount += 1
+                logger.warning("Skipping corrupted entry for key '\(key)': \(error.localizedDescription)")
                 continue
             }
         }
 
-        return entities
+        if corruptedCount > 0 {
+            logger.error("fetchAll completed with \(corruptedCount) corrupted entries skipped")
+        }
+
+        return FetchResult(entities: entities, corruptedCount: corruptedCount)
     }
 
     public func fetch(matching predicate: Predicate<T>) async throws -> [T] {
@@ -120,9 +136,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
         }
     }
 
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
+    public func performTransaction<Result: Sendable>(_ block: @Sendable () async throws -> Result) async throws
+    -> Result {
         // UserDefaults doesn't support transactions, so we just execute the block
         do {
             return try await block()

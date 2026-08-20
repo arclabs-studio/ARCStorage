@@ -1,3 +1,4 @@
+import ARCLogger
 import Foundation
 import Security
 
@@ -97,6 +98,7 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     private let accessibility: KeychainAccessibility
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let logger = ARCLogger(subsystem: "com.arclabs.ARCStorage", category: "KeychainStorage")
 
     /// Creates a new keychain storage.
     ///
@@ -104,11 +106,9 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     ///   - service: The service identifier for keychain items
     ///   - accessGroup: Optional access group for shared keychain access
     ///   - accessibility: When keychain items can be accessed. Defaults to `.whenUnlocked`
-    public init(
-        service: String,
-        accessGroup: String? = nil,
-        accessibility: KeychainAccessibility = .whenUnlocked
-    ) {
+    public init(service: String,
+                accessGroup: String? = nil,
+                accessibility: KeychainAccessibility = .whenUnlocked) {
         self.service = service
         self.accessGroup = accessGroup
         self.accessibility = accessibility
@@ -175,49 +175,66 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func fetchAll() async throws -> [T] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitAll
-        ]
+        let result = try await fetchAllWithDiagnostics()
+        return result.entities
+    }
+
+    /// Fetches all entities with diagnostic information about corrupted entries.
+    ///
+    /// Unlike ``fetchAll()``, this method reports how many entries failed to decode.
+    /// Use this when you need visibility into data integrity issues.
+    ///
+    /// - Returns: A ``FetchResult`` containing valid entities and a corruption count
+    public func fetchAllWithDiagnostics() async throws -> FetchResult<T> {
+        // Step 1: Retrieve all account identifiers for this service.
+        // Requesting only attributes (not data) avoids errSecParam (-50) on macOS
+        // when using kSecMatchLimitAll.
+        var attrsQuery: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                         kSecAttrService as String: service,
+                                         kSecReturnAttributes as String: true,
+                                         kSecMatchLimit as String: kSecMatchLimitAll]
 
         if let accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
+            attrsQuery[kSecAttrAccessGroup as String] = accessGroup
         }
 
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        var attrsResult: AnyObject?
+        let attrsStatus = SecItemCopyMatching(attrsQuery as CFDictionary, &attrsResult)
 
-        if status == errSecItemNotFound {
-            return []
+        if attrsStatus == errSecItemNotFound {
+            return FetchResult(entities: [], corruptedCount: 0)
         }
 
-        guard status == errSecSuccess else {
-            throw StorageError.fetchFailed(underlying: makeKeychainError(status))
+        guard attrsStatus == errSecSuccess else {
+            throw StorageError.fetchFailed(underlying: makeKeychainError(attrsStatus))
         }
 
-        guard let items = result as? [[String: Any]] else {
-            return []
+        guard let items = attrsResult as? [[String: Any]] else {
+            return FetchResult(entities: [], corruptedCount: 0)
         }
 
+        // Step 2: Fetch the data for each account individually.
         var entities: [T] = []
+        var skippedCount = 0
 
         for item in items {
-            guard let data = item[kSecValueData as String] as? Data else {
+            guard let account = item[kSecAttrAccount as String] as? String,
+                  let id = T.ID(account) else {
+                skippedCount += 1
+                logger.warning("Skipping keychain item: could not parse account as \(T.ID.self)")
                 continue
             }
 
-            do {
-                let entity = try decoder.decode(T.self, from: data)
+            if let entity = try await fetch(id: id) {
                 entities.append(entity)
-            } catch {
-                // Skip invalid entries
-                continue
             }
         }
 
-        return entities
+        if skippedCount > 0 {
+            logger.error("fetchAll completed with \(skippedCount) unparseable keychain entries skipped")
+        }
+
+        return FetchResult(entities: entities, corruptedCount: skippedCount)
     }
 
     public func fetch(matching predicate: Predicate<T>) async throws -> [T] {
@@ -243,22 +260,24 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     public func deleteAll() async throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service
-        ]
+        let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                    kSecAttrService as String: service]
 
-        let status = SecItemDelete(query as CFDictionary)
-
-        // It's okay if nothing was found
-        if status != errSecSuccess, status != errSecItemNotFound {
-            throw StorageError.deleteFailed(underlying: makeKeychainError(status))
+        // Loop until no items remain: on macOS, SecItemDelete may only remove
+        // one matching item per call even when multiple items exist.
+        while true {
+            let status = SecItemDelete(query as CFDictionary)
+            if status == errSecItemNotFound {
+                break
+            }
+            guard status == errSecSuccess else {
+                throw StorageError.deleteFailed(underlying: makeKeychainError(status))
+            }
         }
     }
 
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
+    public func performTransaction<Result: Sendable>(_ block: @Sendable () async throws -> Result) async throws
+    -> Result {
         // Keychain doesn't support transactions
         do {
             return try await block()
@@ -270,12 +289,10 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     // MARK: - Private Methods
 
     private func makeQuery(for account: String) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: accessibility.securityAttribute
-        ]
+        var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                    kSecAttrService as String: service,
+                                    kSecAttrAccount as String: account,
+                                    kSecAttrAccessible as String: accessibility.securityAttribute]
 
         if let accessGroup {
             query[kSecAttrAccessGroup as String] = accessGroup
@@ -285,10 +302,8 @@ where T.ID: LosslessStringConvertible & Sendable & Hashable {
     }
 
     private func makeKeychainError(_ status: OSStatus) -> NSError {
-        NSError(
-            domain: NSOSStatusErrorDomain,
-            code: Int(status),
-            userInfo: [NSLocalizedDescriptionKey: "Keychain error: \(status)"]
-        )
+        NSError(domain: NSOSStatusErrorDomain,
+                code: Int(status),
+                userInfo: [NSLocalizedDescriptionKey: "Keychain error: \(status)"])
     }
 }

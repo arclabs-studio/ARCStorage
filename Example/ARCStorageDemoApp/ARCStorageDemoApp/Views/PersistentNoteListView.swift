@@ -73,10 +73,8 @@ extension PersistentNoteListView {
                             Button {
                                 viewModel.togglePin(note)
                             } label: {
-                                Label(
-                                    note.isPinned ? "Unpin" : "Pin",
-                                    systemImage: note.isPinned ? "pin.slash" : "pin"
-                                )
+                                Label(note.isPinned ? "Unpin" : "Pin",
+                                      systemImage: note.isPinned ? "pin.slash" : "pin")
                             }
                             .tint(.orange)
                         }
@@ -151,11 +149,9 @@ extension PersistentNoteListView {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        let note = PersistentNote(
-                            title: newNoteTitle,
-                            content: newNoteContent,
-                            colorName: newNoteColor.rawValue
-                        )
+                        let note = PersistentNote(title: newNoteTitle,
+                                                  content: newNoteContent,
+                                                  colorName: newNoteColor.rawValue)
                         viewModel.addNote(note)
                         resetNewNoteForm()
                         showAddNote = false
@@ -171,22 +167,16 @@ extension PersistentNoteListView {
         NavigationStack {
             Form {
                 Section("Note Details") {
-                    TextField("Title", text: Binding(
-                        get: { note.title },
-                        set: { note.title = $0 }
-                    ))
-                    TextField("Content", text: Binding(
-                        get: { note.content },
-                        set: { note.content = $0 }
-                    ), axis: .vertical)
+                    TextField("Title", text: Binding(get: { note.title },
+                                                     set: { note.title = $0 }))
+                    TextField("Content", text: Binding(get: { note.content },
+                                                       set: { note.content = $0 }), axis: .vertical)
                         .lineLimit(3 ... 6)
                 }
 
                 Section("Color") {
-                    Picker("Color", selection: Binding(
-                        get: { note.noteColor },
-                        set: { note.noteColor = $0 }
-                    )) {
+                    Picker("Color", selection: Binding(get: { note.noteColor },
+                                                       set: { note.noteColor = $0 })) {
                         ForEach(NoteColor.allCases, id: \.self) { color in
                             Text(color.displayName).tag(color)
                         }

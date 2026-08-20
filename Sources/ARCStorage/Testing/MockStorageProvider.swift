@@ -140,9 +140,8 @@ where T.ID: Sendable & Hashable {
         mockEntities.removeAll()
     }
 
-    public func performTransaction<Result: Sendable>(
-        _ block: @Sendable () async throws -> Result
-    ) async throws -> Result {
+    public func performTransaction<Result: Sendable>(_ block: @Sendable () async throws -> Result) async throws
+    -> Result {
         transactionCallCount += 1
 
         if let error = shouldThrowError {

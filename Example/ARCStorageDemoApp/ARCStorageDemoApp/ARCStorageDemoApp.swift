@@ -16,7 +16,9 @@ struct ARCStorageDemoApp: App {
     private let notesViewModel: NotesViewModel
     private let persistentNotesViewModel: PersistentNotesViewModel
     private let settingsViewModel: SettingsViewModel
+    private let preferencesViewModel: PreferencesViewModel
     private let authViewModel: AuthViewModel
+    private let photoDemoViewModel: PhotoDemoViewModel
 
     // MARK: Initialization
 
@@ -25,35 +27,42 @@ struct ARCStorageDemoApp: App {
         let notesRepository = InMemoryRepository<Note>()
         notesViewModel = NotesViewModel(repository: notesRepository)
 
-        // Persistent Notes: SwiftData storage (persistent, Swift 6 compatible)
-        let modelContainer = try! ModelContainer(for: PersistentNote.self)
+        // Persistent Notes + Photos: shared SwiftData container (Swift 6 compatible)
+        // swiftlint:disable:next no_force_try force_try
+        let modelContainer = try! ModelContainer(for: PersistentNote.self,
+                                                 ARCPhoto.self) // App cannot function without storage
         let persistentStorage = SwiftDataStorage<PersistentNote>(modelContainer: modelContainer)
         let persistentRepository = SwiftDataRepository(storage: persistentStorage)
         persistentNotesViewModel = PersistentNotesViewModel(repository: persistentRepository)
 
-        // Settings: UserDefaults storage (persistent)
-        let settingsRepository = UserDefaultsRepository<AppSettings>(
-            keyPrefix: "ARCStorageDemoApp.Settings"
-        )
+        // Photos: SwiftDataPhotoRepository using the same shared container
+        photoDemoViewModel = PhotoDemoViewModel(modelContainer: modelContainer)
+
+        // Settings: UserDefaults storage (persistent, async, entity-based)
+        let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "ARCStorageDemoApp.Settings")
         settingsViewModel = SettingsViewModel(repository: settingsRepository)
 
+        // Preferences: PreferenceStorage (synchronous, key-value based)
+        // Note: This is created synchronously - no async required!
+        preferencesViewModel =
+            PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "ARCStorageDemoApp.Prefs"))
+
         // Auth: Keychain storage (secure, with high security level)
-        authViewModel = AuthViewModel(
-            securityLevel: .whenUnlockedThisDeviceOnly,
-            service: "com.arclabs.exampleapp.auth"
-        )
+        authViewModel = AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly,
+                                      service: "com.arclabs.exampleapp.auth")
     }
 
     // MARK: Body
 
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                notesViewModel: notesViewModel,
-                persistentNotesViewModel: persistentNotesViewModel,
-                settingsViewModel: settingsViewModel,
-                authViewModel: authViewModel
-            )
+            ContentView(notesViewModel: notesViewModel,
+                        persistentNotesViewModel: persistentNotesViewModel,
+                        settingsViewModel: settingsViewModel,
+                        preferencesViewModel: preferencesViewModel,
+                        authViewModel: authViewModel,
+                        photoDemoViewModel: photoDemoViewModel)
+                .preferredColorScheme(preferencesViewModel.isDarkModeEnabled ? .dark : .light)
         }
     }
 }

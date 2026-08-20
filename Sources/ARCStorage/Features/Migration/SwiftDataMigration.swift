@@ -103,9 +103,8 @@ import SwiftData
 /// // MARK: - Step 3: Use in Configuration
 ///
 /// let config = SwiftDataConfiguration(
-///     schema: RestaurantSchemaV2.self,
-///     migrationPlan: RestaurantMigrationPlan.self,
-///     isCloudKitEnabled: false
+///     schema: Schema(versionedSchema: RestaurantSchemaV2.self),
+///     migrationPlan: RestaurantMigrationPlan.self
 /// )
 /// let container = try config.makeContainer()
 /// ```
@@ -131,7 +130,7 @@ import SwiftData
 /// - ``SwiftDataMigrationStage``
 ///
 /// ### Helper Functions
-/// - ``makeVersionedContainer(schema:migrationPlan:isCloudKitEnabled:)``
+/// - ``makeVersionedContainer(schema:migrationPlan:cloudKit:)``
 public enum SwiftDataMigrationDocumentation {}
 
 // MARK: - Migration Stage Type Alias
@@ -161,7 +160,9 @@ public typealias SwiftDataMigrationStage = MigrationStage
 /// - Parameters:
 ///   - schema: The versioned schema type (must be the latest version)
 ///   - migrationPlan: The migration plan type that handles version upgrades
-///   - isCloudKitEnabled: Whether to enable CloudKit synchronization
+///   - storeName: Optional store file name (e.g. `"arc-photos"` → `arc-photos.store`).
+///     When omitted the system default (`default.store`) is used.
+///   - cloudKit: CloudKit sync option (default: `.disabled`)
 /// - Returns: A configured ModelContainer ready for use
 /// - Throws: Error if container creation fails
 ///
@@ -170,84 +171,29 @@ public typealias SwiftDataMigrationStage = MigrationStage
 /// let container = try makeVersionedContainer(
 ///     schema: RestaurantSchemaV2.self,
 ///     migrationPlan: RestaurantMigrationPlan.self,
-///     isCloudKitEnabled: true
+///     cloudKit: .enabled(containerIdentifier: "iCloud.com.myapp")
 /// )
 /// ```
-@MainActor
-public func makeVersionedContainer<S: VersionedSchema>(
-    schema _: S.Type,
-    migrationPlan: (some SchemaMigrationPlan).Type,
-    isCloudKitEnabled: Bool = false
-) throws -> ModelContainer {
-    let modelConfiguration = ModelConfiguration(
-        cloudKitDatabase: isCloudKitEnabled ? .automatic : .none
-    )
-
-    return try ModelContainer(
-        for: Schema(versionedSchema: S.self),
-        migrationPlan: migrationPlan,
-        configurations: [modelConfiguration]
-    )
-}
-
-// MARK: - SwiftDataConfiguration Extension
-
-extension SwiftDataConfiguration {
-    /// Creates a new SwiftData configuration with migration plan support.
-    ///
-    /// Use this initializer when your app requires schema migrations between versions.
-    ///
-    /// - Parameters:
-    ///   - schema: The schema defining the models to persist
-    ///   - migrationPlan: The migration plan type that handles version upgrades
-    ///   - isCloudKitEnabled: Enable CloudKit synchronization
-    ///   - allowsSave: Allow manual save operations
-    ///
-    /// ## Example
-    /// ```swift
-    /// let config = SwiftDataConfiguration(
-    ///     schema: Schema([Restaurant.self]),
-    ///     migrationPlan: RestaurantMigrationPlan.self,
-    ///     isCloudKitEnabled: false
-    /// )
-    /// let container = try config.makeContainer(migrationPlan: RestaurantMigrationPlan.self)
-    /// ```
-    public init(
-        schema: Schema,
-        migrationPlan _: (some SchemaMigrationPlan).Type,
-        isCloudKitEnabled: Bool = false,
-        allowsSave: Bool = true
-    ) {
-        self.init(
-            schema: schema,
-            isCloudKitEnabled: isCloudKitEnabled,
-            allowsSave: allowsSave
-        )
+@MainActor public func makeVersionedContainer<S: VersionedSchema>(schema _: S.Type,
+                                                                  migrationPlan: (some SchemaMigrationPlan).Type,
+                                                                  storeName: String? = nil,
+                                                                  cloudKit: CloudKitOption = .disabled) throws
+-> ModelContainer {
+    let cloudKitDatabase: ModelConfiguration.CloudKitDatabase = switch cloudKit {
+    case .disabled:
+        .none
+    case let .enabled(containerIdentifier):
+        .private(containerIdentifier)
     }
 
-    /// Creates a model container with migration plan support.
-    ///
-    /// - Parameter migrationPlan: The migration plan type that handles version upgrades
-    /// - Returns: A configured model container with migration support
-    /// - Throws: Error if container creation fails
-    ///
-    /// ## Example
-    /// ```swift
-    /// let config = SwiftDataConfiguration(
-    ///     schema: Schema([Restaurant.self]),
-    ///     isCloudKitEnabled: false
-    /// )
-    /// let container = try config.makeContainer(
-    ///     migrationPlan: RestaurantMigrationPlan.self
-    /// )
-    /// ```
-    public func makeContainer(
-        migrationPlan: (some SchemaMigrationPlan).Type
-    ) throws -> ModelContainer {
-        try ModelContainer(
-            for: schema,
-            migrationPlan: migrationPlan,
-            configurations: [modelConfiguration]
-        )
+    let schema = Schema(versionedSchema: S.self)
+    let modelConfiguration = if let storeName {
+        ModelConfiguration(storeName, schema: schema, cloudKitDatabase: cloudKitDatabase)
+    } else {
+        ModelConfiguration(cloudKitDatabase: cloudKitDatabase)
     }
+
+    return try ModelContainer(for: schema,
+                              migrationPlan: migrationPlan,
+                              configurations: [modelConfiguration])
 }
