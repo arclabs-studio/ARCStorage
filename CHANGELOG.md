@@ -5,9 +5,15 @@ All notable changes to ARCStorage will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-08-20
+
+First public release of **ARCStorage**.
+
+ARC Labs Studio re-baselined every package at `1.0.0` for its first product launch. The pre-launch version history (0.1.0 → 1.3.0) never corresponded to a release the studio stood behind; those tags and GitHub Releases have been removed and the notes are preserved below under [Pre-1.0 history](#pre-10-history-untagged).
 
 ### Added
+
+- **`INTERNAL-USE.md`** — documents ARC Labs Studio's self-grant for commercial use of its own products under the new licence.
 
 - **ARCPhoto — Photo attachment support**
   - `ARCPhoto` SwiftData model with thumbnail (inline) + full image (inline, pre-compressed via `ImageCompressor`)
@@ -64,9 +70,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `SwiftLint`: disabled `switch_case_alignment` — false positive with Swift switch expressions
 
-## [1.3.0] - 2026-02-03
+- **License** — relicensed from MIT to [PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). Source-available and free for non-commercial use; commercial use requires a separate licence from ARC Labs Studio. ARC Labs Studio's own products are covered by an internal grant — see `INTERNAL-USE.md`.
 
-### Added
+---
+
+## Pre-1.0 history (untagged)
+
+Everything below predates the 1.0.0 baseline. The version numbers are retained for traceability only — no tag or release exists for any of them.
+
+### [1.3.0] - 2026-02-03
+
+#### Added
 
 - **SwiftData Prefetching API**
   - New `prefetch(ids:)` method for batch loading entities by ID
@@ -82,19 +96,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Best practices for sync conflict resolution
   - Troubleshooting common sync issues
 
-### Changed
+#### Changed
 
 - **CI/CD Improvements**
   - Added Claude GitHub Actions workflows for automated assistance
   - Updated workflow permissions for proper access
 
-### Documentation
+#### Documentation
 
 - Updated CLAUDE.md with make commands and testing patterns
 
-## [1.2.0] - 2026-01-21
+---
 
-### Added
+### [1.2.0] - 2026-01-21
+
+#### Added
 
 - **SwiftDataEntity Protocol**
   - New `SwiftDataEntity` protocol for SwiftData `@Model` classes
@@ -112,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `SwiftDataStorageTests` with comprehensive test coverage
   - Tests for CRUD operations, batch operations, predicates, and error handling
 
-### Changed
+#### Changed
 
 - **SwiftDataStorage Architecture** ⚠️ Breaking Change
   - Changed from `actor` with `@ModelActor` to `@MainActor final class`
@@ -128,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `cachePolicy` parameter from initializer
   - All methods are now **synchronous** (no `async/await`)
 
-### Why These Changes?
+#### Why These Changes?
 
 In Swift 6 strict concurrency, the `@Model` macro generates conformances isolated to the main actor. This makes it impossible for `@Model` classes to safely conform to `Sendable`, which was required by the previous `StorageProvider` and `Repository` protocols.
 
@@ -138,7 +154,7 @@ The new architecture:
 - Provides synchronous API (all on MainActor, no crossing actor boundaries)
 - Relies on SwiftData's internal caching instead of `CacheManager`
 
-### Migration Guide
+#### Migration Guide
 
 **Before (1.1.x):**
 ```swift
@@ -170,20 +186,22 @@ let repository = SwiftDataRepository(storage: storage)
 let restaurants = try repository.fetchAll()
 ```
 
-### Notes
+#### Notes
 
 - Other storage backends (InMemory, UserDefaults, Keychain) are **unchanged**
 - They still require `Codable & Sendable` and use async/await
 - Use structs for these backends, `@Model` classes only for SwiftData
 
-### Project
+#### Project
 
 - **Demo App Renamed** - `ExampleApp` → `ARCStorageDemoApp` following ARCKnowledge naming conventions
 - **Code Quality** - Fixed SwiftFormat and SwiftLint violations across the codebase
 
-## [1.1.0] - 2026-01-05
+---
 
-### Added
+### [1.1.0] - 2026-01-05
+
+#### Added
 
 - **Keychain Security**
   - `KeychainAccessibility` enum with 5 security levels
@@ -207,7 +225,7 @@ let restaurants = try repository.fetchAll()
   - Added `LegacyCloudKitSyncMonitor` for backwards compatibility
   - New convenience properties on `SyncStatus` (`isSyncing`, `isSuccess`, `hasError`)
 
-### Changed
+#### Changed
 
 - **SwiftDataStorage Optimization**
   - `fetch(id:)` now uses local object registry for O(1) lookups
@@ -218,13 +236,15 @@ let restaurants = try repository.fetchAll()
   - New `registerForMemoryWarnings` parameter (default: `true`)
   - Added `handleMemoryPressure(level:)` public method
 
-### Fixed
+#### Fixed
 
 - Improved thread safety in `SwiftDataStorage` registered objects tracking
 
-## [1.0.0] - 2025-01-15
+---
 
-### Added
+### [1.0.0] - 2025-01-15
+
+#### Added
 
 - **Core Protocols**
   - `StorageProvider` - Low-level persistence abstraction
@@ -262,3 +282,7 @@ let restaurants = try repository.fetchAll()
 
 - **Error Handling**
   - `StorageError` - Comprehensive error types with localized descriptions
+
+---
+
+[1.0.0]: https://github.com/arclabs-studio/ARCStorage/releases/tag/v1.0.0
