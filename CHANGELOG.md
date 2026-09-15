@@ -5,6 +5,30 @@ All notable changes to ARCStorage will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-09-15
+
+### Added
+
+- **`UnavailableReason.missingEntitlement`** — reported when the process carries no iCloud
+  entitlement for the requested container, so an app can say *why* it is running local-only
+  instead of guessing "not signed in".
+
+### Fixed
+
+- **CloudKit no longer traps at launch when the iCloud entitlement is absent.**
+  `CKContainer(identifier:)` is not a throwing initialiser: without a matching
+  `com.apple.developer.icloud-container-identifiers` entitlement it traps (`EXC_BREAKPOINT`)
+  before any error can surface, so `makeContainerReportingMode()` died inside the container
+  factory rather than falling back. The entitlement is now read from the executable's own code
+  signature before the container is constructed — `SecTask` is not vended on iOS — and a missing
+  one takes the existing local-only path. An unsigned binary (`CODE_SIGNING_ALLOWED=NO`) carries
+  no signature at all, which is the case this guards. **Signed builds are unaffected.**
+
+### Note on upgrading
+
+`UnavailableReason` gains a case, so an exhaustive `switch` over it without a `default` will no
+longer compile. That is the only source-breaking change.
+
 ## [1.0.0] - 2026-08-20
 
 First public release of **ARCStorage**.
