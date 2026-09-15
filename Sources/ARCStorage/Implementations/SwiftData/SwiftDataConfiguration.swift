@@ -217,6 +217,11 @@ public struct SwiftDataConfiguration: Sendable {
             return try ContainerResult(container: makeContainer(), mode: .localOnly)
 
         case let .enabled(containerIdentifier):
+            // Checked before the container is constructed: `CKContainer(identifier:)` traps rather
+            // than throwing when the entitlement is absent, so there is nothing to catch after.
+            guard CloudKitEntitlements.declaresContainer(containerIdentifier) else {
+                return try makeFallbackResult(reason: .missingEntitlement)
+            }
             let container = CKContainer(identifier: containerIdentifier)
             let accountStatus: CKAccountStatus
             do {
