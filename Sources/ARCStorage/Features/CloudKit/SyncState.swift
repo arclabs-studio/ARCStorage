@@ -43,6 +43,13 @@ public enum UnavailableReason: Sendable, Equatable {
     /// iCloud is temporarily unavailable.
     case temporarilyUnavailable
 
+    /// The process does not carry an iCloud entitlement for the requested container.
+    ///
+    /// Reached when the app runs without the `com.apple.developer.icloud-container-identifiers`
+    /// entitlement — typically a locally built, unsigned binary. CloudKit traps on
+    /// `CKContainer(identifier:)` in that state, so the container is created local-only instead.
+    case missingEntitlement
+
     /// An error occurred while checking account status.
     ///
     /// - Parameter message: A human-readable description of the error.
