@@ -64,22 +64,33 @@ final class SettingsViewModel {
         }
     }
 
-    /// Updates the show pinned first setting.
-    func setShowPinnedFirst(_ value: Bool) async {
-        settings.showPinnedFirst = value
-        await saveSettings()
+    // MARK: Bindable Settings
+
+    /// Whether pinned notes are listed first. Each write persists the settings.
+    var showPinnedFirst: Bool {
+        get { settings.showPinnedFirst }
+        set {
+            settings.showPinnedFirst = newValue
+            Task { await saveSettings() }
+        }
     }
 
-    /// Updates the default note color.
-    func setDefaultNoteColor(_ color: NoteColor) async {
-        settings.defaultNoteColor = color
-        await saveSettings()
+    /// The color new notes start with. Each write persists the settings.
+    var defaultNoteColor: NoteColor {
+        get { settings.defaultNoteColor }
+        set {
+            settings.defaultNoteColor = newValue
+            Task { await saveSettings() }
+        }
     }
 
-    /// Updates the notes per page setting.
-    func setNotesPerPage(_ count: Int) async {
-        settings.notesPerPage = max(5, min(100, count))
-        await saveSettings()
+    /// Notes shown per page, clamped to 5...100. Each write persists the settings.
+    var notesPerPage: Int {
+        get { settings.notesPerPage }
+        set {
+            settings.notesPerPage = max(5, min(100, newValue))
+            Task { await saveSettings() }
+        }
     }
 
     /// Resets settings to defaults.

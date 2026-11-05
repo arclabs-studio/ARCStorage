@@ -164,19 +164,18 @@ extension PersistentNoteListView {
     }
 
     private func editNoteSheet(_ note: PersistentNote) -> some View {
-        NavigationStack {
+        @Bindable var note = note
+
+        return NavigationStack {
             Form {
                 Section("Note Details") {
-                    TextField("Title", text: Binding(get: { note.title },
-                                                     set: { note.title = $0 }))
-                    TextField("Content", text: Binding(get: { note.content },
-                                                       set: { note.content = $0 }), axis: .vertical)
+                    TextField("Title", text: $note.title)
+                    TextField("Content", text: $note.content, axis: .vertical)
                         .lineLimit(3 ... 6)
                 }
 
                 Section("Color") {
-                    Picker("Color", selection: Binding(get: { note.noteColor },
-                                                       set: { note.noteColor = $0 })) {
+                    Picker("Color", selection: $note.noteColor) {
                         ForEach(NoteColor.allCases, id: \.self) { color in
                             Text(color.displayName).tag(color)
                         }
