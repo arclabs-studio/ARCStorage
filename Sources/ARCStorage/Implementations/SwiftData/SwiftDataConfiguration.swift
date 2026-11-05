@@ -1,6 +1,6 @@
 import CloudKit
 import Foundation
-@preconcurrency import SwiftData
+import SwiftData
 
 /// Configuration for SwiftData-based storage.
 ///

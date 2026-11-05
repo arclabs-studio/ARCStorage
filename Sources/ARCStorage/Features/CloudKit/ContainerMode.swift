@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import SwiftData
+import SwiftData
 
 /// How a `ModelContainer` ended up being configured.
 ///

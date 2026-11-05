@@ -356,7 +356,7 @@ public protocol CloudKitSyncEngineDelegate: Actor, AnyObject {
 // MARK: - Errors
 
 /// Errors thrown by ``CloudKitSyncEngineManager``.
-public enum CloudKitSyncError: Error, LocalizedError, @unchecked Sendable {
+public enum CloudKitSyncError: Error, LocalizedError {
     /// ``CloudKitSyncEngineManager/sendChanges()`` or ``CloudKitSyncEngineManager/fetchChanges()``
     /// was called before ``CloudKitSyncEngineManager/start()``.
     case engineNotStarted
