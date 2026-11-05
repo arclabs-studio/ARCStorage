@@ -124,5 +124,6 @@ extension SettingsView {
 // MARK: - Preview
 
 #Preview {
-    SettingsView(viewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")))
+    let repository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
+    SettingsView(viewModel: SettingsViewModel(repository: repository))
 }

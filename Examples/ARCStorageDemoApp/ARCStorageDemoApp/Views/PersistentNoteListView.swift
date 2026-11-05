@@ -284,7 +284,9 @@ private struct PersistentNoteRowView: View {
 
 #Preview("With Notes") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    guard let container = try? ModelContainer(for: PersistentNote.self, configurations: config) else {
+        return Text("Preview container unavailable")
+    }
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
     let viewModel = PersistentNotesViewModel(repository: repository)
@@ -297,7 +299,9 @@ private struct PersistentNoteRowView: View {
 
 #Preview("Empty State") {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: PersistentNote.self, configurations: config)
+    guard let container = try? ModelContainer(for: PersistentNote.self, configurations: config) else {
+        return Text("Preview container unavailable")
+    }
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
     let viewModel = PersistentNotesViewModel(repository: repository)
