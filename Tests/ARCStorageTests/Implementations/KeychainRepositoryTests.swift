@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import ARCStorage
 
+@Suite(.enabled(if: KeychainAvailability.isAvailable, KeychainAvailability.unavailableReason))
 struct KeychainRepositoryTests {
     // MARK: - Save & Fetch
 
