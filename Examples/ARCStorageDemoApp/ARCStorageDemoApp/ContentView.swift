@@ -78,11 +78,13 @@ struct ContentView: View {
     let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
+    let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
+    let preferences = PreferenceStorage(keyPrefix: "Preview.Prefs")
 
     return ContentView(notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
                        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
-                       settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
-                       preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+                       settingsViewModel: SettingsViewModel(repository: settingsRepository),
+                       preferencesViewModel: PreferencesViewModel(preferences: preferences),
                        authViewModel: AuthViewModel(securityLevel: .whenUnlockedThisDeviceOnly),
                        photoDemoViewModel: PhotoDemoViewModel(modelContainer: container))
         .preferredColorScheme(.light)
@@ -94,11 +96,13 @@ struct ContentView: View {
     let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
+    let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
+    let preferences = PreferenceStorage(keyPrefix: "Preview.Prefs")
 
     return ContentView(notesViewModel: NotesViewModel(repository: InMemoryRepository<Note>()),
                        persistentNotesViewModel: PersistentNotesViewModel(repository: repository),
-                       settingsViewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")),
-                       preferencesViewModel: PreferencesViewModel(preferences: PreferenceStorage(keyPrefix: "Preview.Prefs")),
+                       settingsViewModel: SettingsViewModel(repository: settingsRepository),
+                       preferencesViewModel: PreferencesViewModel(preferences: preferences),
                        authViewModel: AuthViewModel(securityLevel: .whenPasscodeSetThisDeviceOnly),
                        photoDemoViewModel: PhotoDemoViewModel(modelContainer: container))
         .preferredColorScheme(.dark)

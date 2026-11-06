@@ -50,26 +50,32 @@ struct SwiftDataChangeMonitorTests {
         let storage = SwiftDataStorage<TestSwiftDataModel>(modelContainer: container)
         let monitor = SwiftDataChangeMonitor(modelContainer: container)
 
-        var yieldCount = 0
+        // Subscribe before saving so no notification can be posted ahead of the observer.
+        let changes = monitor.changes()
 
         let observerTask = Task { @MainActor in
-            for await _ in monitor.changes() {
-                yieldCount += 1
-                if yieldCount >= 3 {
+            var count = 0
+            for await _ in changes {
+                count += 1
+                if count >= 3 {
                     break
                 }
             }
+            return count
         }
 
-        await Task.yield()
+        // Bound the wait instead of sleeping a fixed interval; cancellation ends the stream.
+        let timeout = Task {
+            try await Task.sleep(for: .seconds(2))
+            observerTask.cancel()
+        }
+        defer { timeout.cancel() }
 
         try storage.save(TestSwiftDataModel(name: "First", value: 1))
         try storage.save(TestSwiftDataModel(name: "Second", value: 2))
         try storage.save(TestSwiftDataModel(name: "Third", value: 3))
 
-        try await Task.sleep(for: .milliseconds(150))
-
-        observerTask.cancel()
+        let yieldCount = await observerTask.value
 
         #expect(yieldCount == 3)
     }
