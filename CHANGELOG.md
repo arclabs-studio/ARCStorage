@@ -5,6 +5,42 @@ All notable changes to ARCStorage will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-06
+
+### Changed
+
+- **`SortDescriptor.keyPath` is now `PartialKeyPath<T> & Sendable`**, and `init(_:order:)` takes the
+  same type. `SortDescriptor` itself is now compiler-checked `Sendable` instead of
+  `@unchecked Sendable`. Key-path literals such as `SortDescriptor(\.name, order: .ascending)`
+  infer the new type and compile unchanged. **Source-breaking:** passing a stored value typed as
+  plain `PartialKeyPath<T>` no longer compiles. ([#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+- **`StorageError` and `CloudKitSyncError` drop `@unchecked Sendable`.** They are still `Sendable`
+  through `Error`, and the compiler now checks it. No API change. ([#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+- **`MockPreferenceStorage` is compiler-checked `Sendable`.** Its state sits behind an
+  `OSAllocatedUnfairLock` instead of an `NSLock` with `@unchecked Sendable`. `getCallCount`,
+  `setCallCount`, `removeCallCount`, `hasValueCallCount` and `lastAccessedKey` are now read-only
+  computed properties. They read the same as before. ([#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+- **`SwiftDataChangeMonitor` keeps its observer tokens on the main actor** instead of in an
+  `@unchecked Sendable` box. When a `changes()` stream terminates, the observer is removed by a
+  main-actor hop, so removal now runs shortly after termination rather than inside it.
+  ([#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+- **`CacheManager` memory-pressure handling no longer uses `#selector` observers.** On iOS, tvOS,
+  visionOS and watchOS it reads the memory-warning notification as an async sequence from a
+  main-actor task. macOS keeps its `DispatchSource`, the only API that reports memory pressure
+  there, now documented as the GCD exception. Warnings still map to `MemoryPressureLevel.warning`.
+  ([#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+- **Examples.** The demo app moved from `Example/` to `Examples/`, the studio convention, and is now linted in CI.
+  `CloudKitSyncView` handles `UnavailableReason.missingEntitlement`. Without that the demo did not
+  compile after 1.1.0. The settings and note editor bind through `@Bindable` instead of
+  `Binding(get:set:)`, and the container setup no longer uses `try!`.
+  ([#41](https://github.com/arclabs-studio/ARCStorage/pull/41), [#42](https://github.com/arclabs-studio/ARCStorage/pull/42))
+
+### Note on upgrading
+
+The `SortDescriptor.keyPath` type change is the only source-breaking change. Call sites that pass
+a key-path literal are unaffected. Code that stores a `PartialKeyPath<T>` and passes it later has
+to type it as `PartialKeyPath<T> & Sendable`.
+
 ## [1.1.0] - 2026-09-15
 
 ### Added
