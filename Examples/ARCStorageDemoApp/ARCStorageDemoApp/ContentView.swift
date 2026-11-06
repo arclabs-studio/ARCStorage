@@ -73,9 +73,7 @@ struct ContentView: View {
 // MARK: - Preview
 
 #Preview("Light Mode") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
+    let container = ModelContainer.demo(for: [PersistentNote.self, ARCPhoto.self], inMemory: true)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
     let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
@@ -91,9 +89,7 @@ struct ContentView: View {
 }
 
 #Preview("Dark Mode") {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: PersistentNote.self, ARCPhoto.self, configurations: config)
+    let container = ModelContainer.demo(for: [PersistentNote.self, ARCPhoto.self], inMemory: true)
     let storage = SwiftDataStorage<PersistentNote>(modelContainer: container)
     let repository = SwiftDataRepository(storage: storage)
     let settingsRepository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")

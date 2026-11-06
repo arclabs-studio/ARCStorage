@@ -46,11 +46,11 @@ import Foundation
 /// }
 /// ```
 public struct PreferenceStorage: PreferenceStorageProtocol, @unchecked Sendable {
-    // UserDefaults is thread-safe but doesn't formally conform to Sendable.
-    // Using @unchecked Sendable is safe because:
-    // 1. UserDefaults is documented as thread-safe by Apple
-    // 2. JSONEncoder/JSONDecoder are value types but contain non-Sendable internal state
-    // 3. All operations are atomic (single read/write calls)
+    // Documented exception to the no-@unchecked-Sendable rule (approved 2026-11-06).
+    // `UserDefaults` is the only stored property the compiler cannot prove Sendable:
+    // Apple documents it as thread-safe but does not mark it Sendable. Every other
+    // property is immutable and Sendable. Removing the exception would mean dropping
+    // `init(userDefaults:)` or making the synchronous API async.
     private let userDefaults: UserDefaults
     private let keyPrefix: String
     private let encoder: JSONEncoder

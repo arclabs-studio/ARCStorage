@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 #if DEBUG
 
@@ -24,26 +25,44 @@ import Foundation
 ///     #expect(mock.lastAccessedKey == "darkMode")
 /// }
 /// ```
-public final class MockPreferenceStorage: PreferenceStorageProtocol, @unchecked Sendable {
-    private let lock = NSLock()
-    private var storage: [String: Data] = [:]
+public final class MockPreferenceStorage: PreferenceStorageProtocol {
+    private struct State {
+        var storage: [String: Data] = [:]
+        var getCallCount = 0
+        var setCallCount = 0
+        var removeCallCount = 0
+        var hasValueCallCount = 0
+        var lastAccessedKey: String?
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State())
 
     // MARK: - Call Tracking
 
     /// Number of times `get` was called.
-    public private(set) var getCallCount = 0
+    public var getCallCount: Int {
+        state.withLock { $0.getCallCount }
+    }
 
     /// Number of times `set` was called.
-    public private(set) var setCallCount = 0
+    public var setCallCount: Int {
+        state.withLock { $0.setCallCount }
+    }
 
     /// Number of times `remove` was called.
-    public private(set) var removeCallCount = 0
+    public var removeCallCount: Int {
+        state.withLock { $0.removeCallCount }
+    }
 
     /// Number of times `hasValue` was called.
-    public private(set) var hasValueCallCount = 0
+    public var hasValueCallCount: Int {
+        state.withLock { $0.hasValueCallCount }
+    }
 
     /// The last key that was accessed (get, set, remove, or hasValue).
-    public private(set) var lastAccessedKey: String?
+    public var lastAccessedKey: String? {
+        state.withLock { $0.lastAccessedKey }
+    }
 
     // MARK: - Initialization
 
@@ -53,13 +72,14 @@ public final class MockPreferenceStorage: PreferenceStorageProtocol, @unchecked 
     // MARK: - PreferenceStorageProtocol
 
     public func get<Key: PreferenceKey>(_: Key.Type) -> Key.Value {
-        lock.lock()
-        defer { lock.unlock() }
+        let keyName = Key.key
+        let data = state.withLock { state in
+            state.getCallCount += 1
+            state.lastAccessedKey = keyName
+            return state.storage[keyName]
+        }
 
-        getCallCount += 1
-        lastAccessedKey = Key.key
-
-        guard let data = storage[Key.key] else {
+        guard let data else {
             return Key.defaultValue
         }
 
@@ -71,36 +91,34 @@ public final class MockPreferenceStorage: PreferenceStorageProtocol, @unchecked 
     }
 
     public func set<Key: PreferenceKey>(_ value: Key.Value, for _: Key.Type) {
-        lock.lock()
-        defer { lock.unlock() }
-
-        setCallCount += 1
-        lastAccessedKey = Key.key
-
-        do {
-            let data = try JSONEncoder().encode(value)
-            storage[Key.key] = data
-        } catch {
-            // Silent failure (matches real implementation)
+        let keyName = Key.key
+        // Silent failure on encoding errors matches the real implementation.
+        let data = try? JSONEncoder().encode(value)
+        state.withLock { state in
+            state.setCallCount += 1
+            state.lastAccessedKey = keyName
+            if let data {
+                state.storage[keyName] = data
+            }
         }
     }
 
     public func remove<Key: PreferenceKey>(_: Key.Type) {
-        lock.lock()
-        defer { lock.unlock() }
-
-        removeCallCount += 1
-        lastAccessedKey = Key.key
-        storage.removeValue(forKey: Key.key)
+        let keyName = Key.key
+        state.withLock { state in
+            state.removeCallCount += 1
+            state.lastAccessedKey = keyName
+            _ = state.storage.removeValue(forKey: keyName)
+        }
     }
 
     public func hasValue<Key: PreferenceKey>(for _: Key.Type) -> Bool {
-        lock.lock()
-        defer { lock.unlock() }
-
-        hasValueCallCount += 1
-        lastAccessedKey = Key.key
-        return storage[Key.key] != nil
+        let keyName = Key.key
+        return state.withLock { state in
+            state.hasValueCallCount += 1
+            state.lastAccessedKey = keyName
+            return state.storage[keyName] != nil
+        }
     }
 
     // MARK: - Test Helpers
@@ -113,28 +131,14 @@ public final class MockPreferenceStorage: PreferenceStorageProtocol, @unchecked 
     ///   - value: The value to store.
     ///   - key: The preference key type.
     public func setMockValue<Key: PreferenceKey>(_ value: Key.Value, for _: Key.Type) {
-        lock.lock()
-        defer { lock.unlock() }
-
-        do {
-            let data = try JSONEncoder().encode(value)
-            storage[Key.key] = data
-        } catch {
-            // Silent failure
-        }
+        let keyName = Key.key
+        guard let data = try? JSONEncoder().encode(value) else { return }
+        state.withLock { $0.storage[keyName] = data }
     }
 
     /// Resets all stored values and call counts.
     public func reset() {
-        lock.lock()
-        defer { lock.unlock() }
-
-        storage.removeAll()
-        getCallCount = 0
-        setCallCount = 0
-        removeCallCount = 0
-        hasValueCallCount = 0
-        lastAccessedKey = nil
+        state.withLock { $0 = State() }
     }
 }
 

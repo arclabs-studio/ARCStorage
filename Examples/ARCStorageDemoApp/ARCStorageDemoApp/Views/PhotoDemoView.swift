@@ -169,9 +169,7 @@ extension PhotoDemoView {
 // MARK: - Preview
 
 #Preview("With Photos") {
-    // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: ARCPhoto.self,
-                                        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = ModelContainer.demo(for: [ARCPhoto.self], inMemory: true)
     let viewModel = PhotoDemoViewModel(modelContainer: container)
     return PhotoDemoView(viewModel: viewModel)
         .onAppear {
@@ -182,9 +180,7 @@ extension PhotoDemoView {
 }
 
 #Preview("Empty State") {
-    // swiftlint:disable:next no_force_try force_try
-    let container = try! ModelContainer(for: ARCPhoto.self,
-                                        configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    let container = ModelContainer.demo(for: [ARCPhoto.self], inMemory: true)
     let viewModel = PhotoDemoViewModel(modelContainer: container)
     return PhotoDemoView(viewModel: viewModel)
 }
