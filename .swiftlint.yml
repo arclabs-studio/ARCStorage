@@ -5,6 +5,7 @@
 included:
   - Sources
   - Tests
+  - Examples
 
 # Excluded directories
 excluded:

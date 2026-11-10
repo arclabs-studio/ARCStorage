@@ -56,29 +56,20 @@ struct SettingsView: View {
 extension SettingsView {
     private var displaySection: some View {
         Section("Display") {
-            Toggle("Show Pinned First", isOn: Binding(get: { viewModel.settings.showPinnedFirst },
-                                                      set: { value in
-                                                          Task { await viewModel.setShowPinnedFirst(value) }
-                                                      }))
+            Toggle("Show Pinned First", isOn: $viewModel.showPinnedFirst)
         }
     }
 
     private var notesSection: some View {
         Section("Notes") {
-            Picker("Default Color", selection: Binding(get: { viewModel.settings.defaultNoteColor },
-                                                       set: { color in
-                                                           Task { await viewModel.setDefaultNoteColor(color) }
-                                                       })) {
+            Picker("Default Color", selection: $viewModel.defaultNoteColor) {
                 ForEach(NoteColor.allCases, id: \.self) { color in
                     Text(color.displayName).tag(color)
                 }
             }
 
-            Stepper("Notes per page: \(viewModel.settings.notesPerPage)",
-                    value: Binding(get: { viewModel.settings.notesPerPage },
-                                   set: { count in
-                                       Task { await viewModel.setNotesPerPage(count) }
-                                   }),
+            Stepper("Notes per page: \(viewModel.notesPerPage)",
+                    value: $viewModel.notesPerPage,
                     in: 5 ... 100,
                     step: 5)
         }
@@ -124,5 +115,6 @@ extension SettingsView {
 // MARK: - Preview
 
 #Preview {
-    SettingsView(viewModel: SettingsViewModel(repository: UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")))
+    let repository = UserDefaultsRepository<AppSettings>(keyPrefix: "Preview.Settings")
+    SettingsView(viewModel: SettingsViewModel(repository: repository))
 }

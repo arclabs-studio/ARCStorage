@@ -1,4 +1,7 @@
 import Foundation
+
+// Documented exception: SDKs before Xcode 27 (Swift 6.1, used by CI and supported consumers)
+// do not mark SwiftData's Schema and ModelConfiguration Sendable. Drop once Xcode 27 is the minimum.
 @preconcurrency import SwiftData
 
 /// How a `ModelContainer` ended up being configured.

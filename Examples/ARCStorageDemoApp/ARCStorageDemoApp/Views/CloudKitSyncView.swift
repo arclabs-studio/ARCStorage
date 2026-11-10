@@ -148,6 +148,8 @@ struct CloudKitSyncView: View {
             "iCloud is temporarily unavailable. Try again later."
         case .couldNotDetermine:
             "Could not determine iCloud status."
+        case .missingEntitlement:
+            "This build lacks the iCloud entitlement. Sync is disabled."
         case let .error(message):
             "Error: \(message)"
         }

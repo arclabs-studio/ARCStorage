@@ -308,69 +308,56 @@ public enum MemoryPressureLevel: Sendable {
 // MARK: - Memory Pressure Handler
 
 /// Handles system memory pressure notifications.
-final class MemoryPressureHandler: @unchecked Sendable {
-    private let callback: @Sendable (MemoryPressureLevel) -> Void
-
+///
+/// All stored state is immutable and `Sendable`, so the conformance is compiler-checked.
+final class MemoryPressureHandler: Sendable {
     #if os(macOS)
-    private var dispatchSource: DispatchSourceMemoryPressure?
+    /// macOS reports memory pressure only through a dispatch source; there is no
+    /// notification or async API for it, so this is the documented GCD exception.
+    private let dispatchSource: DispatchSourceMemoryPressure
+    #else
+    private let observation: Task<Void, Never>
     #endif
 
     init(callback: @escaping @Sendable (MemoryPressureLevel) -> Void) {
-        self.callback = callback
-        setupNotifications()
+        #if os(macOS)
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+        source.setEventHandler { [weak source] in
+            guard let event = source?.data else { return }
+            if event.contains(.critical) {
+                callback(.critical)
+            } else if event.contains(.warning) {
+                callback(.warning)
+            }
+        }
+        source.resume()
+        dispatchSource = source
+        #else
+        observation = Task { @MainActor in
+            for await _ in NotificationCenter.default.notifications(named: Self.memoryWarningName) {
+                callback(.warning)
+            }
+        }
+        #endif
     }
 
     deinit {
-        teardownNotifications()
-    }
-
-    private func setupNotifications() {
-        #if canImport(UIKit) && !os(watchOS)
-        // iOS, tvOS, visionOS
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(handleMemoryWarning),
-                                               name: UIApplication.didReceiveMemoryWarningNotification,
-                                               object: nil)
-        #elseif os(macOS)
-        // macOS uses dispatch source for memory pressure
-        dispatchSource = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical],
-                                                                 queue: .main)
-        dispatchSource?.setEventHandler { [weak self] in
-            guard let source = self?.dispatchSource else { return }
-            let event = source.data
-            if event.contains(.critical) {
-                self?.callback(.critical)
-            } else if event.contains(.warning) {
-                self?.callback(.warning)
-            }
-        }
-        dispatchSource?.resume()
-        #elseif os(watchOS)
-        // watchOS - use ProcessInfo for memory warnings
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(handleMemoryWarning),
-                                               name: .init("NSProcessInfoPowerStateDidChangeNotification"),
-                                               object: nil)
+        #if os(macOS)
+        dispatchSource.cancel()
+        #else
+        observation.cancel()
         #endif
     }
 
-    private func teardownNotifications() {
-        #if canImport(UIKit) && !os(watchOS)
-        NotificationCenter.default.removeObserver(self,
-                                                  name: UIApplication.didReceiveMemoryWarningNotification,
-                                                  object: nil)
-        #elseif os(macOS)
-        dispatchSource?.cancel()
-        dispatchSource = nil
-        #elseif os(watchOS)
-        // swiftlint:disable:next notification_center_detachment
-        NotificationCenter.default.removeObserver(self)
-        #endif
+    #if canImport(UIKit) && !os(watchOS)
+    @MainActor private static var memoryWarningName: Notification.Name {
+        UIApplication.didReceiveMemoryWarningNotification
     }
-
-    @objc private func handleMemoryWarning() {
-        callback(.warning)
+    #elseif !os(macOS)
+    @MainActor private static var memoryWarningName: Notification.Name {
+        Notification.Name("NSProcessInfoPowerStateDidChangeNotification")
     }
+    #endif
 }
 
 // MARK: - Cache Entry

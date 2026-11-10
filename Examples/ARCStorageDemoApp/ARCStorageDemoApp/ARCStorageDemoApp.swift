@@ -28,9 +28,7 @@ struct ARCStorageDemoApp: App {
         notesViewModel = NotesViewModel(repository: notesRepository)
 
         // Persistent Notes + Photos: shared SwiftData container (Swift 6 compatible)
-        // swiftlint:disable:next no_force_try force_try
-        let modelContainer = try! ModelContainer(for: PersistentNote.self,
-                                                 ARCPhoto.self) // App cannot function without storage
+        let modelContainer = ModelContainer.demo(for: [PersistentNote.self, ARCPhoto.self])
         let persistentStorage = SwiftDataStorage<PersistentNote>(modelContainer: modelContainer)
         let persistentRepository = SwiftDataRepository(storage: persistentStorage)
         persistentNotesViewModel = PersistentNotesViewModel(repository: persistentRepository)
@@ -63,6 +61,22 @@ struct ARCStorageDemoApp: App {
                         authViewModel: authViewModel,
                         photoDemoViewModel: photoDemoViewModel)
                 .preferredColorScheme(preferencesViewModel.isDarkModeEnabled ? .dark : .light)
+        }
+    }
+}
+
+// MARK: - Model Containers
+
+extension ModelContainer {
+    /// Creates a SwiftData container for the demo.
+    ///
+    /// The demo cannot run without storage, so a failure here is fatal by design.
+    static func demo(for types: [any PersistentModel.Type], inMemory: Bool = false) -> ModelContainer {
+        do {
+            return try ModelContainer(for: Schema(types),
+                                      configurations: ModelConfiguration(isStoredInMemoryOnly: inMemory))
+        } catch {
+            fatalError("Could not create the demo ModelContainer: \(error)")
         }
     }
 }

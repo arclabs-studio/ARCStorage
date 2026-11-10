@@ -35,21 +35,12 @@ import SwiftData
 /// > CloudKit sync and background imports.
 @MainActor
 public final class SwiftDataChangeMonitor {
-    // MARK: Private Types
-
-    /// Boxes an `NSObjectProtocol` observer token so it can safely cross
-    /// `@Sendable` closure boundaries in Swift 6 strict concurrency.
-    ///
-    /// The box is `@unchecked Sendable` because the token is only ever
-    /// accessed on the main queue (both registration and removal happen
-    /// on `.main`), making concurrent access impossible at runtime.
-    private final class TokenBox: @unchecked Sendable {
-        var token: (any NSObjectProtocol)?
-    }
-
     // MARK: Private Properties
 
     private let modelContainer: ModelContainer
+
+    /// Notification observer tokens, keyed per stream. Main-actor isolated like the monitor.
+    private var observers: [UUID: any NSObjectProtocol] = [:]
 
     // MARK: Initialization
 
@@ -78,23 +69,32 @@ public final class SwiftDataChangeMonitor {
         // without a spinning run loop (e.g., Swift Testing). Follows the same
         // pattern as CloudKitSyncMonitor.
         let contextID = ObjectIdentifier(modelContainer.mainContext)
-        let box = TokenBox()
+        let observerID = UUID()
+        let (stream, continuation) = AsyncStream<Void>.makeStream()
 
-        return AsyncStream { continuation in
-            box.token = NotificationCenter.default.addObserver(forName: ModelContext.didSave,
-                                                               object: nil,
-                                                               queue: .main) { notification in
-                guard let context = notification.object as? ModelContext,
-                      ObjectIdentifier(context) == contextID else { return }
-                continuation.yield()
-            }
+        observers[observerID] = NotificationCenter.default.addObserver(forName: ModelContext.didSave,
+                                                                       object: nil,
+                                                                       queue: .main) { notification in
+            guard let context = notification.object as? ModelContext,
+                  ObjectIdentifier(context) == contextID else { return }
+            continuation.yield()
+        }
 
-            continuation.onTermination = { _ in
-                if let token = box.token {
-                    NotificationCenter.default.removeObserver(token)
-                    box.token = nil
-                }
+        // The token stays on the main actor; termination hops back there to remove it.
+        continuation.onTermination = { _ in
+            Task { @MainActor in
+                self.removeObserver(observerID)
             }
+        }
+
+        return stream
+    }
+
+    // MARK: Private Methods
+
+    private func removeObserver(_ observerID: UUID) {
+        if let token = observers.removeValue(forKey: observerID) {
+            NotificationCenter.default.removeObserver(token)
         }
     }
 }

@@ -13,7 +13,7 @@ import Foundation
 /// - ``deleteFailed(underlying:)``
 /// - ``invalidData``
 /// - ``transactionFailed(underlying:)``
-public enum StorageError: Error, @unchecked Sendable {
+public enum StorageError: Error {
     /// Entity with the specified ID was not found.
     case notFound(id: String)
 

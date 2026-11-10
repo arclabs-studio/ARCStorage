@@ -158,7 +158,9 @@ public actor LRUCache<Key: Hashable & Sendable, Value: Sendable> {
 }
 
 /// Internal node for doubly-linked list in LRU cache.
-private class Node<Key: Hashable & Sendable, Value: Sendable>: @unchecked Sendable {
+///
+/// Not `Sendable`: nodes never leave the owning ``LRUCache`` actor.
+private final class Node<Key: Hashable & Sendable, Value: Sendable> {
     let key: Key
     var value: Value
     var byteSize: Int
